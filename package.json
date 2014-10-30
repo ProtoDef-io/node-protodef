@@ -1,0 +1,28 @@
+{
+  "name": "protocols",
+  "version": "0.1.0",
+  "description": "A simple and powerful way to define binary protocols",
+  "main": "index.js",
+  "author": "roblabla <robinlambertz.dev@gmail.com>",
+  "scripts": {
+    "test": "mocha test/**/*.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "lodash": "^2.4.1",
+    "yargs": "^1.3.1"
+  },
+  "bugs": {
+    "url": "https://github.com/roblabla/Protocols/issues"
+  },
+  "homepage": "https://github.com/roblabla/Protocols",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/roblabla/Protocols.git"
+  },
+  "devDependencies": {
+    "chai": "^1.9.2",
+    "mocha": "^1.21.5",
+    "sinon": "^1.11.1"
+  }
+}
