@@ -1,12 +1,12 @@
-var describe = require('mocha').describe;
-var it = require('mocha').it;
 var expect = require('chai').expect;
-var _ = require('lodash');
 
-var numeric = require('../../lib/datatypes/numeric');
-var getReader = require('../../lib/utils').getReader;
+var numeric = require('../../dist/lib/datatypes/numeric');
+var getReader = function(dataType) { return dataType[0]; };
+var getWriter = function(dataType) { return dataType[1]; };
+var getSizeOf = function(dataType) { return dataType[2]; };
+/*var getReader = require('../../lib/utils').getReader;
 var getWriter = require('../../lib/utils').getWriter;
-var getSizeOf = require('../../lib/utils').getSizeOf;
+var getSizeOf = require('../../lib/utils').getSizeOf;*/
 
 var testData = {
   'byte': {
@@ -88,7 +88,7 @@ var testData = {
     },
     'readNeg': {
       'buffer': new Buffer([0xef, 0x77]),
-      'value': 61303 
+      'value': 61303
     },
     'writePos': {
       'buffer': new Buffer([0x00, 0x00]),
@@ -204,8 +204,9 @@ var testData = {
 };
 
 describe('Numeric', function() {
-  _.each(testData, function (value, key) {
-    if (_.has(numeric, key)) {
+  for (var key in testData) {
+    if (testData.hasOwnProperty(key) && numeric.hasOwnProperty(key)) {
+      var value = testData[key];
       describe('.' + key, function() {
         var reader;
         var writer;
@@ -233,7 +234,7 @@ describe('Numeric', function() {
           expect(value.writeNeg.buffer).to.deep.eql(value.writeNeg.bufferAfter);
         });
         it('Calculates size', function() {
-          var size; 
+          var size;
           if (typeof sizeof === "function") {
             size = sizeof(value.sizeof.value);
           } else {
@@ -243,5 +244,5 @@ describe('Numeric', function() {
         });
       });
     }
-  });
+  }
 });
