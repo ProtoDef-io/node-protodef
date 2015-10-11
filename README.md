@@ -1,7 +1,7 @@
-Protocols
+ProtoDef
 =========
 
-[![Join the chat at https://gitter.im/roblabla/Protocols](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/roblabla/Protocols?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/roblabla/ProtoDef](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/roblabla/ProtoDef?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 This is a node.js module to simplify defining, reading and writing binary blobs,
 whether they be internet protocols or files.
 
@@ -11,7 +11,7 @@ This project is not on NPM yet, since it is far from being usable. If you still
 want to use it,
 
 ```
-npm i --save roblabla/protocols
+npm i --save roblabla/protodef
 ```
 
 ## API Stability
@@ -21,8 +21,8 @@ depend on this project, you should specify the hash you build against
 Usage
 =====
 ```javascript
-var protocols = require('protocols');
-var proto = protocols.create();
+var protodef = require('protodef');
+var proto = protodef.create();
 proto.addType("");
 ```
 

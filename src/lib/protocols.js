@@ -49,7 +49,7 @@ function extendType(functions, defaultTypeArgs) {
   }];
 }
 
-class Protocols
+class ProtoDef
 {
   types={};
 
@@ -123,4 +123,4 @@ class Protocols
   }
 }
 
-module.exports = Protocols;
+module.exports = ProtoDef;
