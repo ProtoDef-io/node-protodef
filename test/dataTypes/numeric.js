@@ -1,6 +1,6 @@
 var expect = require('chai').expect;
 
-var numeric = require('../../dist/lib/datatypes/numeric');
+var numeric = require('../../dist/datatypes/numeric');
 var getReader = function(dataType) { return dataType[0]; };
 var getWriter = function(dataType) { return dataType[1]; };
 var getSizeOf = function(dataType) { return dataType[2]; };

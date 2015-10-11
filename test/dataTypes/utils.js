@@ -1,7 +1,7 @@
 var assert = require('power-assert');
 var expect = require('chai').expect;
 
-var utils = require('../../dist/lib/datatypes/utils');
+var utils = require('../../dist/datatypes/utils');
 var getReader = function(dataType) { return dataType[0]; };
 var getWriter = function(dataType) { return dataType[1]; };
 var getSizeOf = function(dataType) { return dataType[2]; };
