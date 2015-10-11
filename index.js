@@ -1,1 +1,1 @@
-module.exports = require("./lib/protocols");
+module.exports = require('./dist/index.js');
