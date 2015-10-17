@@ -8,7 +8,8 @@ module.exports = {
   'string': [readString, writeString, sizeOfString],
   'buffer': [readBuffer, writeBuffer, sizeOfBuffer],
   'void': [readVoid, writeVoid, 0],
-  'bitfield': [readBitField, writeBitField, sizeOfBitField]
+  'bitfield': [readBitField, writeBitField, sizeOfBitField],
+  'cstring': [readCString, writeCString, sizeOfCString]
 };
 
 function readVarInt(buffer, offset) {
@@ -209,4 +210,26 @@ function sizeOfBitField(value, typeArgs, context) {
   return Math.ceil(typeArgs.reduce(function(acc, item) {
     return acc + item.size;
   }, 0) / 8);
+}
+
+function readCString(buffer, offset) {
+  var str = "";
+  var currChar;
+  while (offset < buffer.length && buffer[offset] != 0x00)
+    str += buffer[offset++];
+  if (offset < buffer.length)
+    return null;
+  else
+    return str;
+}
+
+function writeCString(value, buffer, offset) {
+  buffer.write(value, offset);
+  offset += value.length;
+  buffer.writeInt8(0x00, offset);
+  return offset + 1;
+}
+
+function sizeOfCString(value) {
+  return value.length + 1;
 }
