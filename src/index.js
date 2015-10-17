@@ -1,1 +1,5 @@
-module.exports = require("./lib/protocols");
+module.exports = {
+  Protocols:require("./protocols"),
+  Serializer:require("./serializer").Serializer,
+  Parser:require("./serializer").Parser
+};
