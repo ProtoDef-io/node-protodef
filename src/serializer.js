@@ -1,5 +1,5 @@
 var [readVarInt, writeVarInt, sizeOfVarInt] = require("./datatypes/utils").varint;
-var Protocols = require("./protocols");
+var Protocols = require("./protodef");
 var Transform = require("readable-stream").Transform;
 var debug = require("./debug");
 var assert = require('assert');

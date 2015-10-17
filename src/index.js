@@ -1,5 +1,5 @@
 module.exports = {
-  Protocols:require("./protocols"),
+  ProtoDef:require("./protodef"),
   Serializer:require("./serializer").Serializer,
   Parser:require("./serializer").Parser
 };

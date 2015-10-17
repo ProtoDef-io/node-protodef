@@ -1,4 +1,4 @@
-var Protocols=require("./").Protocols;
+var ProtoDef=require("./").ProtoDef;
 var Serializer=require("./").Serializer;
 var Parser=require("./").Parser;
 
@@ -26,10 +26,10 @@ var packets={
   }
 };
 
-var protocol=new Protocols();
+var proto=new ProtoDef();
 
-var parser=new Parser(protocol,packets);
-var serializer=new Serializer(protocol,packets);
+var parser=new Parser(proto,packets);
+var serializer=new Serializer(proto,packets);
 
 serializer.write({
   packetName:"entity_look",
