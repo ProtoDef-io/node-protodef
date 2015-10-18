@@ -1,14 +1,4 @@
-var [readVarInt, writeVarInt, sizeOfVarInt] = require("./datatypes/utils").varint;
-var Protocols = require("./protodef");
 var Transform = require("readable-stream").Transform;
-var debug = require("./debug");
-var assert = require('assert');
-var { getFieldInfo, tryCatch, addErrorField } = require('./utils');
-
-var structures = require("./datatypes/structures");
-var utils = require("./datatypes/utils");
-var readPackets = require("./packets").readPackets;
-
 
 class Serializer extends Transform {
   constructor(proto,mainType) {
@@ -43,15 +33,14 @@ class Parser extends Transform {
   }
 
   parsePacketData(buffer) {
-
-    var results = {
-      metadata: {},
-      data: {},
+    var r=this.proto.read(buffer, 0, this.mainType, {});
+    return {
+      data: r.value,
+      meta:{
+        size:r.size
+      },
       buffer
     };
-
-    results.data=this.proto.read(buffer, 0, this.mainType, {});
-    return results;
   }
 
 

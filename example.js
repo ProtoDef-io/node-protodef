@@ -22,6 +22,7 @@ proto.addType("entity_look",["container",[
         "type": "bool"
       }
 ]]);
+
 proto.addType("packet",["container", [
   { "name": "id", "type": "varint" },
   { "name": "params", "type": ["switch", {
