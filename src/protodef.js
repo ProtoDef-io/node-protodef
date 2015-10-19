@@ -24,26 +24,22 @@ function setField(path, val, into) {
 }
 
 function extendType(functions, defaultTypeArgs) {
+  var json=JSON.stringify(defaultTypeArgs);
   var argPos = reduce(defaultTypeArgs, findArgs, []);
+  function produceArgs(typeArgs) {
+    var args = JSON.parse(json);
+    argPos.forEach((v) => {
+      setField(v.path, typeArgs[v.val], args);
+    });
+    return args;
+  }
   return [function read(buffer, offset, typeArgs, context) {
-    var args = JSON.parse(JSON.stringify(defaultTypeArgs));
-    argPos.forEach((v) => {
-      setField(v.path, typeArgs[v.val], args);
-    });
-    return functions[0].call(this, buffer, offset, args, context);
+    return functions[0].call(this, buffer, offset, produceArgs(typeArgs), context);
   }, function write(value, buffer, offset, typeArgs, context) {
-    var args = JSON.parse(JSON.stringify(defaultTypeArgs));
-    argPos.forEach((v) => {
-      setField(v.path, typeArgs[v.val], args);
-    });
-    return functions[1].call(this, value, buffer, offset, args, context);
+    return functions[1].call(this, value, buffer, offset, produceArgs(typeArgs), context);
   }, function sizeOf(value, typeArgs, context) {
-    var args = JSON.parse(JSON.stringify(defaultTypeArgs));
-    argPos.forEach((v) => {
-      setField(v.path, typeArgs[v.val], args);
-    });
     if (typeof functions[2] === "function")
-      return functions[2].call(this, value, args, context);
+      return functions[2].call(this, value, produceArgs(typeArgs), context);
     else
       return functions[2];
   }];
