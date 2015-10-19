@@ -36,7 +36,7 @@ class Parser extends Transform {
     var r=this.proto.read(buffer, 0, this.mainType, {});
     return {
       data: r.value,
-      meta:{
+      metadata:{
         size:r.size
       },
       buffer
