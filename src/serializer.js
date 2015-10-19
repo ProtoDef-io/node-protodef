@@ -37,7 +37,8 @@ class Parser extends Transform {
     return {
       data: r.value,
       metadata:{
-        size:r.size
+        size:r.size,
+        type:r.type
       },
       buffer
     };

@@ -16,7 +16,8 @@ function evalCount(count, fields) {
 function readArray(buffer, offset, typeArgs, rootNode) {
   var results = {
     value: [],
-    size: 0
+    size: 0,
+    type: []
   };
   var count;
   if(typeof typeArgs.count === "object")
@@ -47,6 +48,7 @@ function readArray(buffer, offset, typeArgs, rootNode) {
     results.size += readResults.size;
     offset += readResults.size;
     results.value.push(readResults.value);
+    results.type.push(readResults.type);
   }
   return results;
 }
@@ -99,7 +101,8 @@ function sizeOfArray(value, typeArgs, rootNode) {
 function readContainer(buffer, offset, typeArgs, context) {
   var results = {
     value: { "..": context },
-    size: 0
+    size: 0,
+    type:{}
   };
   typeArgs.forEach((typeArg) => {
     tryCatch(() => {
@@ -109,9 +112,12 @@ function readContainer(buffer, offset, typeArgs, context) {
       if (typeArg.anon) {
         Object.keys(readResults.value).forEach(function(key) {
           results.value[key] = readResults.value[key];
+          results.type[key]=readResults.type[key];
         });
-      } else
+      } else {
         results.value[typeArg.name] = readResults.value;
+        results.type[typeArg.name] = readResults.type;
+      }
     }, (e) => {
       if (typeArgs && typeArg && typeArg.name)
         addErrorField(e, typeArg.name);

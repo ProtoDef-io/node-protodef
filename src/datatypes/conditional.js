@@ -8,13 +8,17 @@ module.exports = {
 function readSwitch(buffer, offset, typeArgs, rootNode) {
   var compareTo = getField(typeArgs.compareTo, rootNode);
   var fieldInfo;
+  var resultingType;
   if (typeof typeArgs.fields[compareTo] === 'undefined' && typeof typeArgs.default === "undefined")
     throw new Error(compareTo + " has no associated fieldInfo in switch");
   else if (typeof typeArgs.fields[compareTo] === 'undefined')
-    fieldInfo = getFieldInfo(typeArgs.default);
+    resultingType=typeArgs.default;
   else
-    fieldInfo = getFieldInfo(typeArgs.fields[compareTo]);
-  return this.read(buffer, offset, fieldInfo, rootNode);
+    resultingType=typeArgs.fields[compareTo];
+  fieldInfo = getFieldInfo(resultingType);
+  var r=this.read(buffer, offset, fieldInfo, rootNode);
+  r.type=resultingType;
+  return r;
 }
 
 function writeSwitch(value, buffer, offset, typeArgs, rootNode) {
@@ -49,7 +53,8 @@ function readOption(buffer, offset, typeArgs, context) {
     return retval;
   } else {
     return {
-      size: 1
+      size: 1,
+      type: "option"
     };
   }
 }
