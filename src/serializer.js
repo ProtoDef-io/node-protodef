@@ -1,4 +1,6 @@
 var Transform = require("readable-stream").Transform;
+var { tryCatch } = require('./utils');
+
 
 class Serializer extends Transform {
   constructor(proto,mainType) {
@@ -8,9 +10,18 @@ class Serializer extends Transform {
   }
 
   createPacketBuffer(packet) {
-    var length=this.proto.sizeOf(packet, this.mainType, {});
+    var length;
+    tryCatch(()=> length=this.proto.sizeOf(packet, this.mainType, {}),
+      (e)=> {
+        e.message = `SizeOf error for ${e.field} : ${e.message}`;
+        throw e;
+      });
     var buffer = new Buffer(length);
-    this.proto.write(packet, buffer, 0, this.mainType, {});
+    tryCatch(()=> length=this.proto.write(packet, buffer, 0, this.mainType, {}),
+      (e)=> {
+        e.message = `Write error for ${e.field} : ${e.message}`;
+        throw e;
+      });
     return buffer;
   }
 
@@ -33,7 +44,12 @@ class Parser extends Transform {
   }
 
   parsePacketData(buffer) {
-    var r=this.proto.read(buffer, 0, this.mainType, {});
+    var r;
+    tryCatch(()=> r=this.proto.read(buffer, 0, this.mainType, {}),
+      (e) => {
+        e.message=`Read error for ${e.field} : ${e.message}`;
+        throw e;
+      });
     return {
       data: r.value,
       metadata:{
