@@ -16,42 +16,7 @@ var testDataWrite = [
 
 var proto = new ProtoDef();
 
-proto.addType("entity_look", ["container", [
-  {
-    "name": "entityId",
-    "type": "varint"
-  },
-  {
-    "name": "yaw",
-    "type": "byte"
-  },
-  {
-    "name": "pitch",
-    "type": "byte"
-  },
-  {
-    "name": "onGround",
-    "type": "bool"
-  }
-]]);
-
-proto.addType("packet", ["container", [
-  {
-    "name": "name", "type": ["mapper", {
-    "type": "varint", "mappings": {
-      "22": "entity_look"
-    }
-  }]
-  },
-  {
-    "name": "params", "type": ["switch", {
-    "compareTo": "name",
-    "fields": {
-      "entity_look": "entity_look"
-    }
-  }]
-  }
-]]);
+proto.addTypes(require("../example_protocol.json").types);
 
 describe("benchmark",function(){
   this.timeout(60 * 1000);
