@@ -9,14 +9,14 @@ var getSizeOf = function(dataType) { return dataType[2]; };
 describe('Utils', function() {
   describe('.bool', function() {
     it('Reads false value for binary 0', function() {
-      assert.deepEqual(getReader(utils.bool)(new Buffer([0]), 0), {value: false, size: 1, type:"bool"});
+      assert.deepEqual(getReader(utils.bool)(new Buffer([0]), 0), {value: false, size: 1});
     });
     it('Reads true for every other binary value', function() {
       var buf = new Buffer([0]);
       var i = 1;
       while (i < 256) {
         buf[0] = i++;
-        assert.deepEqual(getReader(utils.bool)(buf, 0), {value: true, size: 1, type: "bool"});
+        assert.deepEqual(getReader(utils.bool)(buf, 0), {value: true, size: 1});
       }
     });
     it('Writes false', function() {
@@ -58,8 +58,7 @@ describe('Utils', function() {
       ];
       expect(getReader(utils.bitfield)(buf, 0, typeArgs, {})).to.deep.equal({
         value: { "one": 255 },
-        size: 1,
-        type:"bitfield"
+        size: 1
       });
     });
     it('Reads a signed 8 bit number', function() {
@@ -69,8 +68,7 @@ describe('Utils', function() {
       ];
       expect(getReader(utils.bitfield)(buf, 0, typeArgs, {})).to.deep.equal({
         value: { "one": -1 },
-        size: 1,
-        type:"bitfield"
+        size: 1
       });
     });
     it('Reads multiple signed 8 bit numbers', function() {
@@ -82,8 +80,7 @@ describe('Utils', function() {
       ];
       expect(getReader(utils.bitfield)(buf, 0, typeArgs, {})).to.deep.equal({
         value: { "one": -1, "two": -128, "three": 18 },
-        size: 3,
-        type:"bitfield"
+        size: 3
       });
     });
     it('Reads multiple unsigned 4 bit numbers', function() {
@@ -95,8 +92,7 @@ describe('Utils', function() {
       ];
       expect(getReader(utils.bitfield)(buf, 0, typeArgs, {})).to.deep.equal({
         value: { "one": 15, "two": 15, "three": 8 },
-        size: 2,
-        type:"bitfield"
+        size: 2
       });
     });
     it('Reads multiple signed 4 bit numbers', function() {
@@ -108,8 +104,7 @@ describe('Utils', function() {
       ];
       expect(getReader(utils.bitfield)(buf, 0, typeArgs, {})).to.deep.equal({
         value: { "one": -1, "two": -1, "three": -8 },
-        size: 2,
-        type:"bitfield"
+        size: 2
       });
     });
     it('Reads an unsigned 12 bit number', function() {
@@ -119,8 +114,7 @@ describe('Utils', function() {
       ];
       assert.deepEqual(getReader(utils.bitfield)(buf, 0, typeArgs, {}), {
         value: { "one": 4088 },
-        size: 2,
-        type:"bitfield"
+        size: 2
       });
     });
     it('Reads a complex structure', function() {
@@ -133,8 +127,7 @@ describe('Utils', function() {
       var value = { x: 12, y: 332, z: 4382821 };
       assert.deepEqual(getReader(utils.bitfield)(buf, 0, typeArgs, {}), {
         value: value,
-        size: 8,
-        type:"bitfield"
+        size: 8
       });
     });
     it('Writes an unsigned 8 bit number', function() {
