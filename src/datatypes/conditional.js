@@ -27,7 +27,6 @@ function readSwitch(buffer, offset, typeArgs, rootNode) {
   }, (e) => {
     addErrorField(e, caseDefault ? "default" : compareTo);
   });
-  r.type=resultingType;
   return r;
 }
 
@@ -83,8 +82,7 @@ function readOption(buffer, offset, typeArgs, context) {
     return retval;
   } else {
     return {
-      size: 1,
-      type: "option"
+      size: 1
     };
   }
 }

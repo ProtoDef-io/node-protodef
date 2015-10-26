@@ -24,8 +24,7 @@ function readVarInt(buffer, offset) {
     if(!(b & 0x80)) { // If the MSB is not set, we return the number
       return {
         value: result,
-        size: cursor - offset,
-        type: "varint"
+        size: cursor - offset
       };
     }
     shift += 7; // we only have 7 bits, MSB being the return-trigger
@@ -68,7 +67,6 @@ function readString(buffer, offset) {
   return {
     value: value,
     size: cursor - offset,
-    type: "string"
   };
 }
 
@@ -91,7 +89,6 @@ function readBool(buffer, offset) {
   return {
     value: !!value,
     size: 1,
-    type: "bool"
   };
 }
 
@@ -114,8 +111,7 @@ function readBuffer(buffer, offset, typeArgs, rootNode) {
   }
   return {
     value: buffer.slice(offset, offset + count),
-    size: size + count,
-    type: "buffer"
+    size: size + count
   };
 }
 
@@ -142,7 +138,6 @@ function readVoid() {
   return {
     value: undefined,
     size: 0,
-    type: "void"
   };
 }
 
@@ -178,7 +173,6 @@ function readBitField(buffer, offset, typeArgs, context) {
     return acc;
   }, {});
   results.size = offset - beginOffset;
-  results.type = "bitfield";
   return results;
 }
 function writeBitField(value, buffer, offset, typeArgs, context) {

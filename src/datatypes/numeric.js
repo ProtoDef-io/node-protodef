@@ -12,7 +12,7 @@ function writeLong(value, buffer, offset) {
   return offset + 8;
 }
 
-function generateFunctions(bufferReader,bufferWriter,size,type)
+function generateFunctions(bufferReader,bufferWriter,size)
 {
   var reader=function(buffer, offset)
   {
@@ -20,8 +20,7 @@ function generateFunctions(bufferReader,bufferWriter,size,type)
     var value = buffer[bufferReader](offset);
     return {
       value: value,
-      size: size,
-      type: type
+      size: size
     };
   };
   var writer=function(value, buffer, offset) {
@@ -42,7 +41,7 @@ var nums= {
 };
 
 var types=Object.keys(nums).reduce(function(types,num){
-  types[num]=generateFunctions(nums[num][0], nums[num][1], nums[num][2],num);
+  types[num]=generateFunctions(nums[num][0], nums[num][1], nums[num][2]);
   return types;
 },{});
 types["long"]=[readLong, writeLong, 8];
