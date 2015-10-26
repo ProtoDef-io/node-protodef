@@ -1,5 +1,9 @@
+var ProtoDef = require("./protodef");
+var proto = new ProtoDef();
+
 module.exports = {
-  ProtoDef:require("./protodef"),
+  ProtoDef:ProtoDef,
   Serializer:require("./serializer").Serializer,
-  Parser:require("./serializer").Parser
+  Parser:require("./serializer").Parser,
+  types:proto.types
 };
