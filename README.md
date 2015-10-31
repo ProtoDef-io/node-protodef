@@ -1,41 +1,83 @@
-ProtoDef
-=========
-
+# ProtoDef
+[![NPM version](https://img.shields.io/npm/v/protodef.svg)](http://npmjs.com/package/protodef)
 [![Join the chat at https://gitter.im/roblabla/ProtoDef](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/roblabla/ProtoDef?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Build Status](https://img.shields.io/circleci/project/roblabla/ProtoDef/master.svg)]
+(https://circleci.com/gh/roblabla/ProtoDef)
+
 This is a node.js module to simplify defining, reading and writing binary blobs,
 whether they be internet protocols or files.
 
-Installing
-==========
-This project is not on NPM yet, since it is far from being usable. If you still
-want to use it,
+## Installing
 
 ```
-npm i --save roblabla/protodef
+npm install ProtoDef
 ```
 
-## API Stability
-This project is going to undergo lots of api changes before 1.0, so if you
-depend on this project, you should specify the hash you build against
 
-Usage
-=====
-```javascript
-var protodef = require('protodef');
-var proto = protodef.create();
-proto.addType("");
-```
+## Usage
 
-What's done
-===========
-Currently, only the deserialization engine is done and used. Serialization is
-far from done.
+See [example](example.js)
 
-TODO
-====
+
+## API
+
+### ProtoDef()
+
+#### ProtoDef.addType(name,functions)
+
+Add the type `name` with the data `functions` which can be either:
+* "native" : that type is already implemented by ProtoDef
+* a js object defining a type based on other already defined types
+* `[read,write,sizeOf]` functions
+
+#### ProtoDef.read(buffer, cursor, _fieldInfo, rootNodes)
+
+Read the packet defined by `_fieldInfo` in `buffer` starting from `cursor` using the context `rootNodes`.
+
+#### ProtoDef.write(value, buffer, offset, _fieldInfo, rootNode)
+
+Write the packet defined by `_fieldInfo` in `buffer` starting from `offset` with the value `value` and context `rootNode`
+
+#### ProtoDef.sizeOf(value, _fieldInfo, rootNode)
+
+Size of the packet `value` defined by `_fieldInfo` with context `rootNode`
+
+### Serializer(proto,mainType)
+
+Create a serializer of `mainType` defined in `proto`. This is a Transform stream.
+
+#### Serializer.createPacketBuffer(packet)
+
+Returns a buffer of the `packet`.
+
+### Parser(proto,mainType)
+
+Create a parser of `mainType` defined in `proto`. This is a Transform stream.
+
+#### Parser.parsePacketData(buffer)
+
+Returns a parsed packet of `buffer`.
+
+### types
+
+An object mapping the default type names to the corresponding `[read,write,sizeOf]` functions.
+
+
+## TODO
 - Write tests for every datatypes, and the different \*Field behaviors.
 - Rethink datatype function signature
 - Datatypes should include name when creating them, instead of being provided
 by the user, to ease datatype dependencies.
-- Write the serialization stream.
 - Probably more...
+
+## History
+
+### 0.1.0 (unreleased)
+
+* add the serializer and parser
+* expose the default datatypes
+* add an example
+
+### 0.0.1
+
+* basic version, mostly contain the ProtoDef class and the datatype
