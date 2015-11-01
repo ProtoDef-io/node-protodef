@@ -72,7 +72,7 @@ by the user, to ease datatype dependencies.
 
 ## History
 
-### 0.1.0 (unreleased)
+### 0.1.0
 
 * add the serializer and parser
 * expose the default datatypes
