@@ -42,6 +42,14 @@ Write the packet defined by `_fieldInfo` in `buffer` starting from `offset` with
 
 Size of the packet `value` defined by `_fieldInfo` with context `rootNode`
 
+#### ProtoDef.createPacketBuffer(type,packet)
+
+Returns a buffer of the `packet` for `type`.
+
+#### ProtoDef.parsePacketBuffer(type,buffer)
+
+Returns a parsed packet of `buffer` for `type`.
+
 ### Serializer(proto,mainType)
 
 Create a serializer of `mainType` defined in `proto`. This is a Transform stream.
@@ -54,7 +62,7 @@ Returns a buffer of the `packet`.
 
 Create a parser of `mainType` defined in `proto`. This is a Transform stream.
 
-#### Parser.parsePacketData(buffer)
+#### Parser.parsePacketBuffer(buffer)
 
 Returns a parsed packet of `buffer`.
 
@@ -62,6 +70,30 @@ Returns a parsed packet of `buffer`.
 
 An object mapping the default type names to the corresponding `[read,write,sizeOf]` functions.
 
+### utils
+
+Some functions that can be useful to build new datatypes reader and writer.
+
+#### utils.getField(countField, context)
+
+Get `countField` given `context`. Example: "../field" will get "field" one level above.
+
+#### utils.getFieldInfo(fieldInfo)
+
+Takes `fieldInfo` as :
+* `"type"`
+* `["type",typeArgs]`
+* `{ type: "type", typeArgs: typeArgs }`
+
+Returns `{ type: "type", typeArgs: typeArgs }`
+
+#### utils.addErrorField(e, field)
+
+Add `field` to error `e`
+
+#### utils.tryCatch(tryfn, catchfn)
+
+A simple tryCatch function, useful for optimization.
 
 ## TODO
 - Write tests for every datatypes, and the different \*Field behaviors.
