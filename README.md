@@ -104,6 +104,12 @@ by the user, to ease datatype dependencies.
 
 ## History
 
+### 0.2.0 (not released)
+
+* add createPacketBuffer and parsePacketBuffer to ProtoDef class
+* expose utils functions
+* add mapper and pstring datatypes
+
 ### 0.1.0
 
 * add the serializer and parser
