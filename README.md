@@ -104,7 +104,7 @@ by the user, to ease datatype dependencies.
 
 ## History
 
-### 0.2.0 (not released)
+### 0.2.0
 
 * add createPacketBuffer and parsePacketBuffer to ProtoDef class
 * expose utils functions
