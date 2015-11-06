@@ -19,7 +19,9 @@ function readMapper(buffer,offset,typeArgs,rootNode)
   var results={
     size:readResults.size
   };
-  results.value=typeArgs.mappings[readResults.value];
+  var value=typeArgs.mappings[readResults.value];
+  if(value==undefined) throw new Error(value+" is not in the mappings value");
+  results.value=value;
   return results;
 }
 
@@ -33,6 +35,7 @@ function writeMapper(value,buffer,offset,typeArgs,rootNode)
       break;
     }
   }
+  if(mappedValue==null) throw new Error(value+" is not in the mappings value");
   return this.write(mappedValue,buffer,offset,typeArgs.type,rootNode);
 }
 
@@ -46,6 +49,7 @@ function sizeOfMapper(value,typeArgs,rootNode)
       break;
     }
   }
+  if(mappedValue==null) throw new Error(value+" is not in the mappings value");
   return this.sizeOf(mappedValue,typeArgs.type,rootNode);
 }
 
