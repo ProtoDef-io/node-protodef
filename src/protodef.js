@@ -1,4 +1,4 @@
-var { getFieldInfo } = require('./utils');
+var { getFieldInfo, tryCatch } = require('./utils');
 var reduce = require('lodash.reduce');
 
 function isFieldInfo(type) {
@@ -63,7 +63,7 @@ class ProtoDef
   addType(name, functions) {
     if (functions === "native")
       return;
-    else if (isFieldInfo(functions)) {
+    if (isFieldInfo(functions)) {
       var fieldInfo = getFieldInfo(functions);
       this.types[name] = extendType(this.types[fieldInfo.type], fieldInfo.typeArgs);
     }
@@ -116,6 +116,38 @@ class ProtoDef
     } else {
       return type[2];
     }
+  }
+
+  createPacketBuffer(type,packet) {
+    var length;
+    tryCatch(()=> length=this.sizeOf(packet, type, {}),
+      (e)=> {
+        e.message = `SizeOf error for ${e.field} : ${e.message}`;
+        throw e;
+      });
+    var buffer = new Buffer(length);
+    tryCatch(()=> length=this.write(packet, buffer, 0, type, {}),
+      (e)=> {
+        e.message = `Write error for ${e.field} : ${e.message}`;
+        throw e;
+      });
+    return buffer;
+  }
+
+  parsePacketBuffer(type,buffer) {
+    var r;
+    tryCatch(()=> r=this.read(buffer, 0, type, {}),
+      (e) => {
+        e.message=`Read error for ${e.field} : ${e.message}`;
+        throw e;
+      });
+    return {
+      data: r.value,
+      metadata:{
+        size:r.size
+      },
+      buffer
+    };
   }
 }
 

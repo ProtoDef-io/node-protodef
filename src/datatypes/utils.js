@@ -1,16 +1,57 @@
 var assert = require('assert');
 
-var getField = require("../utils").getField;
+var { getField, tryCatch, addErrorField } = require("../utils");
 
 module.exports = {
   'varint': [readVarInt, writeVarInt, sizeOfVarInt],
   'bool': [readBool, writeBool, 1],
-  'string': [readString, writeString, sizeOfString],
+  'pstring': [readPString, writePString, sizeOfPString],
   'buffer': [readBuffer, writeBuffer, sizeOfBuffer],
   'void': [readVoid, writeVoid, 0],
   'bitfield': [readBitField, writeBitField, sizeOfBitField],
-  'cstring': [readCString, writeCString, sizeOfCString]
+  'cstring': [readCString, writeCString, sizeOfCString],
+  'mapper':[readMapper,writeMapper,sizeOfMapper]
 };
+
+function readMapper(buffer,offset,typeArgs,rootNode)
+{
+  var readResults=this.read(buffer, offset, typeArgs.type, rootNode);
+  var results={
+    size:readResults.size
+  };
+  var value=typeArgs.mappings[readResults.value];
+  if(value==undefined) throw new Error(value+" is not in the mappings value");
+  results.value=value;
+  return results;
+}
+
+function writeMapper(value,buffer,offset,typeArgs,rootNode)
+{
+  var keys=Object.keys(typeArgs.mappings);
+  var mappedValue=null;
+  for(var i=0;i<keys.length;i++) {
+    if(typeArgs.mappings[keys[i]]==value) {
+      mappedValue = keys[i];
+      break;
+    }
+  }
+  if(mappedValue==null) throw new Error(value+" is not in the mappings value");
+  return this.write(mappedValue,buffer,offset,typeArgs.type,rootNode);
+}
+
+function sizeOfMapper(value,typeArgs,rootNode)
+{
+  var keys=Object.keys(typeArgs.mappings);
+  var mappedValue=null;
+  for(var i=0;i<keys.length;i++) {
+    if(typeArgs.mappings[keys[i]]==value) {
+      mappedValue = keys[i];
+      break;
+    }
+  }
+  if(mappedValue==null) throw new Error(value+" is not in the mappings value");
+  return this.sizeOf(mappedValue,typeArgs.type,rootNode);
+}
 
 function readVarInt(buffer, offset) {
   var result = 0;
@@ -54,34 +95,55 @@ function writeVarInt(value, buffer, offset) {
 }
 
 
-function readString(buffer, offset) {
-  var length = readVarInt(buffer, offset);
-  if(!!!length) return null;
+function readPString(buffer, offset, typeArgs,rootNode) {
+  var self=this;
+  var length;
+  tryCatch(function() {
+    length = self.read(buffer, offset, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode);
+  }, function(e) {
+    addErrorField(e, "$count");
+    throw e;
+  });
   var cursor = offset + length.size;
   var stringLength = length.value;
   var strEnd = cursor + stringLength;
-  if(strEnd > buffer.length) return null;
+  if(strEnd > buffer.length) throw new Error("Missing characters in string, found size is "+buffer.length+
+    " expected size was "+strEnd);
 
   var value = buffer.toString('utf8', cursor, strEnd);
   cursor = strEnd;
 
   return {
     value: value,
-    size: cursor - offset,
+    size: cursor - offset
   };
 }
 
-function writeString(value, buffer, offset) {
+function writePString(value, buffer, offset, typeArgs,rootNode) {
+  var self=this;
   var length = Buffer.byteLength(value, 'utf8');
-  offset = writeVarInt(length, buffer, offset);
+  tryCatch(function() {
+    offset = self.write(length, buffer, offset, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode);
+  }, function(e) {
+    addErrorField(e, "$count");
+    throw e;
+  });
   buffer.write(value, offset, length, 'utf8');
   return offset + length;
 }
 
 
-function sizeOfString(value) {
+function sizeOfPString(value, typeArgs,rootNode) {
+  var self=this;
   var length = Buffer.byteLength(value, 'utf8');
-  return sizeOfVarInt(length) + length;
+  var size;
+  tryCatch(function() {
+    size = self.sizeOf(length, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode);
+  }, function(e) {
+    addErrorField(e, "$count");
+    throw e;
+  });
+  return size + length;
 }
 
 function readBool(buffer, offset) {
