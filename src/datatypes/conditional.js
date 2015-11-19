@@ -26,6 +26,7 @@ function readSwitch(buffer, offset, typeArgs, rootNode) {
     r = this.read(buffer, offset, fieldInfo, rootNode);
   }, (e) => {
     addErrorField(e, caseDefault ? "default" : compareTo);
+    throw e;
   });
   return r;
 }
