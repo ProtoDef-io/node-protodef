@@ -16,12 +16,12 @@
     "readable-stream": "^1.1.0"
   },
   "bugs": {
-    "url": "https://github.com/roblabla/Protocols/issues"
+    "url": "https://github.com/roblabla/ProtoDef/issues"
   },
-  "homepage": "https://github.com/roblabla/Protocols",
+  "homepage": "https://github.com/roblabla/ProtoDef",
   "repository": {
     "type": "git",
-    "url": "https://github.com/roblabla/Protocols.git"
+    "url": "https://github.com/roblabla/ProtoDef.git"
   },
   "devDependencies": {
     "gulp": "^3.8.11",
