@@ -104,6 +104,10 @@ by the user, to ease datatype dependencies.
 
 ## History
 
+### 0.2.2
+
+* Fix writeOption : the offset wasn't properly updated
+
 ### 0.2.1
 
 * Anon fields may now be null/undefined.
