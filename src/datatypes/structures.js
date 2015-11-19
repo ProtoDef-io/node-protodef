@@ -107,7 +107,7 @@ function readContainer(buffer, offset, typeArgs, context) {
       results.size += readResults.size;
       offset += readResults.size;
       if (typeArg.anon) {
-        Object.keys(readResults.value).forEach(function(key) {
+        if(readResults.value !== undefined) Object.keys(readResults.value).forEach(function(key) {
           results.value[key] = readResults.value[key];
         });
       } else
