@@ -91,7 +91,7 @@ function readOption(buffer, offset, typeArgs, context) {
 function writeOption(value, buffer, offset, typeArgs, context) {
   if (value != null) {
     buffer.writeUInt8(1, offset++);
-    this.write(value, buffer, offset, typeArgs, context);
+    offset=this.write(value, buffer, offset, typeArgs, context);
   } else {
     buffer.writeUInt8(0, offset++);
   }
