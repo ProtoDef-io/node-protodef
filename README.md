@@ -104,6 +104,10 @@ by the user, to ease datatype dependencies.
 
 ## History
 
+### 0.2.1
+
+* Anon fields may now be null/undefined.
+
 ### 0.2.0
 
 * add createPacketBuffer and parsePacketBuffer to ProtoDef class

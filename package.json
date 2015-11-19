@@ -1,6 +1,6 @@
 {
   "name": "protodef",
-  "version": "0.2.1-gh",
+  "version": "0.2.1",
   "description": "A simple yet powerful way to define binary protocols",
   "main": "index.js",
   "author": "roblabla <robinlambertz.dev@gmail.com>",
