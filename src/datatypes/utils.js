@@ -20,7 +20,7 @@ function readMapper(buffer,offset,typeArgs,rootNode)
     size:readResults.size
   };
   var value=typeArgs.mappings[readResults.value];
-  if(value==undefined) throw new Error(value+" is not in the mappings value");
+  if(value==undefined) throw new Error(readResults.value+" is not in the mappings value");
   results.value=value;
   return results;
 }
