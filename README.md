@@ -89,11 +89,17 @@ Returns `{ type: "type", typeArgs: typeArgs }`
 
 #### utils.addErrorField(e, field)
 
-Add `field` to error `e`
+Add `field` to error `e` and throw e.
 
 #### utils.tryCatch(tryfn, catchfn)
 
 A simple tryCatch function, useful for optimization.
+returns what tryfn returns
+
+#### utils.tryDoc(tryfn, field)
+
+Try `tryfn`, it it fails, use addErrorField with `field`
+
 
 ## TODO
 - Write tests for every datatypes, and the different \*Field behaviors.

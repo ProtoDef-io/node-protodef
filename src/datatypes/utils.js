@@ -1,6 +1,6 @@
 var assert = require('assert');
 
-var { getField, tryCatch, addErrorField } = require("../utils");
+var { getField, tryDoc } = require("../utils");
 
 module.exports = {
   'varint': [readVarInt, writeVarInt, sizeOfVarInt],
@@ -13,44 +13,43 @@ module.exports = {
   'mapper':[readMapper,writeMapper,sizeOfMapper]
 };
 
-function readMapper(buffer,offset,typeArgs,rootNode)
+function readMapper(buffer,offset,{type,mappings},rootNode)
 {
-  var readResults=this.read(buffer, offset, typeArgs.type, rootNode);
+  var {size,value}=this.read(buffer, offset, type, rootNode);
   var results={
-    size:readResults.size
+    size:size,
+    value:mappings[value]
   };
-  var value=typeArgs.mappings[readResults.value];
-  if(value==undefined) throw new Error(readResults.value+" is not in the mappings value");
-  results.value=value;
+  if(results.value==undefined) throw new Error(value+" is not in the mappings value");
   return results;
 }
 
-function writeMapper(value,buffer,offset,typeArgs,rootNode)
+function writeMapper(value,buffer,offset,{type,mappings},rootNode)
 {
-  var keys=Object.keys(typeArgs.mappings);
+  var keys=Object.keys(mappings);
   var mappedValue=null;
   for(var i=0;i<keys.length;i++) {
-    if(typeArgs.mappings[keys[i]]==value) {
+    if(mappings[keys[i]]==value) {
       mappedValue = keys[i];
       break;
     }
   }
   if(mappedValue==null) throw new Error(value+" is not in the mappings value");
-  return this.write(mappedValue,buffer,offset,typeArgs.type,rootNode);
+  return this.write(mappedValue,buffer,offset,type,rootNode);
 }
 
-function sizeOfMapper(value,typeArgs,rootNode)
+function sizeOfMapper(value,{type,mappings},rootNode)
 {
-  var keys=Object.keys(typeArgs.mappings);
+  var keys=Object.keys(mappings);
   var mappedValue=null;
   for(var i=0;i<keys.length;i++) {
-    if(typeArgs.mappings[keys[i]]==value) {
+    if(mappings[keys[i]]==value) {
       mappedValue = keys[i];
       break;
     }
   }
   if(mappedValue==null) throw new Error(value+" is not in the mappings value");
-  return this.sizeOf(mappedValue,typeArgs.type,rootNode);
+  return this.sizeOf(mappedValue,type,rootNode);
 }
 
 function readVarInt(buffer, offset) {
@@ -95,54 +94,30 @@ function writeVarInt(value, buffer, offset) {
 }
 
 
-function readPString(buffer, offset, typeArgs,rootNode) {
-  var self=this;
-  var length;
-  tryCatch(function() {
-    length = self.read(buffer, offset, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode);
-  }, function(e) {
-    addErrorField(e, "$count");
-    throw e;
-  });
-  var cursor = offset + length.size;
-  var stringLength = length.value;
-  var strEnd = cursor + stringLength;
+function readPString(buffer, offset, {countType,countTypeArgs},rootNode) {
+  var {size,value}=tryDoc(() => this.read(buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
+  var cursor = offset + size;
+  var strEnd = cursor + value;
   if(strEnd > buffer.length) throw new Error("Missing characters in string, found size is "+buffer.length+
     " expected size was "+strEnd);
 
-  var value = buffer.toString('utf8', cursor, strEnd);
-  cursor = strEnd;
-
   return {
-    value: value,
-    size: cursor - offset
+    value: buffer.toString('utf8', cursor, strEnd),
+    size: strEnd - offset
   };
 }
 
-function writePString(value, buffer, offset, typeArgs,rootNode) {
-  var self=this;
+function writePString(value, buffer, offset, {countType,countTypeArgs},rootNode) {
   var length = Buffer.byteLength(value, 'utf8');
-  tryCatch(function() {
-    offset = self.write(length, buffer, offset, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode);
-  }, function(e) {
-    addErrorField(e, "$count");
-    throw e;
-  });
+  offset=tryDoc(() => this.write(length, buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
   buffer.write(value, offset, length, 'utf8');
   return offset + length;
 }
 
 
-function sizeOfPString(value, typeArgs,rootNode) {
-  var self=this;
+function sizeOfPString(value, {countType,countTypeArgs},rootNode) {
   var length = Buffer.byteLength(value, 'utf8');
-  var size;
-  tryCatch(function() {
-    size = self.sizeOf(length, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode);
-  }, function(e) {
-    addErrorField(e, "$count");
-    throw e;
-  });
+  var size=tryDoc(() => this.sizeOf(length, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
   return size + length;
 }
 
@@ -151,7 +126,7 @@ function readBool(buffer, offset) {
   var value = buffer.readInt8(offset);
   return {
     value: !!value,
-    size: 1,
+    size: 1
   };
 }
 
@@ -161,38 +136,37 @@ function writeBool(value, buffer, offset) {
 }
 
 
-function readBuffer(buffer, offset, typeArgs, rootNode) {
-  var size = 0;
-  var count;
-  if (typeof typeArgs.count !== "undefined")
-    count = getField(typeArgs.count, rootNode);
-  else if (typeof typeArgs.countType !== "undefined") {
-    var countResults = this.read(buffer, offset, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode);
-    size += countResults.size;
-    offset += countResults.size;
-    count = countResults.value;
+function readBuffer(buffer, offset, {count,countType,countTypeArgs}, rootNode) {
+  var totalSize = 0;
+  var totalCount;
+  if (typeof count !== "undefined")
+    totalCount = getField(count, rootNode);
+  else if (typeof countType !== "undefined") {
+    var {value,size} = this.read(buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode);
+    totalSize += size;
+    offset += size;
+    totalCount = value;
   }
   return {
-    value: buffer.slice(offset, offset + count),
-    size: size + count
+    value: buffer.slice(offset, offset + totalCount),
+    size: totalSize + totalCount
   };
 }
 
-function writeBuffer(value, buffer, offset, typeArgs, rootNode) {
-  if (typeof typeArgs.count === "undefined" &&
-      typeof typeArgs.countType !== "undefined") {
-    offset = this.write(value.length, buffer, offset, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode);
-  } else if (typeof typeArgs.count === "undefined") { // Broken schema, should probably error out
+function writeBuffer(value, buffer, offset, {count,countType,countTypeArgs}, rootNode) {
+  if (typeof count === "undefined" && typeof countType !== "undefined") {
+    offset = this.write(value.length, buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode);
+  } else if (typeof count === "undefined") { // Broken schema, should probably error out
   }
   value.copy(buffer, offset);
   return offset + value.length;
 }
 
-function sizeOfBuffer(value, typeArgs, rootNode) {
+function sizeOfBuffer(value, {count,countType,countTypeArgs}, rootNode) {
   var size = 0;
-  if (typeof typeArgs.count === "undefined" &&
-      typeof typeArgs.countType !== "undefined") {
-    size = this.sizeOf(value.length, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode);
+  if (typeof count === "undefined" &&
+      typeof countType !== "undefined") {
+    size = this.sizeOf(value.length, { type: countType, typeArgs: countTypeArgs }, rootNode);
   }
   return size + value.length;
 }
@@ -200,7 +174,7 @@ function sizeOfBuffer(value, typeArgs, rootNode) {
 function readVoid() {
   return {
     value: undefined,
-    size: 0,
+    size: 0
   };
 }
 
@@ -212,44 +186,42 @@ function generateBitMask(n) {
   return (1 << n) - 1;
 }
 
-function readBitField(buffer, offset, typeArgs, context) {
+function readBitField(buffer, offset, typeArgs) {
   var beginOffset = offset;
   var curVal = null;
   var bits = 0;
   var results = {};
-  results.value = typeArgs.reduce(function(acc, item) {
-    var size = item.size;
+  results.value = typeArgs.reduce(function(acc, {size,signed,name}) {
+    var currentSize = size;
     var val = 0;
-    while (size > 0) {
+    while (currentSize > 0) {
       if (bits == 0) {
         curVal = buffer[offset++];
         bits = 8;
       }
-      var bitsToRead = Math.min(size, bits);
+      var bitsToRead = Math.min(currentSize, bits);
       val = (val << bitsToRead) | (curVal & generateBitMask(bits)) >> (bits - bitsToRead);
       bits -= bitsToRead;
-      size -= bitsToRead;
+      currentSize -= bitsToRead;
     }
-    if (item.signed && val >= 1 << (item.size - 1))
-      val -= 1 << item.size;
-    acc[item.name] = val;
+    if (signed && val >= 1 << (size - 1))
+      val -= 1 << size;
+    acc[name] = val;
     return acc;
   }, {});
   results.size = offset - beginOffset;
   return results;
 }
-function writeBitField(value, buffer, offset, typeArgs, context) {
+function writeBitField(value, buffer, offset, typeArgs) {
   var toWrite = 0;
   var bits = 0;
-  typeArgs.forEach(function(item) {
-    var val = value[item.name];
-    var size = item.size;
-    var signed = item.signed;
-    if ((!item.signed && val < 0) || (item.signed && val < -(1 << (size - 1))))
-      throw new Error(value + " < " + item.signed ? (-(1 << (size - 1))) : 0);
-    else if ((!item.signed && val >= 1 << size)
-        || (item.signed && val >= (1 << (size - 1)) - 1))
-      throw new Error(value + " >= " + iteme.signed ? (1 << size) : ((1 << (size - 1)) - 1));
+  typeArgs.forEach(function({size,signed,name}) {
+    var val = value[name];
+    if ((!signed && val < 0) || (signed && val < -(1 << (size - 1))))
+      throw new Error(value + " < " + signed ? (-(1 << (size - 1))) : 0);
+    else if ((!signed && val >= 1 << size)
+        || (signed && val >= (1 << (size - 1)) - 1))
+      throw new Error(value + " >= " + signed ? (1 << size) : ((1 << (size - 1)) - 1));
     while (size > 0) {
       var writeBits = Math.min(8 - bits, size);
       toWrite = toWrite << writeBits |
@@ -268,15 +240,14 @@ function writeBitField(value, buffer, offset, typeArgs, context) {
   return offset;
 }
 
-function sizeOfBitField(value, typeArgs, context) {
-  return Math.ceil(typeArgs.reduce(function(acc, item) {
-    return acc + item.size;
+function sizeOfBitField(value, typeArgs) {
+  return Math.ceil(typeArgs.reduce(function(acc, {size}) {
+    return acc + size;
   }, 0) / 8);
 }
 
 function readCString(buffer, offset) {
   var str = "";
-  var currChar;
   while (offset < buffer.length && buffer[offset] != 0x00)
     str += buffer[offset++];
   if (offset < buffer.length)

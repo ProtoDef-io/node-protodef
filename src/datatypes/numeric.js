@@ -2,7 +2,7 @@ function readLong(buffer, offset) {
   if(offset + 8 > buffer.length) return null;
   return {
     value: [buffer.readInt32BE(offset), buffer.readInt32BE(offset + 4)],
-    size: 8,
+    size: 8
   };
 }
 

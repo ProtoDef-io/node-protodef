@@ -3,6 +3,7 @@ module.exports = {
   getFieldInfo: getFieldInfo,
   addErrorField: addErrorField,
   tryCatch: tryCatch,
+  tryDoc: tryDoc
 };
 
 function getField(countField, context) {
@@ -13,9 +14,8 @@ function getField(countField, context) {
       context = context[".."];
     i++;
   }
-  for(; i < countFieldArr.length; i++) {
+  for(; i < countFieldArr.length; i++)
     context = context[countFieldArr[i]];
-  }
   return context;
 }
 
@@ -31,12 +31,14 @@ function getFieldInfo(fieldInfo) {
 }
 
 function addErrorField(e, field) {
-  if (e.field)
-    e.field = field + "." + e.field;
-  else
-    e.field = field;
+  e.field = e.field ? field + "." + e.field : field;
+  throw e;
 }
 
 function tryCatch(tryfn, catchfn) {
-  try { tryfn(); } catch (e) { catchfn(e); }
+  try { return tryfn(); } catch (e) { catchfn(e); }
+}
+
+function tryDoc(tryfn,field) {
+  return tryCatch(tryfn,(e) => addErrorField(e,field));
 }
