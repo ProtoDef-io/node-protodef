@@ -1,6 +1,6 @@
 var assert = require('assert');
 
-var { getField, tryCatch, addErrorField } = require("../utils");
+var { getField, tryDoc } = require("../utils");
 
 module.exports = {
   'varint': [readVarInt, writeVarInt, sizeOfVarInt],
@@ -96,8 +96,7 @@ function writeVarInt(value, buffer, offset) {
 
 
 function readPString(buffer, offset, typeArgs,rootNode) {
-  var length=tryCatch(() => this.read(buffer, offset, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode),
-    (e) => addErrorField(e, "$count"));
+  var length=tryDoc(() => this.read(buffer, offset, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode),"$count");
   var cursor = offset + length.size;
   var stringLength = length.value;
   var strEnd = cursor + stringLength;
@@ -115,8 +114,7 @@ function readPString(buffer, offset, typeArgs,rootNode) {
 
 function writePString(value, buffer, offset, typeArgs,rootNode) {
   var length = Buffer.byteLength(value, 'utf8');
-  offset=tryCatch(() => this.write(length, buffer, offset, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode),
-    (e) =>  addErrorField(e, "$count"));
+  offset=tryDoc(() => this.write(length, buffer, offset, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode),"$count");
   buffer.write(value, offset, length, 'utf8');
   return offset + length;
 }
@@ -124,8 +122,7 @@ function writePString(value, buffer, offset, typeArgs,rootNode) {
 
 function sizeOfPString(value, typeArgs,rootNode) {
   var length = Buffer.byteLength(value, 'utf8');
-  var size=tryCatch(() => this.sizeOf(length, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode),
-    (e) =>  addErrorField(e, "$count"));
+  var size=tryDoc(() => this.sizeOf(length, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode),"$count");
   return size + length;
 }
 

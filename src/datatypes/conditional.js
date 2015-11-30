@@ -1,4 +1,4 @@
-var { getField, getFieldInfo, tryCatch , addErrorField} = require('../utils');
+var { getField, getFieldInfo, tryDoc} = require('../utils');
 
 module.exports = {
   'switch': [readSwitch, writeSwitch, sizeOfSwitch],
@@ -21,8 +21,7 @@ function readSwitch(buffer, offset, typeArgs, rootNode) {
   }
   fieldInfo = getFieldInfo(resultingType);
 
-  return tryCatch(() => this.read(buffer, offset, fieldInfo, rootNode),
-    (e) => addErrorField(e, caseDefault ? "default" : compareTo));
+  return tryDoc(() => this.read(buffer, offset, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
 }
 
 function writeSwitch(value, buffer, offset, typeArgs, rootNode) {
@@ -38,8 +37,7 @@ function writeSwitch(value, buffer, offset, typeArgs, rootNode) {
     else
       fieldInfo = getFieldInfo(typeArgs.fields[compareTo]);
   }
-  return tryCatch(() => this.write(value, buffer, offset, fieldInfo, rootNode),
-    (e) => addErrorField(e, caseDefault ? "default" : compareTo));
+  return tryDoc(() => this.write(value, buffer, offset, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
 }
 
 function sizeOfSwitch(value, typeArgs, rootNode) {
@@ -55,8 +53,7 @@ function sizeOfSwitch(value, typeArgs, rootNode) {
     else
       fieldInfo = getFieldInfo(typeArgs.fields[compareTo]);
   }
-  return tryCatch(() => this.sizeOf(value, fieldInfo, rootNode),
-    (e) => addErrorField(e, caseDefault ? "default" : compareTo));
+  return tryDoc(() => this.sizeOf(value, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
 }
 
 function readOption(buffer, offset, typeArgs, context) {

@@ -3,6 +3,7 @@ module.exports = {
   getFieldInfo: getFieldInfo,
   addErrorField: addErrorField,
   tryCatch: tryCatch,
+  tryDoc: tryDoc
 };
 
 function getField(countField, context) {
@@ -40,4 +41,8 @@ function addErrorField(e, field) {
 
 function tryCatch(tryfn, catchfn) {
   try { return tryfn(); } catch (e) { catchfn(e); }
+}
+
+function tryDoc(tryfn,field) {
+  return tryCatch(tryfn,(e) => addErrorField(e,field));
 }
