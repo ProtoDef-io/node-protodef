@@ -38,5 +38,5 @@ function addErrorField(e, field) {
 }
 
 function tryCatch(tryfn, catchfn) {
-  try { tryfn(); } catch (e) { catchfn(e); }
+  try { return tryfn(); } catch (e) { catchfn(e); }
 }

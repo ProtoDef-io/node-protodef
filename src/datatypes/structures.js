@@ -62,15 +62,9 @@ function writeArray(value, buffer, offset, typeArgs, rootNode) {
     });
   } else if (typeof typeArgs.count === "undefined") { // Broken schema, should probably error out
   }
-  for(var index in value) {
-    tryCatch(() => {
-      offset = this.write(value[index], buffer, offset, typeArgs.type, rootNode);
-    }, (e) => {
-      addErrorField(e, index);
-      throw e;
-    });
-  }
-  return offset;
+  return value.reduce((offset,v,index) =>
+    tryCatch(() => offset+this.write(v, buffer, offset, typeArgs.type, rootNode),
+    (e) => {addErrorField(e, index);throw e;}),offset);
 }
 
 function sizeOfArray(value, typeArgs, rootNode) {
@@ -84,15 +78,9 @@ function sizeOfArray(value, typeArgs, rootNode) {
       throw e;
     });
   }
-  for(var index in value) {
-    tryCatch(() => {
-      size += this.sizeOf(value[index], typeArgs.type, rootNode);
-    }, (e) => {
-      addErrorField(e, index);
-      throw e;
-    });
-  }
-  return size;
+  return value.reduce((offset,v,index) =>
+    tryCatch(() => offset+this.sizeOf(v, typeArgs.type, rootNode),
+      (e) => {addErrorField(e, index);throw e;}),size);
 }
 
 
