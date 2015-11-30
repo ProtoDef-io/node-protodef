@@ -24,26 +24,15 @@ function readArray(buffer, offset, typeArgs, rootNode) {
   else if (typeof typeArgs.count !== "undefined")
     count = getField(typeArgs.count, rootNode);
   else if (typeof typeArgs.countType !== "undefined") {
-    var countResults;
-    tryCatch(() => {
-      countResults = this.read(buffer, offset, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode);
-    }, (e) => {
-      addErrorField(e, "$count");
-      throw e;
-    });
+    var countResults=tryCatch(() => this.read(buffer, offset, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode),
+      (e) => addErrorField(e, "$count"));
     results.size += countResults.size;
     offset += countResults.size;
     count = countResults.value;
   } else // TODO : broken schema, should probably error out.
     count = 0;
   for(var i = 0; i < count; i++) {
-    var readResults;
-    tryCatch(() => {
-      readResults = this.read(buffer, offset, typeArgs.type, rootNode);
-    }, (e) => {
-      addErrorField(e, i);
-      throw e;
-    });
+    var readResults=tryCatch(() => this.read(buffer, offset, typeArgs.type, rootNode), (e) => addErrorField(e, i));
     results.size += readResults.size;
     offset += readResults.size;
     results.value.push(readResults.value);
@@ -52,35 +41,25 @@ function readArray(buffer, offset, typeArgs, rootNode) {
 }
 
 function writeArray(value, buffer, offset, typeArgs, rootNode) {
-  if (typeof typeArgs.count === "undefined" &&
-      typeof typeArgs.countType !== "undefined") {
-    tryCatch(() => {
-      offset = this.write(value.length, buffer, offset, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode);
-    }, (e) => {
-      addErrorField(e, "$count");
-      throw e;
-    });
-  } else if (typeof typeArgs.count === "undefined") { // Broken schema, should probably error out
+  if (typeof typeArgs.count === "undefined" && typeof typeArgs.countType !== "undefined")
+    offset= tryCatch(() => this.write(value.length, buffer, offset, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode),
+      (e) => addErrorField(e, "$count"));
+  else if (typeof typeArgs.count === "undefined") { // Broken schema, should probably error out
   }
-  return value.reduce((offset,v,index) =>
-    tryCatch(() => offset+this.write(v, buffer, offset, typeArgs.type, rootNode),
-    (e) => {addErrorField(e, index);throw e;}),offset);
+  return value.reduce((offset,v,index) =>tryCatch(
+    () => offset+this.write(v, buffer, offset, typeArgs.type, rootNode),
+    (e) => addErrorField(e, index)),offset);
 }
 
 function sizeOfArray(value, typeArgs, rootNode) {
   var size = 0;
-  if (typeof typeArgs.count === "undefined" &&
-      typeof typeArgs.countType !== "undefined") {
-    tryCatch(() => {
-      size = this.sizeOf(value.length, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode);
-    }, (e) => {
-      addErrorField(e, "$count");
-      throw e;
-    });
-  }
-  return value.reduce((offset,v,index) =>
-    tryCatch(() => offset+this.sizeOf(v, typeArgs.type, rootNode),
-      (e) => {addErrorField(e, index);throw e;}),size);
+  if (typeof typeArgs.count === "undefined" &&  typeof typeArgs.countType !== "undefined")
+    size=tryCatch(() => this.sizeOf(value.length, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode),
+      (e) => addErrorField(e, "$count"));
+
+  return value.reduce((offset,v,index) =>tryCatch(
+    () => offset+this.sizeOf(v, typeArgs.type, rootNode),
+    (e) => addErrorField(e, index)),size);
 }
 
 
@@ -100,13 +79,7 @@ function readContainer(buffer, offset, typeArgs, context) {
         });
       } else
         results.value[typeArg.name] = readResults.value;
-    }, (e) => {
-      if (typeArgs && typeArg && typeArg.name)
-        addErrorField(e, typeArg.name);
-      else
-        addErrorField(e, "unknown");
-      throw e;
-    });
+    }, (e) => addErrorField(e, typeArgs && typeArg && typeArg.name ? typeArg.name : "unknown"));
   });
   delete results.value[".."];
   return results;
@@ -120,13 +93,7 @@ function writeContainer(value, buffer, offset, typeArgs, context) {
         offset = this.write(value, buffer, offset, typeArg.type, value);
       else
         offset = this.write(value[typeArg.name], buffer, offset, typeArg.type, value);
-    }, (e) => {
-      if (typeArgs && typeArg && typeArg.name)
-        addErrorField(e, typeArg.name);
-      else
-        addErrorField(e, "unknown");
-      throw e;
-    });
+    }, (e) => addErrorField(e,typeArgs && typeArg && typeArg.name ?  typeArg.name : "unknown"));
   });
   delete value[".."];
   return offset;
@@ -141,13 +108,7 @@ function sizeOfContainer(value, typeArgs, context) {
         size += this.sizeOf(value, typeArg.type, value);
       else
         size += this.sizeOf(value[typeArg.name], typeArg.type, value);
-    }, (e) => {
-      if (typeArgs && typeArg && typeArg.name)
-        addErrorField(e, typeArg.name);
-      else
-        addErrorField(e, "unknown");
-      throw e;
-    });
+    }, (e) =>  addErrorField(e, typeArgs && typeArg && typeArg.name ? typeArg.name : "unknown"));
   });
   delete value[".."];
   return size;

@@ -119,14 +119,13 @@ class ProtoDef
   }
 
   createPacketBuffer(type,packet) {
-    var length;
-    tryCatch(()=> length=this.sizeOf(packet, type, {}),
+    var length=tryCatch(()=> this.sizeOf(packet, type, {}),
       (e)=> {
         e.message = `SizeOf error for ${e.field} : ${e.message}`;
         throw e;
       });
     var buffer = new Buffer(length);
-    tryCatch(()=> length=this.write(packet, buffer, 0, type, {}),
+    tryCatch(()=> this.write(packet, buffer, 0, type, {}),
       (e)=> {
         e.message = `Write error for ${e.field} : ${e.message}`;
         throw e;
@@ -135,8 +134,7 @@ class ProtoDef
   }
 
   parsePacketBuffer(type,buffer) {
-    var r;
-    tryCatch(()=> r=this.read(buffer, 0, type, {}),
+    var r=tryCatch(()=> this.read(buffer, 0, type, {}),
       (e) => {
         e.message=`Read error for ${e.field} : ${e.message}`;
         throw e;

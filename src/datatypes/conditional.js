@@ -21,14 +21,8 @@ function readSwitch(buffer, offset, typeArgs, rootNode) {
   }
   fieldInfo = getFieldInfo(resultingType);
 
-  var r;
-  tryCatch(() => {
-    r = this.read(buffer, offset, fieldInfo, rootNode);
-  }, (e) => {
-    addErrorField(e, caseDefault ? "default" : compareTo);
-    throw e;
-  });
-  return r;
+  return tryCatch(() => this.read(buffer, offset, fieldInfo, rootNode),
+    (e) => addErrorField(e, caseDefault ? "default" : compareTo));
 }
 
 function writeSwitch(value, buffer, offset, typeArgs, rootNode) {
@@ -44,13 +38,8 @@ function writeSwitch(value, buffer, offset, typeArgs, rootNode) {
     else
       fieldInfo = getFieldInfo(typeArgs.fields[compareTo]);
   }
-  var r;
-  tryCatch(() => r=this.write(value, buffer, offset, fieldInfo, rootNode),
-    (e) => {
-      addErrorField(e, caseDefault ? "default" : compareTo);
-      throw e;
-  });
-  return r;
+  return tryCatch(() => this.write(value, buffer, offset, fieldInfo, rootNode),
+    (e) => addErrorField(e, caseDefault ? "default" : compareTo));
 }
 
 function sizeOfSwitch(value, typeArgs, rootNode) {
@@ -66,13 +55,8 @@ function sizeOfSwitch(value, typeArgs, rootNode) {
     else
       fieldInfo = getFieldInfo(typeArgs.fields[compareTo]);
   }
-  var r;
-  tryCatch(() => r=this.sizeOf(value, fieldInfo, rootNode),
-    (e) => {
-      addErrorField(e, caseDefault ? "default" : compareTo);
-      throw e;
-    });
-  return r;
+  return tryCatch(() => this.sizeOf(value, fieldInfo, rootNode),
+    (e) => addErrorField(e, caseDefault ? "default" : compareTo));
 }
 
 function readOption(buffer, offset, typeArgs, context) {

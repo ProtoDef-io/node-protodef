@@ -96,14 +96,8 @@ function writeVarInt(value, buffer, offset) {
 
 
 function readPString(buffer, offset, typeArgs,rootNode) {
-  var self=this;
-  var length;
-  tryCatch(function() {
-    length = self.read(buffer, offset, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode);
-  }, function(e) {
-    addErrorField(e, "$count");
-    throw e;
-  });
+  var length=tryCatch(() => this.read(buffer, offset, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode),
+    (e) => addErrorField(e, "$count"));
   var cursor = offset + length.size;
   var stringLength = length.value;
   var strEnd = cursor + stringLength;
@@ -120,29 +114,18 @@ function readPString(buffer, offset, typeArgs,rootNode) {
 }
 
 function writePString(value, buffer, offset, typeArgs,rootNode) {
-  var self=this;
   var length = Buffer.byteLength(value, 'utf8');
-  tryCatch(function() {
-    offset = self.write(length, buffer, offset, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode);
-  }, function(e) {
-    addErrorField(e, "$count");
-    throw e;
-  });
+  offset=tryCatch(() => this.write(length, buffer, offset, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode),
+    (e) =>  addErrorField(e, "$count"));
   buffer.write(value, offset, length, 'utf8');
   return offset + length;
 }
 
 
 function sizeOfPString(value, typeArgs,rootNode) {
-  var self=this;
   var length = Buffer.byteLength(value, 'utf8');
-  var size;
-  tryCatch(function() {
-    size = self.sizeOf(length, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode);
-  }, function(e) {
-    addErrorField(e, "$count");
-    throw e;
-  });
+  var size=tryCatch(() => this.sizeOf(length, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode),
+    (e) =>  addErrorField(e, "$count"));
   return size + length;
 }
 
@@ -151,7 +134,7 @@ function readBool(buffer, offset) {
   var value = buffer.readInt8(offset);
   return {
     value: !!value,
-    size: 1,
+    size: 1
   };
 }
 

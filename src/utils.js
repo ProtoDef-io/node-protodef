@@ -35,6 +35,7 @@ function addErrorField(e, field) {
     e.field = field + "." + e.field;
   else
     e.field = field;
+  throw e;
 }
 
 function tryCatch(tryfn, catchfn) {
