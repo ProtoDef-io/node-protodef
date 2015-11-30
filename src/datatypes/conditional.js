@@ -2,56 +2,45 @@ var { getField, getFieldInfo, tryDoc} = require('../utils');
 
 module.exports = {
   'switch': [readSwitch, writeSwitch, sizeOfSwitch],
-  'option': [readOption, writeOption, sizeOfOption],
+  'option': [readOption, writeOption, sizeOfOption]
 };
 
-function readSwitch(buffer, offset, typeArgs, rootNode) {
-  var compareTo = getField(typeArgs.compareTo, rootNode);
-  var fieldInfo;
+function readSwitch(buffer, offset, {compareTo,fields,defaul}, rootNode) {
+  compareTo = getField(compareTo, rootNode);
   var resultingType;
   var caseDefault;
-  if (typeof typeArgs.fields[compareTo] === 'undefined' && typeof typeArgs.default === "undefined")
+  if (typeof fields[compareTo] === 'undefined' && typeof defaul === "undefined")
     throw new Error(compareTo + " has no associated fieldInfo in switch");
   else {
-    caseDefault=typeof typeArgs.fields[compareTo] === 'undefined';
-    if (caseDefault)
-      resultingType = typeArgs.default;
-    else
-      resultingType = typeArgs.fields[compareTo];
+    caseDefault=typeof fields[compareTo] === 'undefined';
+    resultingType = caseDefault ? defaul : fields[compareTo];
   }
-  fieldInfo = getFieldInfo(resultingType);
-
+  var fieldInfo = getFieldInfo(resultingType);
   return tryDoc(() => this.read(buffer, offset, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
 }
 
-function writeSwitch(value, buffer, offset, typeArgs, rootNode) {
-  var compareTo = getField(typeArgs.compareTo, rootNode);
+function writeSwitch(value, buffer, offset, {compareTo,fields,defaul}, rootNode) {
+  compareTo = getField(compareTo, rootNode);
   var fieldInfo;
   var caseDefault;
-  if (typeof typeArgs.fields[compareTo] === 'undefined' && typeof typeArgs.default === "undefined")
+  if (typeof fields[compareTo] === 'undefined' && typeof defaul === "undefined")
     throw new Error(compareTo + " has no associated fieldInfo in switch");
   else {
-    caseDefault=typeof typeArgs.fields[compareTo] === 'undefined';
-    if (caseDefault)
-      fieldInfo = getFieldInfo(typeArgs.default);
-    else
-      fieldInfo = getFieldInfo(typeArgs.fields[compareTo]);
+    caseDefault=typeof fields[compareTo] === 'undefined';
+    fieldInfo = getFieldInfo(caseDefault ? defaul : fields[compareTo]);
   }
   return tryDoc(() => this.write(value, buffer, offset, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
 }
 
-function sizeOfSwitch(value, typeArgs, rootNode) {
-  var compareTo = getField(typeArgs.compareTo, rootNode);
+function sizeOfSwitch(value, {compareTo,fields,defaul}, rootNode) {
+  compareTo = getField(compareTo, rootNode);
   var fieldInfo;
   var caseDefault;
-  if (typeof typeArgs.fields[compareTo] === 'undefined' && typeof typeArgs.default === "undefined")
+  if (typeof fields[compareTo] === 'undefined' && typeof defaul === "undefined")
     throw new Error(compareTo + " has no associated fieldInfo in switch");
   else {
-    caseDefault=typeof typeArgs.fields[compareTo] === 'undefined';
-    if (caseDefault)
-      fieldInfo = getFieldInfo(typeArgs.default);
-    else
-      fieldInfo = getFieldInfo(typeArgs.fields[compareTo]);
+    caseDefault=typeof fields[compareTo] === 'undefined';
+    fieldInfo = getFieldInfo(caseDefault ? defaul : fields[compareTo]);
   }
   return tryDoc(() => this.sizeOf(value, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
 }

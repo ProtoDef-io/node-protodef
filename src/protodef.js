@@ -64,57 +64,54 @@ class ProtoDef
     if (functions === "native")
       return;
     if (isFieldInfo(functions)) {
-      var fieldInfo = getFieldInfo(functions);
-      this.types[name] = extendType(this.types[fieldInfo.type], fieldInfo.typeArgs);
+      var {type,typeArgs} = getFieldInfo(functions);
+      this.types[name] = extendType(this.types[type], typeArgs);
     }
     else
       this.types[name] = functions;
   }
 
   addTypes(types) {
-    var self = this;
-    Object.keys(types).forEach(function(name) {
-      self.addType(name, types[name]);
-    });
+    Object.keys(types).forEach((name) => this.addType(name, types[name]));
   }
 
   read(buffer, cursor, _fieldInfo, rootNodes) {
-    let fieldInfo = getFieldInfo(_fieldInfo);
-    var type = this.types[fieldInfo.type];
-    if(!type) {
+    let {type,typeArgs} = getFieldInfo(_fieldInfo);
+    var typeFunctions = this.types[type];
+    if(!typeFunctions) {
       return {
-        error: new Error("missing data type: " + fieldInfo.type)
+        error: new Error("missing data type: " + type)
       };
     }
-    var readResults = type[0].call(this, buffer, cursor, fieldInfo.typeArgs, rootNodes);
+    var readResults = typeFunctions[0].call(this, buffer, cursor, typeArgs, rootNodes);
     if(readResults == null) {
-      throw new Error("Reader returned null : " + JSON.stringify(fieldInfo));
+      throw new Error("Reader returned null : " + JSON.stringify({type,typeArgs}));
     }
     if(readResults && readResults.error) return {error: readResults.error};
     return readResults;
   }
 
   write(value, buffer, offset, _fieldInfo, rootNode) {
-    let fieldInfo = getFieldInfo(_fieldInfo);
-    var type = this.types[fieldInfo.type];
-    if(!type) {
+    let {type,typeArgs} = getFieldInfo(_fieldInfo);
+    var typeFunctions = this.types[type];
+    if(!typeFunctions) {
       return {
-        error: new Error("missing data type: " + fieldInfo.type)
+        error: new Error("missing data type: " + type)
       };
     }
-    return type[1].call(this, value, buffer, offset, fieldInfo.typeArgs, rootNode);
+    return typeFunctions[1].call(this, value, buffer, offset, typeArgs, rootNode);
   }
 
   sizeOf(value, _fieldInfo, rootNode) {
-    let fieldInfo = getFieldInfo(_fieldInfo);
-    var type = this.types[fieldInfo.type];
-    if(!type) {
-      throw new Error("missing data type: " + fieldInfo.type);
+    let {type,typeArgs} = getFieldInfo(_fieldInfo);
+    var typeFunctions = this.types[type];
+    if(!typeFunctions) {
+      throw new Error("missing data type: " + type);
     }
-    if(typeof type[2] === 'function') {
-      return type[2].call(this, value, fieldInfo.typeArgs, rootNode);
+    if(typeof typeFunctions[2] === 'function') {
+      return typeFunctions[2].call(this, value, typeArgs, rootNode);
     } else {
-      return type[2];
+      return typeFunctions[2];
     }
   }
 
@@ -134,15 +131,15 @@ class ProtoDef
   }
 
   parsePacketBuffer(type,buffer) {
-    var r=tryCatch(()=> this.read(buffer, 0, type, {}),
+    var {value,size}=tryCatch(()=> this.read(buffer, 0, type, {}),
       (e) => {
         e.message=`Read error for ${e.field} : ${e.message}`;
         throw e;
       });
     return {
-      data: r.value,
+      data: value,
       metadata:{
-        size:r.size
+        size:size
       },
       buffer
     };
