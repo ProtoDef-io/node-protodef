@@ -44,7 +44,7 @@ function writeArray(value, buffer, offset, typeArgs, rootNode) {
     offset= tryDoc(() => this.write(value.length, buffer, offset, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode),"$count");
   else if (typeof typeArgs.count === "undefined") { // Broken schema, should probably error out
   }
-  return value.reduce((offset,v,index) =>tryDoc(() => offset+this.write(v, buffer, offset, typeArgs.type, rootNode),index),offset);
+  return value.reduce((offset,v,index) =>tryDoc(() => this.write(v, buffer, offset, typeArgs.type, rootNode),index),offset);
 }
 
 function sizeOfArray(value, typeArgs, rootNode) {
@@ -52,7 +52,7 @@ function sizeOfArray(value, typeArgs, rootNode) {
   if (typeof typeArgs.count === "undefined" &&  typeof typeArgs.countType !== "undefined")
     size=tryDoc(() => this.sizeOf(value.length, { type: typeArgs.countType, typeArgs: typeArgs.countTypeArgs }, rootNode),"$count");
 
-  return value.reduce((offset,v,index) =>tryDoc(() => offset+this.sizeOf(v, typeArgs.type, rootNode), index),size);
+  return value.reduce((size,v,index) =>tryDoc(() => size+this.sizeOf(v, typeArgs.type, rootNode), index),size);
 }
 
 
@@ -80,29 +80,18 @@ function readContainer(buffer, offset, typeArgs, context) {
 
 function writeContainer(value, buffer, offset, typeArgs, context) {
   value[".."] = context;
-  typeArgs.forEach((typeArg) => {
-    tryDoc(() => {
-      if (typeArg.anon)
-        offset = this.write(value, buffer, offset, typeArg.type, value);
-      else
-        offset = this.write(value[typeArg.name], buffer, offset, typeArg.type, value);
-    }, typeArgs && typeArg && typeArg.name ?  typeArg.name : "unknown");
-  });
+  offset=typeArgs.reduce((offset,typeArg) =>
+    tryDoc(() => this.write(typeArg.anon ? value : value[typeArg.name], buffer, offset, typeArg.type, value),
+      typeArgs && typeArg && typeArg.name ?  typeArg.name : "unknown"),offset);
   delete value[".."];
   return offset;
 }
 
 function sizeOfContainer(value, typeArgs, context) {
   value[".."] = context;
-  var size = 0;
-  typeArgs.forEach((typeArg) => {
-    tryDoc(() => {
-      if (typeArg.anon)
-        size += this.sizeOf(value, typeArg.type, value);
-      else
-        size += this.sizeOf(value[typeArg.name], typeArg.type, value);
-    }, typeArgs && typeArg && typeArg.name ? typeArg.name : "unknown");
-  });
+  var size = typeArgs.reduce((size,typeArg) =>
+    size + tryDoc(() => this.sizeOf(typeArg.anon ? value : value[typeArg.name], typeArg.type, value),
+      typeArgs && typeArg && typeArg.name ? typeArg.name : "unknown"),0);
   delete value[".."];
   return size;
 }
