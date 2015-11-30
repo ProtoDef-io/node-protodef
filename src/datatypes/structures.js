@@ -31,7 +31,7 @@ function readArray(buffer, offset, {type,count,countType,countTypeArgs}, rootNod
   } else // TODO : broken schema, should probably error out.
     c = 0;
   for(var i = 0; i < c; i++) {
-    var {size,value}=tryDoc(() => this.read(buffer, offset, type, rootNode), i);
+    ({size,value}=tryDoc(() => this.read(buffer, offset, type, rootNode), i));
     results.size += size;
     offset += size;
     results.value.push(value);

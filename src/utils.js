@@ -14,9 +14,8 @@ function getField(countField, context) {
       context = context[".."];
     i++;
   }
-  for(; i < countFieldArr.length; i++) {
+  for(; i < countFieldArr.length; i++)
     context = context[countFieldArr[i]];
-  }
   return context;
 }
 
@@ -32,10 +31,7 @@ function getFieldInfo(fieldInfo) {
 }
 
 function addErrorField(e, field) {
-  if (e.field)
-    e.field = field + "." + e.field;
-  else
-    e.field = field;
+  e.field = e.field ? field + "." + e.field : field;
   throw e;
 }
 
