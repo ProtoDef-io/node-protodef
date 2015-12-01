@@ -185,17 +185,17 @@ function readBitField(read, typeArgs) {
   }
 
   return typeArgs.reduce((acc_, {size,signed,name}) =>
-    acc_.then(({values,curVal,bits}) => {
-      return compute({currentSize:size,val:0,curVal,bits})
-      .then(({val,curVal,bits}) => {
-        if (signed && val >= 1 << (size - 1))
-          val -= 1 << size;
-        values[name] = val;
-        return {values,curVal,bits};
-      })
-    }),
+      acc_.then(({values,curVal,bits}) => {
+        return compute({currentSize:size,val:0,curVal,bits})
+          .then(({val,curVal,bits}) => {
+            if (signed && val >= 1 << (size - 1))
+              val -= 1 << size;
+            values[name] = val;
+            return {values,curVal,bits};
+          })
+      }),
     Promise.resolve({values:{},curVal:null,bits:0}))
-  .then(({values}) => values);
+    .then(({values}) => values);
 }
 function writeBitField(value, buffer, offset, typeArgs) {
   var toWrite = 0;
