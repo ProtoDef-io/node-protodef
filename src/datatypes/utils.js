@@ -49,21 +49,15 @@ function sizeOfMapper(value,{type,mappings},rootNode)
   return this.sizeOf(mappedValue,type,rootNode);
 }
 
-function readVarInt(buffer, offset) {
+async function readVarInt(getter) {
   var result = 0;
   var shift = 0;
-  var cursor = offset;
 
   while(true) {
-    if(cursor + 1 > buffer.length) return null;
-    var b = buffer.readUInt8(cursor);
+    var b = (await getter.get(1)).readUInt8(0);
     result |= ((b & 0x7f) << shift); // Add the bits to our number, except MSB
-    cursor++;
     if(!(b & 0x80)) { // If the MSB is not set, we return the number
-      return {
-        value: result,
-        size: cursor - offset
-      };
+      return result;
     }
     shift += 7; // we only have 7 bits, MSB being the return-trigger
     assert.ok(shift < 64, "varint is too big"); // Make sure our shift don't overflow.
