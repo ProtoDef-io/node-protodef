@@ -90,5 +90,6 @@ class Parser extends Transform {
 
 module.exports={
   Serializer:Serializer,
-  Parser:Parser
+  Parser:Parser,
+  DataGetter:DataGetter
 };
