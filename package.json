@@ -25,7 +25,6 @@
     "url": "https://github.com/roblabla/ProtoDef.git"
   },
   "devDependencies": {
-    "babel-core": "^5.8.34",
     "chai": "^1.9.2",
     "espower-loader": "^1.0.0",
     "gulp": "^3.8.11",
