@@ -5,7 +5,7 @@ module.exports = {
   'option': [readOption, writeOption, sizeOfOption]
 };
 
-async function readSwitch(read, {compareTo,fields,...rest}, rootNode) {
+function readSwitch(read, {compareTo,fields,...rest}, rootNode) {
   compareTo = getField(compareTo, rootNode);
   if (typeof fields[compareTo] === 'undefined' && typeof rest.default === "undefined")
     throw new Error(compareTo + " has no associated fieldInfo in switch");
@@ -13,7 +13,7 @@ async function readSwitch(read, {compareTo,fields,...rest}, rootNode) {
   var caseDefault=typeof fields[compareTo] === 'undefined';
   var resultingType = caseDefault ? rest.default : fields[compareTo];
   var fieldInfo = getFieldInfo(resultingType);
-  return await tryDoc(() => this.read(read, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
+  return tryDoc(() => this.read(read, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
 }
 
 function writeSwitch(value, buffer, offset, {compareTo,fields,...rest}, rootNode) {
