@@ -78,8 +78,8 @@ function sizeOfContainer(value, typeArgs, context) {
   return size;
 }
 
-function readCount(buffer, offset, {type}, rootNode) {
-  return this.read(buffer, offset, type, rootNode);
+function readCount(getter, {type}, rootNode) {
+  return this.read(getter, type, rootNode);
 }
 
 function writeCount(value, buffer, offset, {countFor,type}, rootNode) {
