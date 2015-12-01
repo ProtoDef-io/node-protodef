@@ -15,7 +15,7 @@ module.exports = {
 
 async function readMapper(getter,{type,mappings},rootNode)
 {
-  var value=this.read(getter, type, rootNode);
+  var value=await this.read(getter, type, rootNode);
   var mappedValue=mappings[value];
   if(mappedValue==undefined) throw new Error(value+" is not in the mappings value");
   return mappedValue;
@@ -112,7 +112,7 @@ function sizeOfPString(value, {countType,countTypeArgs},rootNode) {
 }
 
 async function readBool(getter) {
-  var buffer=getter.get(1);
+  var buffer=await getter.get(1);
   return !!buffer.readInt8(0);
 }
 
@@ -122,12 +122,12 @@ function writeBool(value, buffer, offset) {
 }
 
 
-function readBuffer(getter, {count,countType,countTypeArgs}, rootNode) {
+async function readBuffer(getter, {count,countType,countTypeArgs}, rootNode) {
   var totalCount;
   if (typeof count !== "undefined")
     totalCount = getField(count, rootNode);
   else if (typeof countType !== "undefined")
-    totalCount = this.read(getter, { type: countType, typeArgs: countTypeArgs }, rootNode);
+    totalCount = await this.read(getter, { type: countType, typeArgs: countTypeArgs }, rootNode);
 
   return getter.get(totalCount);
 }
