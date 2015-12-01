@@ -75,7 +75,7 @@ class ProtoDef
     Object.keys(types).forEach((name) => this.addType(name, types[name]));
   }
 
-  read(buffer, cursor, _fieldInfo, rootNodes) {
+  async read(getter, _fieldInfo, rootNodes) {
     let {type,typeArgs} = getFieldInfo(_fieldInfo);
     var typeFunctions = this.types[type];
     if(!typeFunctions) {
@@ -83,12 +83,7 @@ class ProtoDef
         error: new Error("missing data type: " + type)
       };
     }
-    var readResults = typeFunctions[0].call(this, buffer, cursor, typeArgs, rootNodes);
-    if(readResults == null) {
-      throw new Error("Reader returned null : " + JSON.stringify({type,typeArgs}));
-    }
-    if(readResults && readResults.error) return {error: readResults.error};
-    return readResults;
+    return await typeFunctions[0].call(this, getter, typeArgs, rootNodes);
   }
 
   write(value, buffer, offset, _fieldInfo, rootNode) {
@@ -130,19 +125,12 @@ class ProtoDef
     return buffer;
   }
 
-  parsePacketBuffer(type,buffer) {
-    var {value,size}=tryCatch(()=> this.read(buffer, 0, type, {}),
+  async parsePacketBuffer(type,getter) {
+    return tryCatch(()=> this.read(getter, type, {}),
       (e) => {
         e.message=`Read error for ${e.field} : ${e.message}`;
         throw e;
       });
-    return {
-      data: value,
-      metadata:{
-        size:size
-      },
-      buffer
-    };
   }
 }
 
