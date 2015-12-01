@@ -114,13 +114,9 @@ function sizeOfPString(value, {countType,countTypeArgs},rootNode) {
   return size + length;
 }
 
-function readBool(buffer, offset) {
-  if(offset + 1 > buffer.length) return null;
-  var value = buffer.readInt8(offset);
-  return {
-    value: !!value,
-    size: 1
-  };
+async function readBool(getter) {
+  var buffer=getter.get(1);
+  return !!buffer.readInt8(0);
 }
 
 function writeBool(value, buffer, offset) {
