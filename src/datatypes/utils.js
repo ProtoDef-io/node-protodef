@@ -222,14 +222,12 @@ function sizeOfBitField(value, typeArgs) {
   }, 0) / 8);
 }
 
-function readCString(buffer, offset) {
+async function readCString(getter) {
   var str = "";
-  while (offset < buffer.length && buffer[offset] != 0x00)
-    str += buffer[offset++];
-  if (offset < buffer.length)
-    return null;
-  else
-    return str;
+  var c;
+  while ((c=await getter.get(1)) != 0x00)
+    str += c;
+  return str;
 }
 
 function writeCString(value, buffer, offset) {
