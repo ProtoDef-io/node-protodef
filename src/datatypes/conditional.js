@@ -5,7 +5,7 @@ module.exports = {
   'option': [readOption, writeOption, sizeOfOption]
 };
 
-async function readSwitch(read, {compareTo,fields,...rest}, rootNode) {
+function readSwitch(read, {compareTo,fields,...rest}, rootNode) {
   compareTo = getField(compareTo, rootNode);
   if (typeof fields[compareTo] === 'undefined' && typeof rest.default === "undefined")
     throw new Error(compareTo + " has no associated fieldInfo in switch");
