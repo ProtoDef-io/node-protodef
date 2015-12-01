@@ -71,12 +71,12 @@ class Parser extends Transform {
 
   dataGetter = new DataGetter();
 
-  async parsePacketBuffer(getter) {
-    return this.proto.parsePacketBuffer(this.mainType,getter);
+  async parsePacketBuffer(read) {
+    return this.proto.parsePacketBuffer(this.mainType,read);
   }
 
   read() {
-    return this.parsePacketBuffer(this.dataGetter)
+    return this.parsePacketBuffer(this.dataGetter.get.bind(this.dataGetter))
       .then(packet => this.push(packet))
       .then(() => this.dataGetter.hasMore() ? this.read() : Promise.resolve())
   }
