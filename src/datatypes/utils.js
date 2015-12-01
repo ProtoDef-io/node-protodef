@@ -156,17 +156,16 @@ function generateBitMask(n) {
   return (1 << n) - 1;
 }
 
-function readBitField(buffer, offset, typeArgs) {
-  var beginOffset = offset;
+async function readBitField(getter, typeArgs) {
   var curVal = null;
   var bits = 0;
-  var results = {};
-  results.value = typeArgs.reduce(function(acc, {size,signed,name}) {
+  return typeArgs.reduce(async function(acc_, {size,signed,name}) {
+    var acc=await acc_;
     var currentSize = size;
     var val = 0;
     while (currentSize > 0) {
       if (bits == 0) {
-        curVal = buffer[offset++];
+        curVal = await getter.get(1);
         bits = 8;
       }
       var bitsToRead = Math.min(currentSize, bits);
@@ -178,9 +177,7 @@ function readBitField(buffer, offset, typeArgs) {
       val -= 1 << size;
     acc[name] = val;
     return acc;
-  }, {});
-  results.size = offset - beginOffset;
-  return results;
+  }, Promise.resolve({}));
 }
 function writeBitField(value, buffer, offset, typeArgs) {
   var toWrite = 0;
