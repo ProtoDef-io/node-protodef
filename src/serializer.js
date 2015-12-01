@@ -22,6 +22,46 @@ class Serializer extends Transform {
   }
 }
 
+const EventEmitter = require('events').EventEmitter;
+
+class Waiter extends EventEmitter {
+  constructor() {
+    super(this);
+  }
+}
+
+class DataGetter {
+  incomingBuffer = new Buffer(0);
+  wait = new Waiter();
+  constructor() {
+
+  }
+
+  push(chunk) {
+    this.incomingBuffer = Buffer.concat([this.incomingBuffer, chunk]);
+    this.wait.emit("moreData");
+  }
+
+  async moreData() {
+    await new Promise((cb) => {
+      this.wait.once("moreData",cb);
+    })
+  }
+
+  hasMore() {
+    return this.incomingBuffer.length>0;
+  }
+
+  async get(count) {
+    if(this.incomingBuffer.length<count)
+      await this.moreData();
+
+    var data=this.incomingBuffer.slice(0,count);
+    this.incomingBuffer=this.incomingBuffer.slice(count-1);
+    return data;
+  }
+}
+
 class Parser extends Transform {
   constructor(proto,mainType) {
     super({ readableObjectMode: true });
@@ -29,19 +69,21 @@ class Parser extends Transform {
     this.mainType=mainType;
   }
 
-  parsePacketBuffer(buffer) {
-    return this.proto.parsePacketBuffer(this.mainType,buffer);
+  dataGetter = new DataGetter();
+
+  async parsePacketBuffer(getter) {
+    return this.proto.parsePacketBuffer(this.mainType,getter);
   }
 
-  _transform(chunk, enc, cb) {
-    var packet;
-    try {
-      packet = this.parsePacketBuffer(chunk);
-    } catch (e) {
-      return cb(e);
-    }
-    this.push(packet);
-    return cb();
+  read() {
+    return this.parsePacketBuffer(this.dataGetter)
+      .then(packet => this.push(packet))
+      .then(() => this.dataGetter.hasMore() ? this.read() : Promise.resolve())
+  }
+
+  _transform(chunk,enc, cb) {
+    this.dataGetter.push(chunk);
+    this.read().then(cb).catch(cb);
   }
 }
 
