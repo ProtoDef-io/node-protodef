@@ -79,7 +79,7 @@ class Parser extends Transform {
     var packet=await this.parsePacketBuffer(this.dataGetter.get.bind(this.dataGetter));
     this.push(packet);
     if(this.dataGetter.hasMore())
-      this.readData();
+      await this.readData();
   }
 
   _transform(chunk,enc, cb) {
