@@ -33,8 +33,8 @@ function extendType(functions, defaultTypeArgs) {
     });
     return args;
   }
-  return [function read(buffer, offset, typeArgs, context) {
-    return functions[0].call(this, buffer, offset, produceArgs(typeArgs), context);
+  return [function read(read, typeArgs, context) {
+    return functions[0].call(this, read, produceArgs(typeArgs), context);
   }, function write(value, buffer, offset, typeArgs, context) {
     return functions[1].call(this, value, buffer, offset, produceArgs(typeArgs), context);
   }, function sizeOf(value, typeArgs, context) {
@@ -75,7 +75,7 @@ class ProtoDef
     Object.keys(types).forEach((name) => this.addType(name, types[name]));
   }
 
-  async read(read, _fieldInfo, rootNodes) {
+  read(read, _fieldInfo, rootNodes) {
     let {type,typeArgs} = getFieldInfo(_fieldInfo);
     var typeFunctions = this.types[type];
     if(!typeFunctions) {
@@ -83,7 +83,7 @@ class ProtoDef
         error: new Error("missing data type: " + type)
       };
     }
-    return await typeFunctions[0].call(this, read, typeArgs, rootNodes);
+    return typeFunctions[0].call(this, read, typeArgs, rootNodes);
   }
 
   write(value, buffer, offset, _fieldInfo, rootNode) {
@@ -125,7 +125,7 @@ class ProtoDef
     return buffer;
   }
 
-  async parsePacketBuffer(type,read) {
+  parsePacketBuffer(type,read) {
     return tryCatch(()=> this.read(read, type, {}),
       (e) => {
         e.message=`Read error for ${e.field} : ${e.message}`;

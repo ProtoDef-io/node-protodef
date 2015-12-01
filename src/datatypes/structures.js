@@ -47,17 +47,18 @@ function sizeOfArray(value, {type,count,countType,countTypeArgs}, rootNode) {
 
 
 async function readContainer(read, typeArgs, context) {
-  var values={ "..": context };
-  typeArgs.reduce(async (p,{type,name,anon}) => {
-    await tryDoc(async () => {
+  var values=await typeArgs.reduce(async (p,{type,name,anon}) =>
+    tryDoc(async () => {
+      var values = await p;
       var value = await this.read(read, type, values);
       if (anon) {
         if (value !== undefined) Object.keys(value).forEach(key => values[key] = value[key]);
       }
       else
         values[name] = value;
-    }, name ? name : "unknown");
-  },Promise.resolve());
+      return values;
+    }, name ? name : "unknown")
+  ,Promise.resolve({ "..": context }));
   delete values[".."];
   return values;
 }
