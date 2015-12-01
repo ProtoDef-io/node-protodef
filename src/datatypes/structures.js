@@ -13,19 +13,19 @@ function evalCount(count, fields) {
   return count["default"];
 }
 
-function readArray(getter, {type,count,countType,countTypeArgs}, rootNode) {
+async function readArray(getter, {type,count,countType,countTypeArgs}, rootNode) {
   var c;
   if(typeof count === "object")
     c = evalCount(count, rootNode);
   else if (typeof count !== "undefined")
     c = getField(count, rootNode);
   else if (typeof countType !== "undefined") {
-    c=tryDoc(() => this.read(getter, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
+    c=await tryDoc(() => this.read(getter, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
   } else // TODO : broken schema, should probably error out.
     c = 0;
   var results=[];
   for(var i = 0; i < c; i++)
-    results.push(tryDoc(() => this.read(getter, type, rootNode), i));
+    results.push(await tryDoc(() => this.read(getter, type, rootNode), i));
   return results;
 }
 
