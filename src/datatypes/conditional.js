@@ -5,7 +5,7 @@ module.exports = {
   'option': [readOption, writeOption, sizeOfOption]
 };
 
-function readSwitch(buffer, offset, {compareTo,fields,...rest}, rootNode) {
+async function readSwitch(getter, {compareTo,fields,...rest}, rootNode) {
   compareTo = getField(compareTo, rootNode);
   if (typeof fields[compareTo] === 'undefined' && typeof rest.default === "undefined")
     throw new Error(compareTo + " has no associated fieldInfo in switch");
@@ -13,7 +13,7 @@ function readSwitch(buffer, offset, {compareTo,fields,...rest}, rootNode) {
   var caseDefault=typeof fields[compareTo] === 'undefined';
   var resultingType = caseDefault ? rest.default : fields[compareTo];
   var fieldInfo = getFieldInfo(resultingType);
-  return tryDoc(() => this.read(buffer, offset, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
+  return tryDoc(() => this.read(getter, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
 }
 
 function writeSwitch(value, buffer, offset, {compareTo,fields,...rest}, rootNode) {
@@ -36,15 +36,9 @@ function sizeOfSwitch(value, {compareTo,fields,...rest}, rootNode) {
   return tryDoc(() => this.sizeOf(value, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
 }
 
-function readOption(buffer, offset, typeArgs, context) {
-  var val = buffer.readUInt8(offset++);
-  if (val !== 0) {
-    var retval = this.read(buffer, offset, typeArgs, context);
-    retval.size++;
-    return retval;
-  }
-  else
-    return {size: 1};
+async function readOption(getter, typeArgs, context) {
+  var val = (await getter.get(1)).readUInt8(0);
+  return (val !== 0) ? await this.read(getter, typeArgs, context) : undefined;
 }
 
 function writeOption(value, buffer, offset, typeArgs, context) {
