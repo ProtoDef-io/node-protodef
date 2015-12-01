@@ -94,16 +94,18 @@ describe("benchmark",function(){
     done();
   });
 
-  it("bench parsing",function(cb){
+  it("bench parsing",async function(){
     var parser=new Parser(proto,"packet");
     inputData.forEach(data => parser.write(data));
     console.log('Beginning read test');
     var start = Date.now();
-    var i=0;
-    parser.on("data",function(){
-      i++;
-      if(i==inputData.length)
-        cb();
+    await new Promise((cb) => {
+      var i=0;
+      parser.on("data",function(){
+        i++;
+        if(i==inputData.length)
+          cb();
+      });
     });
     console.log('Finished read test in ' + (Date.now() - start) / 1000 + ' seconds');
   });
