@@ -16,7 +16,65 @@ var testDataWrite = [
 
 var proto = new ProtoDef();
 
-proto.addTypes(require("../example_protocol.json").types);
+var example_protocol={
+  "container": "native",
+  "varint": "native",
+  "byte": "native",
+  "bool": "native",
+  "switch": "native",
+  "entity_look": [
+    "container",
+    [
+      {
+        "name": "entityId",
+        "type": "varint"
+      },
+      {
+        "name": "yaw",
+        "type": "byte"
+      },
+      {
+        "name": "pitch",
+        "type": "byte"
+      },
+      {
+        "name": "onGround",
+        "type": "bool"
+      }
+    ]
+  ],
+  "packet": [
+    "container",
+    [
+      {
+        "name": "name",
+        "type": [
+          "mapper",
+          {
+            "type": "varint",
+            "mappings": {
+              "22": "entity_look"
+            }
+          }
+        ]
+      },
+      {
+        "name": "params",
+        "type": [
+          "switch",
+          {
+            "compareTo": "name",
+            "fields": {
+              "entity_look": "entity_look"
+            }
+          }
+        ]
+      }
+    ]
+  ]
+};
+
+proto.addTypes(example_protocol);
 
 describe("benchmark",function(){
   this.timeout(60 * 1000);

@@ -2,8 +2,67 @@ var ProtoDef = require("protodef").ProtoDef;
 var Serializer = require("protodef").Serializer;
 var Parser = require("protodef").Parser;
 
+// the protocol can be in a separate json file
+var example_protocol={
+  "container": "native",
+  "varint": "native",
+  "byte": "native",
+  "bool": "native",
+  "switch": "native",
+  "entity_look": [
+    "container",
+    [
+      {
+        "name": "entityId",
+        "type": "varint"
+      },
+      {
+        "name": "yaw",
+        "type": "byte"
+      },
+      {
+        "name": "pitch",
+        "type": "byte"
+      },
+      {
+        "name": "onGround",
+        "type": "bool"
+      }
+    ]
+  ],
+  "packet": [
+    "container",
+    [
+      {
+        "name": "name",
+        "type": [
+          "mapper",
+          {
+            "type": "varint",
+            "mappings": {
+              "22": "entity_look"
+            }
+          }
+        ]
+      },
+      {
+        "name": "params",
+        "type": [
+          "switch",
+          {
+            "compareTo": "name",
+            "fields": {
+              "entity_look": "entity_look"
+            }
+          }
+        ]
+      }
+    ]
+  ]
+};
+
 var proto = new ProtoDef();
-proto.addTypes(require("./example_protocol.json").types);
+proto.addTypes(example_protocol);
 var parser = new Parser(proto, "packet");
 var serializer = new Serializer(proto, "packet");
 
