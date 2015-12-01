@@ -13,9 +13,9 @@ module.exports = {
   'mapper':[readMapper,writeMapper,sizeOfMapper]
 };
 
-async function readMapper(getter,{type,mappings},rootNode)
+async function readMapper(read,{type,mappings},rootNode)
 {
-  var value=await this.read(getter, type, rootNode);
+  var value=await this.read(read, type, rootNode);
   var mappedValue=mappings[value];
   if(mappedValue==undefined) throw new Error(value+" is not in the mappings value");
   return mappedValue;
@@ -49,12 +49,12 @@ function sizeOfMapper(value,{type,mappings},rootNode)
   return this.sizeOf(mappedValue,type,rootNode);
 }
 
-async function readVarInt(getter) {
+async function readVarInt(read) {
   var result = 0;
   var shift = 0;
 
   while(true) {
-    var b = (await getter.get(1)).readUInt8(0);
+    var b = (await read(1)).readUInt8(0);
     result |= ((b & 0x7f) << shift); // Add the bits to our number, except MSB
     if(!(b & 0x80)) { // If the MSB is not set, we return the number
       return result;
@@ -85,9 +85,9 @@ function writeVarInt(value, buffer, offset) {
 }
 
 
-async function readPString(getter, {countType,countTypeArgs},rootNode) {
-  var size=await tryDoc(() => this.read(getter, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
-  var buffer=getter.get(size);
+async function readPString(read, {countType,countTypeArgs},rootNode) {
+  var size=await tryDoc(() => this.read(read, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
+  var buffer=read(size);
   return buffer.toString('utf8', 0, size);
 }
 
@@ -105,8 +105,8 @@ function sizeOfPString(value, {countType,countTypeArgs},rootNode) {
   return size + length;
 }
 
-async function readBool(getter) {
-  var buffer=await getter.get(1);
+async function readBool(read) {
+  var buffer=await read(1);
   return !!buffer.readInt8(0);
 }
 
@@ -116,14 +116,14 @@ function writeBool(value, buffer, offset) {
 }
 
 
-async function readBuffer(getter, {count,countType,countTypeArgs}, rootNode) {
+async function readBuffer(read, {count,countType,countTypeArgs}, rootNode) {
   var totalCount;
   if (typeof count !== "undefined")
     totalCount = getField(count, rootNode);
   else if (typeof countType !== "undefined")
-    totalCount = await this.read(getter, { type: countType, typeArgs: countTypeArgs }, rootNode);
+    totalCount = await this.read(read, { type: countType, typeArgs: countTypeArgs }, rootNode);
 
-  return getter.get(totalCount);
+  return read(totalCount);
 }
 
 function writeBuffer(value, buffer, offset, {count,countType,countTypeArgs}, rootNode) {
@@ -156,7 +156,7 @@ function generateBitMask(n) {
   return (1 << n) - 1;
 }
 
-async function readBitField(getter, typeArgs) {
+async function readBitField(read, typeArgs) {
   var curVal = null;
   var bits = 0;
   return typeArgs.reduce(async function(acc_, {size,signed,name}) {
@@ -165,7 +165,7 @@ async function readBitField(getter, typeArgs) {
     var val = 0;
     while (currentSize > 0) {
       if (bits == 0) {
-        curVal = await getter.get(1);
+        curVal = await read(1);
         bits = 8;
       }
       var bitsToRead = Math.min(currentSize, bits);
@@ -213,10 +213,10 @@ function sizeOfBitField(value, typeArgs) {
   }, 0) / 8);
 }
 
-async function readCString(getter) {
+async function readCString(read) {
   var str = "";
   var c;
-  while ((c=await getter.get(1)) != 0x00)
+  while ((c=await read(1)) != 0x00)
     str += c;
   return str;
 }
