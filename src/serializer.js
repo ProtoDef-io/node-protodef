@@ -26,7 +26,7 @@ const EventEmitter = require('events').EventEmitter;
 
 class Waiter extends EventEmitter {
   constructor() {
-    super(this);
+    super();
   }
 }
 
@@ -42,8 +42,8 @@ class DataGetter {
     this.wait.emit("moreData");
   }
 
-  async moreData() {
-    await new Promise((cb) => {
+  moreData() {
+    return new Promise((cb) => {
       this.wait.once("moreData",cb);
     })
   }
@@ -57,7 +57,7 @@ class DataGetter {
       await this.moreData();
 
     var data=this.incomingBuffer.slice(0,count);
-    this.incomingBuffer=this.incomingBuffer.slice(count-1);
+    this.incomingBuffer=this.incomingBuffer.slice(count);
     return data;
   }
 }
@@ -75,15 +75,16 @@ class Parser extends Transform {
     return this.proto.parsePacketBuffer(this.mainType,read);
   }
 
-  read() {
-    return this.parsePacketBuffer(this.dataGetter.get.bind(this.dataGetter))
-      .then(packet => this.push(packet))
-      .then(() => this.dataGetter.hasMore() ? this.read() : Promise.resolve())
+  async readData() {
+    var packet=await this.parsePacketBuffer(this.dataGetter.get.bind(this.dataGetter));
+    this.push(packet);
+    if(this.dataGetter.hasMore())
+      this.readData();
   }
 
   _transform(chunk,enc, cb) {
     this.dataGetter.push(chunk);
-    this.read().then(cb).catch(cb);
+    this.readData().then(cb).catch(cb);
   }
 }
 
