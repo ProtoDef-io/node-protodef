@@ -1,6 +1,6 @@
-var ProtoDef = require("./").ProtoDef;
-var Serializer = require("./").Serializer;
-var Parser = require("./").Parser;
+var ProtoDef = require("protodef").ProtoDef;
+var Serializer = require("protodef").Serializer;
+var Parser = require("protodef").Parser;
 
 var proto = new ProtoDef();
 proto.addTypes(require("./example_protocol.json").types);

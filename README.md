@@ -3,6 +3,7 @@
 [![Join the chat at https://gitter.im/roblabla/ProtoDef](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/roblabla/ProtoDef?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Build Status](https://img.shields.io/circleci/project/roblabla/ProtoDef/master.svg)]
 (https://circleci.com/gh/roblabla/ProtoDef)
+[![Tonic](https://img.shields.io/badge/tonic-try%20it-blue.svg)](https://tonicdev.com/npm/protodef)
 
 This is a node.js module to simplify defining, reading and writing binary blobs,
 whether they be internet protocols or files.
