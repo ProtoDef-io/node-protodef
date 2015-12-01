@@ -111,6 +111,12 @@ by the user, to ease datatype dependencies.
 
 ## History
 
+### 0.2.3
+* fix a small mistake in mapping error
+* improve internal code
+* improve example
+* integrate with tonicdev
+
 ### 0.2.2
 
 * Fix writeOption : the offset wasn't properly updated
