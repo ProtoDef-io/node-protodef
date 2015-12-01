@@ -46,26 +46,20 @@ function sizeOfArray(value, {type,count,countType,countTypeArgs}, rootNode) {
 }
 
 
-function readContainer(buffer, offset, typeArgs, context) {
-  var results = {
-    value: { "..": context },
-    size: 0
-  };
-  typeArgs.forEach(({type,name,anon}) => {
-    tryDoc(() => {
-      var readResults = this.read(buffer, offset, type, results.value);
-      results.size += readResults.size;
-      offset += readResults.size;
+async function readContainer(getter, typeArgs, context) {
+  var values={ "..": context };
+  typeArgs.reduce(async (p,{type,name,anon}) => {
+    await tryDoc(async () => {
+      var value = await this.read(getter, type, values);
       if (anon) {
-        if(readResults.value !== undefined) Object.keys(readResults.value).forEach(function(key) {
-          results.value[key] = readResults.value[key];
-        });
-      } else
-        results.value[name] = readResults.value;
+        if (value !== undefined) Object.keys(value).forEach(key => values[key] = value[key]);
+      }
+      else
+        values[name] = value;
     }, name ? name : "unknown");
-  });
-  delete results.value[".."];
-  return results;
+  },Promise.resolve());
+  delete values[".."];
+  return values;
 }
 
 function writeContainer(value, buffer, offset, typeArgs, context) {
