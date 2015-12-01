@@ -94,17 +94,10 @@ function writeVarInt(value, buffer, offset) {
 }
 
 
-function readPString(buffer, offset, {countType,countTypeArgs},rootNode) {
-  var {size,value}=tryDoc(() => this.read(buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
-  var cursor = offset + size;
-  var strEnd = cursor + value;
-  if(strEnd > buffer.length) throw new Error("Missing characters in string, found size is "+buffer.length+
-    " expected size was "+strEnd);
-
-  return {
-    value: buffer.toString('utf8', cursor, strEnd),
-    size: strEnd - offset
-  };
+async function readPString(getter, {countType,countTypeArgs},rootNode) {
+  var size=await tryDoc(() => this.read(getter, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
+  var buffer=getter.get(size);
+  return buffer.toString('utf8', 0, size);
 }
 
 function writePString(value, buffer, offset, {countType,countTypeArgs},rootNode) {
