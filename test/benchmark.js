@@ -1,6 +1,7 @@
-var ITERATIONS = 100000;
+var ITERATIONS = 10000;
 
-var ProtoDef=require("../").ProtoDef;
+var ProtoDef=require("protodef").ProtoDef;
+var Parser=require("protodef").Parser;
 
 var testDataWrite = [
   {
@@ -93,13 +94,17 @@ describe("benchmark",function(){
     done();
   });
 
-  it("bench parsing",function(done){
+  it("bench parsing",function(cb){
+    var parser=new Parser(proto,"packet");
+    inputData.forEach(data => parser.write(data));
     console.log('Beginning read test');
-    start = Date.now();
-    for (j = 0; j < inputData.length; j++) {
-      proto.parsePacketBuffer("packet",inputData[j]);
-    }
+    var start = Date.now();
+    var i=0;
+    parser.on("data",function(){
+      i++;
+      if(i==inputData.length)
+        cb();
+    });
     console.log('Finished read test in ' + (Date.now() - start) / 1000 + ' seconds');
-    done();
   });
 });

@@ -159,13 +159,13 @@ function generateBitMask(n) {
 async function readBitField(read, typeArgs) {
   var curVal = null;
   var bits = 0;
-  return typeArgs.reduce(async function(acc_, {size,signed,name}) {
+  return await typeArgs.reduce(async function(acc_, {size,signed,name}) {
     var acc=await acc_;
     var currentSize = size;
     var val = 0;
     while (currentSize > 0) {
       if (bits == 0) {
-        curVal = await read(1);
+        curVal = (await read(1))[0];
         bits = 8;
       }
       var bitsToRead = Math.min(currentSize, bits);
