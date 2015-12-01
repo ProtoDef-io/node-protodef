@@ -111,6 +111,9 @@ by the user, to ease datatype dependencies.
 
 ## History
 
+### 0.2.4
+* get back the example file as one file for simplicity and for tonic
+
 ### 0.2.3
 * fix a small mistake in mapping error
 * improve internal code
