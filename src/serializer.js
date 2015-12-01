@@ -71,7 +71,7 @@ class Parser extends Transform {
 
   dataGetter = new DataGetter();
 
-  async parsePacketBuffer(read) {
+  parsePacketBuffer(read) {
     return this.proto.parsePacketBuffer(this.mainType,read);
   }
 
