@@ -13,15 +13,12 @@ module.exports = {
   'mapper':[readMapper,writeMapper,sizeOfMapper]
 };
 
-function readMapper(buffer,offset,{type,mappings},rootNode)
+async function readMapper(getter,{type,mappings},rootNode)
 {
-  var {size,value}=this.read(buffer, offset, type, rootNode);
-  var results={
-    size:size,
-    value:mappings[value]
-  };
-  if(results.value==undefined) throw new Error(value+" is not in the mappings value");
-  return results;
+  var value=this.read(getter, type, rootNode);
+  var mappedValue=mappings[value];
+  if(mappedValue==undefined) throw new Error(value+" is not in the mappings value");
+  return mappedValue;
 }
 
 function writeMapper(value,buffer,offset,{type,mappings},rootNode)
@@ -125,21 +122,14 @@ function writeBool(value, buffer, offset) {
 }
 
 
-function readBuffer(buffer, offset, {count,countType,countTypeArgs}, rootNode) {
-  var totalSize = 0;
+function readBuffer(getter, {count,countType,countTypeArgs}, rootNode) {
   var totalCount;
   if (typeof count !== "undefined")
     totalCount = getField(count, rootNode);
-  else if (typeof countType !== "undefined") {
-    var {value,size} = this.read(buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode);
-    totalSize += size;
-    offset += size;
-    totalCount = value;
-  }
-  return {
-    value: buffer.slice(offset, offset + totalCount),
-    size: totalSize + totalCount
-  };
+  else if (typeof countType !== "undefined")
+    totalCount = this.read(getter, { type: countType, typeArgs: countTypeArgs }, rootNode);
+
+  return getter.get(totalCount);
 }
 
 function writeBuffer(value, buffer, offset, {count,countType,countTypeArgs}, rootNode) {
@@ -160,11 +150,8 @@ function sizeOfBuffer(value, {count,countType,countTypeArgs}, rootNode) {
   return size + value.length;
 }
 
-function readVoid() {
-  return {
-    value: undefined,
-    size: 0
-  };
+async function readVoid() {
+  return undefined;
 }
 
 function writeVoid(value, buffer, offset) {
