@@ -16,9 +16,8 @@ function generateFunctions(bufferReader,bufferWriter,size)
     var buffer=await read(size);
     return buffer[bufferReader](0);
   };
-  var writer=function(value, buffer, offset) {
-    buffer[bufferWriter](value, offset);
-    return offset + size;
+  var writer=function(value, write) {
+    write((new Buffer(size))(value, 0));
   };
   return [reader, writer, size];
 }

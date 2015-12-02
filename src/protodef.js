@@ -86,7 +86,7 @@ class ProtoDef
     return typeFunctions[0].call(this, read, typeArgs, rootNodes);
   }
 
-  write(value, buffer, offset, _fieldInfo, rootNode) {
+  write(value, write, _fieldInfo, rootNode) {
     let {type,typeArgs} = getFieldInfo(_fieldInfo);
     var typeFunctions = this.types[type];
     if(!typeFunctions) {
@@ -94,35 +94,15 @@ class ProtoDef
         error: new Error("missing data type: " + type)
       };
     }
-    return typeFunctions[1].call(this, value, buffer, offset, typeArgs, rootNode);
+    return typeFunctions[1].call(this, value, write, typeArgs, rootNode);
   }
 
-  sizeOf(value, _fieldInfo, rootNode) {
-    let {type,typeArgs} = getFieldInfo(_fieldInfo);
-    var typeFunctions = this.types[type];
-    if(!typeFunctions) {
-      throw new Error("missing data type: " + type);
-    }
-    if(typeof typeFunctions[2] === 'function') {
-      return typeFunctions[2].call(this, value, typeArgs, rootNode);
-    } else {
-      return typeFunctions[2];
-    }
-  }
-
-  createPacketBuffer(type,packet) {
-    var length=tryCatch(()=> this.sizeOf(packet, type, {}),
-      (e)=> {
-        e.message = `SizeOf error for ${e.field} : ${e.message}`;
-        throw e;
-      });
-    var buffer = new Buffer(length);
-    tryCatch(()=> this.write(packet, buffer, 0, type, {}),
+  createPacketBuffer(type,packet,write) {
+    return tryCatch(()=> this.write(packet, write, type, {}),
       (e)=> {
         e.message = `Write error for ${e.field} : ${e.message}`;
         throw e;
       });
-    return buffer;
   }
 
   parsePacketBuffer(type,read) {
