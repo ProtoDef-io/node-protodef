@@ -111,7 +111,7 @@ async function readVoid() {
   return undefined;
 }
 
-function writeVoid(write, offset) {
+function writeVoid(write) {
 }
 
 function generateBitMask(n) {
