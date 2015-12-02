@@ -18,7 +18,9 @@ function generateFunctions(bufferReader,bufferWriter,size)
     return buffer[bufferReader](0);
   };
   var writer=function(value, write) {
-    write((new Buffer(size))[bufferWriter](value, 0));
+    var buffer=new Buffer(size);
+    buffer[bufferWriter](value, 0)
+    write(buffer);
   };
   return [reader, writer, size];
 }
