@@ -1,6 +1,6 @@
 async function readLong(read) {
   var buffer=await read(8);
-  return [buffer.readInt32BE(offset), buffer.readInt32BE(offset + 4)]
+  return [buffer.readInt32BE(0), buffer.readInt32BE(4)]
 }
 
 function writeLong(value, write) {
