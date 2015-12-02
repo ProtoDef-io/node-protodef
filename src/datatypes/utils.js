@@ -119,7 +119,7 @@ function readVoid() {
   return Promise.resolve(undefined);
 }
 
-function writeVoid(write, offset) {
+function writeVoid(write) {
 }
 
 function generateBitMask(n) {
