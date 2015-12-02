@@ -89,11 +89,11 @@ class ProtoDef
         error: new Error("missing data type: " + type)
       };
     }
-    return typeFunctions[1].call(this, value, write, typeArgs, rootNode);
+    typeFunctions[1].call(this, value, write, typeArgs, rootNode);
   }
 
   createPacketBuffer(type,packet,write) {
-    return tryCatch(()=> this.write(packet, write, type, {}),
+    tryCatch(()=> this.write(packet, write, type, {}),
       (e)=> {
         e.message = `Write error for ${e.field} : ${e.message}`;
         throw e;
