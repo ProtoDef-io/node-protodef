@@ -7,18 +7,17 @@ class Serializer extends Transform {
     this.mainType=mainType;
   }
 
-  createPacketBuffer(packet) {
-    return this.proto.createPacketBuffer(this.mainType,packet);
+  createPacketBuffer(packet,write) {
+    return this.proto.createPacketBuffer(this.mainType,packet,write);
   }
 
   _transform(chunk, enc, cb) {
-    try {
-      var buf = this.createPacketBuffer(chunk);
-      this.push(buf);
-      return cb();
-    } catch (e) {
-      return cb(e);
-    }
+    //var transformedBuffer=new Buffer(0);
+    // buf => buf.copy(transformedBuffer,transformedBuffer.length)
+
+    this.createPacketBuffer(chunk,buf => this.push(buf))
+      .then(cb)
+      .catch(cb);
   }
 }
 
