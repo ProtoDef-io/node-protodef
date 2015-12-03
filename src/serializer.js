@@ -47,7 +47,10 @@ class DataGetter {
 
   moreData() {
     return new Promise((cb) => {
-      this.wait.once("moreData",cb);
+      this.wait.once("moreData",function(){
+        console.log("moreData");
+        cb();
+      });
     })
   }
 
