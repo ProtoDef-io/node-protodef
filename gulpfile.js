@@ -3,8 +3,8 @@ var gulp = require('gulp');
 var plumber = require('gulp-plumber');
 var babel = require('gulp-babel');
 var options = {
-    presets: ['es2015','stage-0'],
-    plugins: [["fast-async",{compiler:{promises:true,generators:false}}]]
+    presets: ['es2015','stage-0','async-to-bluebird'],
+    plugins: ['transform-runtime']
 };
 
 var sourcemaps = require('gulp-sourcemaps');
