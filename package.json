@@ -30,6 +30,7 @@
     "babel-preset-stage-0": "^6.1.18",
     "chai": "^1.9.2",
     "espower-loader": "^1.0.0",
+    "fast-async": "^6.0.4",
     "gulp": "^3.9.0",
     "gulp-babel": "^6.1.0",
     "gulp-plumber": "^1.0.1",
