@@ -111,7 +111,7 @@ describe("benchmark",function(){
     console.log('Beginning read test');
     var start = Date.now();
     var parser=new Parser(proto,"packet");
-    inputData.forEach(data => parser.write(data));
+    inputData.forEach(function(data) {parser.write(data)});
     function wait(cb) {
       var i=0;
       parser.on("data",function(){
