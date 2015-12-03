@@ -66,7 +66,7 @@ function writeVarInt(value, write) {
     value >>>= 7;
   }
   var buffer2=new Buffer(1);
-  buffer2.writeUInt8(value);
+  buffer2.writeUInt8(value,0);
   write(buffer2);
 }
 
