@@ -7,17 +7,20 @@ class Serializer extends Transform {
     this.mainType=mainType;
   }
 
-  createPacketBuffer(packet) {
-    return this.proto.createPacketBuffer(this.mainType,packet);
+  createPacketBuffer(packet,write) {
+    this.proto.createPacketBuffer(this.mainType,packet,write);
   }
 
   _transform(chunk, enc, cb) {
+    //var transformedBuffer=new Buffer(0);
+    // buf => buf.copy(transformedBuffer,transformedBuffer.length)
+
     try {
-      var buf = this.createPacketBuffer(chunk);
-      this.push(buf);
-      return cb();
-    } catch (e) {
-      return cb(e);
+      this.createPacketBuffer(chunk, buf => this.push(buf));
+      cb();
+    }
+    catch(err) {
+      cb(err);
     }
   }
 }
@@ -44,7 +47,10 @@ class DataGetter {
 
   moreData() {
     return new Promise((cb) => {
-      this.wait.once("moreData",cb);
+      this.wait.once("moreData",function(){
+        console.log("moreData");
+        cb();
+      });
     })
   }
 

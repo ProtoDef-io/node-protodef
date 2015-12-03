@@ -35,13 +35,8 @@ function extendType(functions, defaultTypeArgs) {
   }
   return [function read(read, typeArgs, context) {
     return functions[0].call(this, read, produceArgs(typeArgs), context);
-  }, function write(value, buffer, offset, typeArgs, context) {
-    return functions[1].call(this, value, buffer, offset, produceArgs(typeArgs), context);
-  }, function sizeOf(value, typeArgs, context) {
-    if (typeof functions[2] === "function")
-      return functions[2].call(this, value, produceArgs(typeArgs), context);
-    else
-      return functions[2];
+  }, function write(value, write, typeArgs, context) {
+    return functions[1].call(this, value, write, produceArgs(typeArgs), context);
   }];
 }
 
@@ -86,7 +81,7 @@ class ProtoDef
     return typeFunctions[0].call(this, read, typeArgs, rootNodes);
   }
 
-  write(value, buffer, offset, _fieldInfo, rootNode) {
+  write(value, write, _fieldInfo, rootNode) {
     let {type,typeArgs} = getFieldInfo(_fieldInfo);
     var typeFunctions = this.types[type];
     if(!typeFunctions) {
@@ -94,35 +89,15 @@ class ProtoDef
         error: new Error("missing data type: " + type)
       };
     }
-    return typeFunctions[1].call(this, value, buffer, offset, typeArgs, rootNode);
+    typeFunctions[1].call(this, value, write, typeArgs, rootNode);
   }
 
-  sizeOf(value, _fieldInfo, rootNode) {
-    let {type,typeArgs} = getFieldInfo(_fieldInfo);
-    var typeFunctions = this.types[type];
-    if(!typeFunctions) {
-      throw new Error("missing data type: " + type);
-    }
-    if(typeof typeFunctions[2] === 'function') {
-      return typeFunctions[2].call(this, value, typeArgs, rootNode);
-    } else {
-      return typeFunctions[2];
-    }
-  }
-
-  createPacketBuffer(type,packet) {
-    var length=tryCatch(()=> this.sizeOf(packet, type, {}),
-      (e)=> {
-        e.message = `SizeOf error for ${e.field} : ${e.message}`;
-        throw e;
-      });
-    var buffer = new Buffer(length);
-    tryCatch(()=> this.write(packet, buffer, 0, type, {}),
+  createPacketBuffer(type,packet,write) {
+    tryCatch(()=> this.write(packet, write, type, {}),
       (e)=> {
         e.message = `Write error for ${e.field} : ${e.message}`;
         throw e;
       });
-    return buffer;
   }
 
   parsePacketBuffer(type,read) {

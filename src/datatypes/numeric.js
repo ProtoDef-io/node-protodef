@@ -1,12 +1,13 @@
 async function readLong(read) {
   var buffer=await read(8);
-  return [buffer.readInt32BE(offset), buffer.readInt32BE(offset + 4)]
+  return [buffer.readInt32BE(0), buffer.readInt32BE(4)]
 }
 
-function writeLong(value, buffer, offset) {
-  buffer.writeInt32BE(value[0], offset);
-  buffer.writeInt32BE(value[1], offset + 4);
-  return offset + 8;
+function writeLong(value, write) {
+  var buffer=new Buffer(8);
+  buffer.writeInt32BE(value[0], 0);
+  buffer.writeInt32BE(value[1], 4);
+  write(buffer);
 }
 
 function generateFunctions(bufferReader,bufferWriter,size)
@@ -16,9 +17,10 @@ function generateFunctions(bufferReader,bufferWriter,size)
     var buffer=await read(size);
     return buffer[bufferReader](0);
   };
-  var writer=function(value, buffer, offset) {
-    buffer[bufferWriter](value, offset);
-    return offset + size;
+  var writer=function(value, write) {
+    var buffer=new Buffer(size);
+    buffer[bufferWriter](value, 0)
+    write(buffer);
   };
   return [reader, writer, size];
 }
@@ -37,7 +39,7 @@ var types=Object.keys(nums).reduce(function(types,num){
   types[num]=generateFunctions(nums[num][0], nums[num][1], nums[num][2]);
   return types;
 },{});
-types["long"]=[readLong, writeLong, 8];
+types["long"]=[readLong, writeLong];
 
 
 module.exports = types;
