@@ -41,7 +41,10 @@ async function readContainer(read, typeArgs, context) {
   var values=await typeArgs.reduce(async (p,{type,name,anon}) =>
     tryDoc(async () => {
       var values = await p;
+      console.log("plop1")
       var value = await this.read(read, type, values);
+      console.log(value)
+      console.log("plop")
       if (anon) {
         if (value !== undefined) Object.keys(value).forEach(key => values[key] = value[key]);
       }
