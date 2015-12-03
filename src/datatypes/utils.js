@@ -13,12 +13,14 @@ module.exports = {
   'mapper':[readMapper,writeMapper,sizeOfMapper]
 };
 
-async function readMapper(read,{type,mappings},rootNode)
+function readMapper(read,{type,mappings},rootNode)
 {
-  var value=await this.read(read, type, rootNode);
-  var mappedValue=mappings[value];
-  if(mappedValue==undefined) throw new Error(value+" is not in the mappings value");
-  return mappedValue;
+  return this.read(read, type, rootNode)
+  .then(value => {
+    var mappedValue=mappings[value];
+    if(mappedValue==undefined) throw new Error(value+" is not in the mappings value");
+    return mappedValue;
+  })
 }
 
 function writeMapper(value,buffer,offset,{type,mappings},rootNode)
@@ -49,19 +51,25 @@ function sizeOfMapper(value,{type,mappings},rootNode)
   return this.sizeOf(mappedValue,type,rootNode);
 }
 
-async function readVarInt(read) {
+function readVarInt(read) {
   var result = 0;
   var shift = 0;
 
-  while(true) {
-    var b = (await read(1)).readUInt8(0);
-    result |= ((b & 0x7f) << shift); // Add the bits to our number, except MSB
-    if(!(b & 0x80)) { // If the MSB is not set, we return the number
-      return result;
-    }
-    shift += 7; // we only have 7 bits, MSB being the return-trigger
-    assert.ok(shift < 64, "varint is too big"); // Make sure our shift don't overflow.
+  function next() {
+     return read(1)
+      .then(val => val.readUInt8(0))
+      .then(b => {
+        result |= ((b & 0x7f) << shift); // Add the bits to our number, except MSB
+        if (!(b & 0x80)) { // If the MSB is not set, we return the number
+          return result;
+        }
+        shift += 7; // we only have 7 bits, MSB being the return-trigger
+        assert.ok(shift < 64, "varint is too big"); // Make sure our shift don't overflow.
+        return null;
+      })
+      .then(result => result!=null ? result : next());
   }
+  return next();
 }
 
 function sizeOfVarInt(value) {
@@ -85,10 +93,10 @@ function writeVarInt(value, buffer, offset) {
 }
 
 
-async function readPString(read, {countType,countTypeArgs},rootNode) {
-  var size=await tryDoc(() => this.read(read, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
-  var buffer=read(size);
-  return buffer.toString('utf8', 0, size);
+function readPString(read, {countType,countTypeArgs},rootNode) {
+  return tryDoc(() => this.read(read, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count")
+  .then(read)
+  .then(buffer => buffer.toString('utf8', 0, size));
 }
 
 function writePString(value, buffer, offset, {countType,countTypeArgs},rootNode) {
@@ -105,9 +113,8 @@ function sizeOfPString(value, {countType,countTypeArgs},rootNode) {
   return size + length;
 }
 
-async function readBool(read) {
-  var buffer=await read(1);
-  return !!buffer.readInt8(0);
+function readBool(read) {
+  return read(1).then(buffer => !!buffer.readInt8(0));
 }
 
 function writeBool(value, buffer, offset) {
@@ -116,14 +123,14 @@ function writeBool(value, buffer, offset) {
 }
 
 
-async function readBuffer(read, {count,countType,countTypeArgs}, rootNode) {
-  var totalCount;
+function readBuffer(read, {count,countType,countTypeArgs}, rootNode) {
+  var p;
   if (typeof count !== "undefined")
-    totalCount = getField(count, rootNode);
+    p = Promise.resolve(getField(count, rootNode));
   else if (typeof countType !== "undefined")
-    totalCount = await this.read(read, { type: countType, typeArgs: countTypeArgs }, rootNode);
+    p = this.read(read, { type: countType, typeArgs: countTypeArgs }, rootNode);
 
-  return read(totalCount);
+  return p.then(read(totalCount));
 }
 
 function writeBuffer(value, buffer, offset, {count,countType,countTypeArgs}, rootNode) {
@@ -144,8 +151,8 @@ function sizeOfBuffer(value, {count,countType,countTypeArgs}, rootNode) {
   return size + value.length;
 }
 
-async function readVoid() {
-  return undefined;
+function readVoid() {
+  return Promise.resolve(undefined);
 }
 
 function writeVoid(value, buffer, offset) {
@@ -156,6 +163,7 @@ function generateBitMask(n) {
   return (1 << n) - 1;
 }
 
+// rewriting this with promises is a pain, doing it later
 async function readBitField(read, typeArgs) {
   var curVal = null;
   var bits = 0;

@@ -52,13 +52,16 @@ class DataGetter {
     return this.incomingBuffer.length>0;
   }
 
-  async get(count) {
+  get(count) {
+    var p=Promise.resolve();
     if(this.incomingBuffer.length<count)
-      await this.moreData();
+      p=this.moreData();
 
-    var data=this.incomingBuffer.slice(0,count);
-    this.incomingBuffer=this.incomingBuffer.slice(count);
-    return data;
+    return p.then(() => {
+      var data=this.incomingBuffer.slice(0,count);
+      this.incomingBuffer=this.incomingBuffer.slice(count);
+      return data;
+    })
   }
 }
 
@@ -75,11 +78,12 @@ class Parser extends Transform {
     return this.proto.parsePacketBuffer(this.mainType,read);
   }
 
-  async readData() {
-    var packet=await this.parsePacketBuffer(this.dataGetter.get.bind(this.dataGetter));
-    this.push(packet);
-    if(this.dataGetter.hasMore())
-      await this.readData();
+  readData() {
+    return this.parsePacketBuffer(this.dataGetter.get.bind(this.dataGetter))
+    .then(packet => {
+      this.push(packet);
+    })
+    .then(() => this.dataGetter.hasMore() ? this.readData() : Promise.resolve())
   }
 
   _transform(chunk,enc, cb) {
