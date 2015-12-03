@@ -1,6 +1,8 @@
 var ITERATIONS = 100000;
 
-var ProtoDef=require("../").ProtoDef;
+var ProtoDef=require("protodef").ProtoDef;
+var Parser=require("protodef").Parser;
+var Serializer=require("protodef").Serializer;
 
 var testDataWrite = [
   {
@@ -79,27 +81,48 @@ proto.addTypes(example_protocol);
 describe("benchmark",function(){
   this.timeout(60 * 1000);
   var inputData = [];
+  var size=ITERATIONS*testDataWrite.length;
   it("bench serializing",function(done){
     var start, i, j;
     console.log('Beginning write test');
+    var serializer = new Serializer(proto, "packet");
     start = Date.now();
     for(i = 0; i < ITERATIONS; i++) {
       for(j = 0; j < testDataWrite.length; j++) {
-        inputData.push(proto.createPacketBuffer("packet",testDataWrite[j]));
+        serializer.write(testDataWrite[j]);
       }
     }
-    var result=(Date.now() - start) / 1000;
-    console.log('Finished write test in ' + result + ' seconds');
-    done();
+    function wait(cb) {
+      var i=0;
+      serializer.on("data",function(data){
+        inputData.push(data);
+        i++;
+        if(i==size)
+          cb();
+      });
+    }
+    wait(function(){
+      console.log('Finished write test in ' + (Date.now() - start) / 1000 + ' seconds');
+      done();
+    });
   });
 
   it("bench parsing",function(done){
     console.log('Beginning read test');
-    start = Date.now();
-    for (j = 0; j < inputData.length; j++) {
-      proto.parsePacketBuffer("packet",inputData[j]);
+    var start = Date.now();
+    var parser=new Parser(proto,"packet");
+    inputData.forEach(data => parser.write(data));
+    function wait(cb) {
+      var i=0;
+      parser.on("data",function(){
+        i++;
+        if(i==inputData.length)
+          cb();
+      });
     }
-    console.log('Finished read test in ' + (Date.now() - start) / 1000 + ' seconds');
-    done();
+    wait(function(){
+      console.log('Finished read test in ' + (Date.now() - start) / 1000 + ' seconds');
+      done();
+    });
   });
 });
