@@ -11,7 +11,7 @@ function writeLong(value, buffer, offset) {
 
 function generateFunctions(bufferReader,bufferWriter,size)
 {
-  var reader=async function(read)
+  var reader=function(read)
   {
     return read(size).then(buffer => buffer[bufferReader](0));
   };
