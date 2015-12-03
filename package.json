@@ -36,6 +36,7 @@
     "power-assert": "^1.0.0",
     "require-self": "^0.1.0",
     "sinon": "^1.11.1",
-    "source-map-support": "^0.3.2"
+    "source-map-support": "^0.3.2",
+    "fast-async": "^1.0.3"
   }
 }
