@@ -36,9 +36,10 @@ function sizeOfSwitch(value, {compareTo,fields,...rest}, rootNode) {
   return tryDoc(() => this.sizeOf(value, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
 }
 
-async function readOption(read, typeArgs, context) {
-  var val = (await read(1)).readUInt8(0);
-  return (val !== 0) ? await this.read(read, typeArgs, context) : undefined;
+function readOption(read, typeArgs, context) {
+  read(0)
+    .then(buf => buf.readUInt8(0))
+    .then(val => (val !== 0) ? this.read(read, typeArgs, context) : undefined);
 }
 
 function writeOption(value, buffer, offset, typeArgs, context) {

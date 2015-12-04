@@ -4,7 +4,6 @@ var plumber = require('gulp-plumber');
 var babel = require('gulp-babel');
 var options = {
   stage: 0, // Dat ES7 goodness
-  optional: ["runtime"]
 };
 
 var sourcemaps = require('gulp-sourcemaps');
@@ -35,7 +34,10 @@ gulp.task('compileTest', function() {
       }
     }))
     .pipe(sourcemaps.init())
-    .pipe(babel(options))
+    .pipe(babel({
+      stage: 0, // Dat ES7 goodness
+      optional:'runtime'
+    }))
     .pipe(plumber.stop())
     .pipe(sourcemaps.write('maps/'))
     .pipe(gulp.dest('distTest/'));

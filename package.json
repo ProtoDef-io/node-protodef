@@ -14,7 +14,8 @@
     "babel-runtime": "^5.4.4",
     "lodash.reduce": "^3.1.2",
     "yargs": "^1.3.1",
-    "readable-stream": "^1.1.0"
+    "readable-stream": "^1.1.0",
+    "bluebird": "^3.0.6"
   },
   "bugs": {
     "url": "https://github.com/roblabla/ProtoDef/issues"
@@ -36,6 +37,7 @@
     "power-assert": "^1.0.0",
     "require-self": "^0.1.0",
     "sinon": "^1.11.1",
-    "source-map-support": "^0.3.2"
+    "source-map-support": "^0.3.2",
+    "babel-plugin-transform-async-to-module-method": "^6.1.18"
   }
 }

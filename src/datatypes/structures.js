@@ -13,20 +13,33 @@ function evalCount(count, fields) {
   return count["default"];
 }
 
-async function readArray(read, {type,count,countType,countTypeArgs}, rootNode) {
-  var c;
+function range(a,b)
+{
+  var arr=[];
+  for(var i=a;i<b;i++)
+    arr.push(i);
+  return arr;
+}
+
+function readArray(read, {type,count,countType,countTypeArgs}, rootNode) {
+  var p;
   if(typeof count === "object")
-    c = evalCount(count, rootNode);
+    p = Promise.resolve(evalCount(count, rootNode));
   else if (typeof count !== "undefined")
-    c = getField(count, rootNode);
+    p = Promise.resolve(getField(count, rootNode));
   else if (typeof countType !== "undefined") {
-    c=await tryDoc(() => this.read(read, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
+    p=tryDoc(() => this.read(read, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
   } else // TODO : broken schema, should probably error out.
-    c = 0;
-  var results=[];
-  for(var i = 0; i < c; i++)
-    results.push(await tryDoc(() => this.read(read, type, rootNode), i));
-  return results;
+    p = Promise.resolve(0);
+  return p.then(c =>
+    range(0,c)
+      .reduce((presults,i) =>
+        presults.then(results =>
+            tryDoc(() => this.read(read, type, rootNode), i)
+            .then(val => {results.push(val);return results})
+        )
+        ,Promise.resolve([]))
+  );
 }
 
 function writeArray(value, buffer, offset, {type,count,countType,countTypeArgs}, rootNode) {
@@ -46,21 +59,21 @@ function sizeOfArray(value, {type,count,countType,countTypeArgs}, rootNode) {
 }
 
 
-async function readContainer(read, typeArgs, context) {
-  var values=await typeArgs.reduce(async (p,{type,name,anon}) =>
-    tryDoc(async () => {
-      var values = await p;
-      var value = await this.read(read, type, values);
-      if (anon) {
-        if (value !== undefined) Object.keys(value).forEach(key => values[key] = value[key]);
-      }
-      else
-        values[name] = value;
-      return values;
-    }, name ? name : "unknown")
-  ,Promise.resolve({ "..": context }));
-  delete values[".."];
-  return values;
+function readContainer(read, typeArgs, context) {
+  return typeArgs.reduce((p,{type,name,anon}) =>
+    tryDoc(() =>
+      p.then(values =>
+        this.read(read, type, values)
+        .then(value => {
+          if(!anon)
+            values[name] = value;
+          else if (value !== undefined)
+            Object.keys(value).forEach(key => values[key] = value[key]);
+          return values;
+        }))
+    , name ? name : "unknown")
+  ,Promise.resolve({ "..": context }))
+  .then(values => {delete values[".."];return values});
 }
 
 function writeContainer(value, buffer, offset, typeArgs, context) {
