@@ -16,7 +16,11 @@ class Serializer extends Transform {
     // buf => buf.copy(transformedBuffer,transformedBuffer.length)
 
     try {
-      this.createPacketBuffer(chunk, buf => this.push(buf));
+      this.createPacketBuffer(chunk, (size,f) => {
+        var buffer=new Buffer(size);
+        f(buffer);
+        this.push(buffer);
+      });
       cb();
     }
     catch(err) {

@@ -60,14 +60,10 @@ function readVarInt(read) {
 
 function writeVarInt(value, write) {
   while(value & ~0x7F) {
-    var buffer=new Buffer(1);
-    buffer.writeUInt8((value & 0xFF) | 0x80,0);
-    write(buffer);
+    write(1,buffer => buffer.writeUInt8((value & 0xFF) | 0x80,0));
     value >>>= 7;
   }
-  var buffer2=new Buffer(1);
-  buffer2.writeUInt8(value,0);
-  write(buffer2);
+  write(1,buffer => buffer.writeUInt8(value,0));
 }
 
 function readPString(read, {countType,countTypeArgs},rootNode) {
@@ -79,9 +75,7 @@ function readPString(read, {countType,countTypeArgs},rootNode) {
 function writePString(value, write, {countType,countTypeArgs},rootNode) {
   var length = Buffer.byteLength(value, 'utf8');
   tryDoc(() => this.write(length, write, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
-  var buffer2=new Buffer(length);
-  buffer2.write(value, 0, length, 'utf8');
-  write(buffer2);
+  write(length,buffer => buffer.write(value, 0, length, 'utf8'));
 }
 
 function readBool(read) {
@@ -89,9 +83,7 @@ function readBool(read) {
 }
 
 function writeBool(value, write) {
-  var buffer=new Buffer(1);
-  buffer.writeInt8(+value, 0);
-  write(buffer);
+  write(1,buffer => buffer.writeInt8(+value, 0));
 }
 
 function readBuffer(read, {count,countType,countTypeArgs}, rootNode) {
@@ -110,9 +102,7 @@ function writeBuffer(value, write, {count,countType,countTypeArgs}, rootNode) {
     this.write(value.length, write, { type: countType, typeArgs: countTypeArgs }, rootNode);
   } else if (typeof count === "undefined") { // Broken schema, should probably error out
   }
-  var buffer=new Buffer(value.length);
-  value.copy(buffer, 0);
-  write(buffer);
+  write(value.length,buffer => value.copy(buffer, 0));
 }
 
 function readVoid() {
@@ -161,9 +151,6 @@ function readBitField(read, typeArgs) {
     .then(({values}) => values);
 }
 function writeBitField(value, write, typeArgs) {
-  var size=Math.ceil(typeArgs.reduce((acc, {size}) => acc + size, 0) / 8);
-  var offset=0;
-  var buffer=new Buffer(size);
   var toWrite = 0;
   var bits = 0;
   typeArgs.forEach(function({size,signed,name}) {
@@ -180,15 +167,14 @@ function writeBitField(value, write, typeArgs) {
       size -= writeBits;
       bits += writeBits;
       if (bits === 8) {
-        buffer[offset++] = toWrite;
+        write(1,buffer => toWrite);
         bits = 0;
         toWrite = 0;
       }
     }
   });
   if (bits != 0)
-    buffer[offset++] = toWrite << (8 - bits);
-  write(buffer);
+    write(1,buffer => toWrite << (8 - bits));
 }
 
 function readCString(read) {
@@ -196,10 +182,6 @@ function readCString(read) {
 }
 
 function writeCString(value, write) {
-  var buffer=new Buffer(value.length+1);
-  var offset=0;
-  buffer.write(value, offset);
-  offset += value.length;
-  buffer.writeInt8(0x00, offset);
-  write(buffer);
+  write(value.length,buffer => buffer.write(value,0));
+  write(1,buffer => buffer.writeInt8(0x00, 0));
 }

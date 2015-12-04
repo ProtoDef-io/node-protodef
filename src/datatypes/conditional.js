@@ -34,9 +34,9 @@ function readOption(read, typeArgs, context) {
 
 function writeOption(value, write, typeArgs, context) {
   if (value != null) {
-    write((new Buffer(1).writeUInt8(1)));
+    write(1, buffer => buffer.writeUInt8(1,0));
     this.write(value, write, typeArgs, context);
   }
   else
-    write((new Buffer(0).writeUInt8(1)));
+    write(1, buffer => buffer.writeUInt8(0,0));
 }

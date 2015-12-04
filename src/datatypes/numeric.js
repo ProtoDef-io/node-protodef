@@ -4,10 +4,8 @@ function readLong(read) {
 }
 
 function writeLong(value, write) {
-  var buffer=new Buffer(8);
-  buffer.writeInt32BE(value[0], 0);
-  buffer.writeInt32BE(value[1], 4);
-  write(buffer);
+  write(4, buffer => buffer.writeInt32BE(value[0],0));
+  write(4, buffer => buffer.writeInt32BE(value[1],0));
 }
 
 function generateFunctions(bufferReader,bufferWriter,size)
@@ -17,9 +15,7 @@ function generateFunctions(bufferReader,bufferWriter,size)
     return read(size).then(buffer => buffer[bufferReader](0));
   };
   var writer=function(value, write) {
-    var buffer=new Buffer(size);
-    buffer[bufferWriter](value, 0)
-    write(buffer);
+    write(size,buffer => buffer[bufferWriter](value, 0));
   };
   return [reader, writer, size];
 }
