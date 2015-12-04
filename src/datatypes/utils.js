@@ -43,7 +43,7 @@ function readVarInt(read) {
 
   function next() {
      return read(1)
-      .then(val => val.readUInt8(0))
+      .then(({buffer,offset}) => buffer.readUInt8(offset))
       .then(b => {
         result |= ((b & 0x7f) << shift); // Add the bits to our number, except MSB
         if (!(b & 0x80)) { // If the MSB is not set, we return the number
@@ -85,7 +85,7 @@ function writePString(value, write, {countType,countTypeArgs},rootNode) {
 }
 
 function readBool(read) {
-  return read(1).then(buffer => !!buffer.readInt8(0));
+  return read(1).then(({buffer,offset}) => !!buffer.readInt8(offset));
 }
 
 function writeBool(value, write) {
@@ -102,7 +102,7 @@ function readBuffer(read, {count,countType,countTypeArgs}, rootNode) {
   else if (typeof countType !== "undefined")
     p = this.read(read, { type: countType, typeArgs: countTypeArgs }, rootNode);
 
-  return p.then(read(totalCount));
+  return p.then(read).then(({buffer}) => buffer);
 }
 
 function writeBuffer(value, write, {count,countType,countTypeArgs}, rootNode) {
@@ -135,7 +135,7 @@ function readBitField(read, typeArgs) {
     var p2=Promise.resolve(curVal);
     if (bits == 0) {
       bits = 8;
-      p2=read(1).then(buf => buf[0]);
+      p2=read(1).then(({buffer,offset}) => buffer[offset]);
     }
     return p2.then(curVal => {
         var bitsToRead = Math.min(currentSize, bits);
@@ -192,7 +192,7 @@ function writeBitField(value, write, typeArgs) {
 }
 
 function readCString(read) {
-  return (str => read(1).then(c => c==0x00 ? Promise.resolve(str) : f(str+c)))("");
+  return (str => read(1).then(({buffer,offset}) => buffer[offset]==0x00 ? Promise.resolve(str) : f(str+buffer[offset])))("");
 }
 
 function writeCString(value, write) {
