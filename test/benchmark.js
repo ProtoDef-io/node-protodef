@@ -81,7 +81,6 @@ proto.addTypes(example_protocol);
 describe("benchmark",function(){
   this.timeout(60 * 1000);
   var inputData = [];
-  var size=ITERATIONS*testDataWrite.length;
   it("bench serializing",function(done){
     var start, i, j;
     console.log('Beginning write test');
