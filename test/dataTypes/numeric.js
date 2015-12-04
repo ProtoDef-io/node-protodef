@@ -1,6 +1,6 @@
 var expect = require('chai').expect;
 
-var numeric = require('../../dist/datatypes/numeric');
+var numeric = require('protodef').types;
 var DataGetter = require('protodef').DataGetter;
 var getReader = function(dataType) {
   return async function(buffer, _fieldInfo, rootNodes) {
@@ -9,11 +9,14 @@ var getReader = function(dataType) {
     return await dataType[0](dataGetter.get.bind(dataGetter),_fieldInfo,rootNodes);
   };
 };
-var getWriter = function(dataType) { return dataType[1]; };
-var getSizeOf = function(dataType) { return dataType[2]; };
-/*var getReader = require('../../lib/utils').getReader;
-var getWriter = require('../../lib/utils').getWriter;
-var getSizeOf = require('../../lib/utils').getSizeOf;*/
+var getWriter = function(dataType) {
+  return function(value, buffer,offset, typeArgs, context) {
+    dataType[1](value,(size,f) => {
+      f(buffer.slice(offset));
+      offset+=size;
+    },typeArgs,context);
+  }
+};
 
 var testData = {
   'byte': {
@@ -34,10 +37,6 @@ var testData = {
       'buffer': new Buffer([0x00]),
       'value': -122,
       'bufferAfter': new Buffer([0x86])
-    },
-    'sizeof': {
-      'value': 0x2d,
-      'size': 1,
     }
   },
   'ubyte': {
@@ -58,10 +57,6 @@ var testData = {
       'buffer': new Buffer([0x00]),
       'value': 134,
       'bufferAfter': new Buffer([0x86])
-    },
-    'sizeof': {
-      'value': 0x2d,
-      'size': 1,
     }
   },
   'short': {
@@ -82,10 +77,6 @@ var testData = {
       'buffer': new Buffer([0x00, 0x00]),
       'value': -4233,
       'bufferAfter': new Buffer([0xef, 0x77])
-    },
-    'sizeof': {
-      'value': 0x2d,
-      'size': 2,
     }
   },
   'ushort': {
@@ -106,10 +97,6 @@ var testData = {
       'buffer': new Buffer([0x00, 0x00]),
       'value': 61303,
       'bufferAfter': new Buffer([0xef, 0x77])
-    },
-    'sizeof': {
-      'value': 0x2d,
-      'size': 2,
     }
   },
   'int': {
@@ -130,10 +117,6 @@ var testData = {
       'buffer': new Buffer([0x00, 0x00, 0x00, 0x00]),
       'value': -1024,
       'bufferAfter': new Buffer([0xff, 0xff, 0xfc, 0x00])
-    },
-    'sizeof': {
-      'value': 0x2d,
-      'size': 4
     }
   },
   'uint': {
@@ -154,10 +137,6 @@ var testData = {
       'buffer': new Buffer([0x00, 0x00, 0x00, 0x00]),
       'value': 4294966272,
       'bufferAfter': new Buffer([0xff, 0xff, 0xfc, 0x00])
-    },
-    'sizeof': {
-      'value': 0x2d,
-      'size': 4
     }
   },
   'float': {
@@ -178,10 +157,6 @@ var testData = {
       'buffer': new Buffer([0x00, 0x00, 0x00, 0x00]),
       'value': -12435,
       'bufferAfter': new Buffer([0xc6, 0x42, 0x4c, 0x00])
-    },
-    'sizeof': {
-      'value': 0x2d,
-      'size': 4
     }
   },
   'double': {
@@ -202,51 +177,34 @@ var testData = {
       'buffer': new Buffer([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]),
       'value': -12435,
       'bufferAfter': new Buffer([0xc0, 0xc8, 0x49, 0x80, 0x00, 0x00, 0x00, 0x00]),
-    },
-    'sizeof': {
-      'value': 0x2d,
-      'size': 8
     }
   }
 };
 
 describe('Numeric', function() {
-  for (var key in testData) {
-    if (testData.hasOwnProperty(key) && numeric.hasOwnProperty(key)) {
-      var value = testData[key];
-      describe('.' + key, function() {
-        var reader;
-        var writer;
-        var sizeof;
-        before(function() {
-          reader = getReader(numeric[key]);
-          writer = getWriter(numeric[key]);
-          sizeof = getSizeOf(numeric[key]);
-        });
-        it('Reads positive values', async function() {
-          expect(await reader(value.readPos.buffer, 0)).to.deep.eql(value.readPos.value);
-        });
-        it('Reads big/negative values',async function() {
-          expect(await reader(value.readNeg.buffer, 0)).to.deep.eql(value.readNeg.value);
-        });
-        it('Writes positive values', function() {
-          writer(value.writePos.value, value.writePos.buffer, 0);
-          expect(value.writePos.buffer).to.deep.eql(value.writePos.bufferAfter);
-        });
-        it('Writes negative values', function() {
-          writer(value.writeNeg.value, value.writeNeg.buffer, 0);
-          expect(value.writeNeg.buffer).to.deep.eql(value.writeNeg.bufferAfter);
-        });
-        it('Calculates size', function() {
-          var size;
-          if (typeof sizeof === "function") {
-            size = sizeof(value.sizeof.value);
-          } else {
-            size = sizeof;
-          }
-          expect(size).to.eql(value.sizeof.size);
-        });
+  Object.keys(testData).forEach(function(key){
+    var value = testData[key];
+    describe('.' + key, function() {
+      var reader;
+      var writer;
+      before(function() {
+        reader = getReader(numeric[key]);
+        writer = getWriter(numeric[key]);
       });
-    }
-  }
+      it('Reads positive values', async function() {
+        expect(await reader(value.readPos.buffer, 0)).to.deep.eql(value.readPos.value);
+      });
+      it('Reads big/negative values',async function() {
+        expect(await reader(value.readNeg.buffer, 0)).to.deep.eql(value.readNeg.value);
+      });
+      it('Writes positive values', function() {
+        writer(value.writePos.value, value.writePos.buffer, 0);
+        expect(value.writePos.buffer).to.deep.eql(value.writePos.bufferAfter);
+      });
+      it('Writes negative values', function() {
+        writer(value.writeNeg.value, value.writeNeg.buffer, 0);
+        expect(value.writeNeg.buffer).to.deep.eql(value.writeNeg.bufferAfter);
+      });
+    });
+  });
 });

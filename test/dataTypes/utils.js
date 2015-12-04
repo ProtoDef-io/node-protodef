@@ -1,7 +1,7 @@
 var assert = require('power-assert');
 var expect = require('chai').expect;
 
-var utils = require('../../dist/datatypes/utils');
+var utils = require('protodef').types;
 
 var DataGetter = require('protodef').DataGetter;
 
@@ -12,8 +12,14 @@ var getReader = function(dataType) {
     return await dataType[0](dataGetter.get.bind(dataGetter),_fieldInfo,rootNodes);
   };
 };
-var getWriter = function(dataType) { return dataType[1]; };
-var getSizeOf = function(dataType) { return dataType[2]; };
+var getWriter = function(dataType) {
+  return function(value, buffer,offset, typeArgs, context) {
+    dataType[1](value,(size,f) => {
+      f(buffer.slice(offset));
+      offset+=size;
+    },typeArgs,context);
+  }
+};
 
 describe('Utils', function() {
   describe('.bool', function() {
@@ -37,10 +43,6 @@ describe('Utils', function() {
       var buffer = new Buffer(1);
       getWriter(utils.bool)(true, buffer, 0);
       assert.notDeepEqual(buffer, new Buffer([0]));
-    });
-    it('Has a size of 1', function() {
-      assert.equal(typeof getSizeOf(utils.bool), "number");
-      assert.equal(getSizeOf(utils.bool), 1);
     });
   });
   describe('.varint', function() {
@@ -124,7 +126,7 @@ describe('Utils', function() {
         { "name": "one", "size": 8, "signed": false }
       ];
       var value = { "one": 0xff };
-      assert.equal(getWriter(utils.bitfield)(value, buf, 0, typeArgs, {}), 1);
+      getWriter(utils.bitfield)(value, buf, 0, typeArgs, {});
       assert.deepEqual(buf, new Buffer([0xff]));
     });
     it('Writes a signed 8 bit number', function() {
@@ -133,7 +135,7 @@ describe('Utils', function() {
         { "name": "one", "size": 8, "signed": true }
       ];
       var value = { "one": -1 };
-      assert.equal(getWriter(utils.bitfield)(value, buf, 0, typeArgs, {}), 1);
+      getWriter(utils.bitfield)(value, buf, 0, typeArgs, {});
       assert.deepEqual(buf, new Buffer([0xff]));
     });
     it('Writes multiple signed 8 bit numbers', function() {
@@ -144,7 +146,7 @@ describe('Utils', function() {
         { "name": "three", "size": 8, "signed": true }
       ];
       var value = { "one": -1, "two": -128, "three": 18 };
-      assert.equal(getWriter(utils.bitfield)(value, buf, 0, typeArgs, {}), 3);
+      getWriter(utils.bitfield)(value, buf, 0, typeArgs, {});
       assert.deepEqual(buf, new Buffer([0xff, 0x80, 0x12]));
     });
     it('Writes multiple unsigned 4 bit numbers', function() {
@@ -155,7 +157,7 @@ describe('Utils', function() {
         { "name": "three", "size": 4, "signed": false }
       ];
       var value = { "one": 15, "two": 15, "three": 8 };
-      assert.equal(getWriter(utils.bitfield)(value, buf, 0, typeArgs, {}), 2);
+      getWriter(utils.bitfield)(value, buf, 0, typeArgs, {});
       assert.deepEqual(buf, new Buffer([0xff, 0x80]));
     });
     it('Writes multiple signed 4 bit numbers', function() {
@@ -166,7 +168,7 @@ describe('Utils', function() {
         { "name": "three", "size": 4, "signed": true }
       ];
       var value = { "one": -1, "two": -1, "three": -8 };
-      assert.equal(getWriter(utils.bitfield)(value, buf, 0, typeArgs, {}), 2);
+      getWriter(utils.bitfield)(value, buf, 0, typeArgs, {});
       assert.deepEqual(buf, new Buffer([0xff, 0x80]));
     });
     it('Writes an unsigned 12 bit number', function() {
@@ -175,7 +177,7 @@ describe('Utils', function() {
         { "name": "one", "size": 12, "signed": false }
       ];
       var value = { "one": 4088 };
-      assert.equal(getWriter(utils.bitfield)(value, buf, 0, typeArgs, {}), 2);
+      getWriter(utils.bitfield)(value, buf, 0, typeArgs, {});
       assert.deepEqual(buf, new Buffer([0xff, 0x80]));
     });
     it('Writes a complex structure', function() {
@@ -186,7 +188,7 @@ describe('Utils', function() {
         { "name": "z", "size": 26, "signed": true }
       ];
       var value = { x: 12, y: 332, z: 4382821 };
-      assert.equal(getWriter(utils.bitfield)(value, buf, 0, typeArgs, {}), 8);
+      getWriter(utils.bitfield)(value, buf, 0, typeArgs, {});
       assert.deepEqual(buf, new Buffer([0x00, 0x00, 0x03, 0x05, 0x30, 0x42, 0xE0, 0x65]));
     });
   });

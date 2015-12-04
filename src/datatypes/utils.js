@@ -167,14 +167,14 @@ function writeBitField(value, write, typeArgs) {
       size -= writeBits;
       bits += writeBits;
       if (bits === 8) {
-        write(1,buffer => toWrite);
+        write(1,buffer => buffer[0]=toWrite);
         bits = 0;
         toWrite = 0;
       }
     }
   });
   if (bits != 0)
-    write(1,buffer => toWrite << (8 - bits));
+    write(1,buffer => buffer[0]=toWrite << (8 - bits));
 }
 
 function readCString(read) {

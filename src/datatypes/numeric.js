@@ -26,6 +26,7 @@ var nums= {
   'short': ["readInt16BE", "writeInt16BE", 2],
   'ushort': ["readUInt16BE", "writeUInt16BE", 2],
   'int': ["readInt32BE", "writeInt32BE", 4],
+  'uint': ["readUInt32BE", "writeUInt32BE", 4],
   'float': ["readFloatBE", "writeFloatBE", 4],
   'double': ["readDoubleBE", "writeDoubleBE", 8]
 };
