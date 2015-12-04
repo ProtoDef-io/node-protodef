@@ -27,15 +27,11 @@ class Serializer extends Transform {
 
 const EventEmitter = require('events').EventEmitter;
 
-class Waiter extends EventEmitter {
-  constructor() {
-    super();
-  }
-}
-
 class DataGetter {
   incomingBuffer = new Buffer(0);
-  wait = new Waiter();
+  wait = new EventEmitter();
+  asker = new EventEmitter();
+
   constructor() {
 
   }
@@ -45,12 +41,14 @@ class DataGetter {
     this.wait.emit("moreData");
   }
 
-  moreData() {
+  moreData(count) {
+    this.asker.emit("needMoreData");
     return new Promise((cb) => {
-      this.wait.once("moreData",function(){
-        console.log("moreData");
-        cb();
-      });
+      if(this.incomingBuffer.length<count)
+        this.wait.once("moreData",function(){
+          cb();
+        });
+      else cb();
     })
   }
 
@@ -61,8 +59,7 @@ class DataGetter {
   get(count) {
     var p=Promise.resolve();
     if(this.incomingBuffer.length<count)
-      p=this.moreData();
-
+      p=this.moreData(count);
     return p.then(() => {
       var data=this.incomingBuffer.slice(0,count);
       this.incomingBuffer=this.incomingBuffer.slice(count);
@@ -72,13 +69,14 @@ class DataGetter {
 }
 
 class Parser extends Transform {
+  dataGetter = new DataGetter();
   constructor(proto,mainType) {
     super({ readableObjectMode: true });
     this.proto=proto;
     this.mainType=mainType;
+    this.readData();
   }
 
-  dataGetter = new DataGetter();
 
   parsePacketBuffer(read) {
     return this.proto.parsePacketBuffer(this.mainType,read);
@@ -89,12 +87,12 @@ class Parser extends Transform {
     .then(packet => {
       this.push(packet);
     })
-    .then(() => this.dataGetter.hasMore() ? this.readData() : Promise.resolve())
+    .then(() => this.readData())
   }
 
   _transform(chunk,enc, cb) {
+    this.dataGetter.asker.once('needMoreData',cb);
     this.dataGetter.push(chunk);
-    this.readData().then(cb).catch(cb);
   }
 }
 
