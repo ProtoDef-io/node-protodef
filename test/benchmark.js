@@ -92,16 +92,11 @@ describe("benchmark",function(){
         serializer.write(testDataWrite[j]);
       }
     }
-    function wait(cb) {
-      var i=0;
-      serializer.on("data",function(data){
-        inputData.push(data);
-        i++;
-        if(i==size)
-          cb();
-      });
-    }
-    wait(function(){
+    serializer.end();
+    serializer.on("data",function(data) {
+      inputData.push(data);
+    });
+    serializer.on('finish',function(){
       console.log('Finished write test in ' + (Date.now() - start) / 1000 + ' seconds');
       done();
     });
@@ -112,15 +107,8 @@ describe("benchmark",function(){
     var start = Date.now();
     var parser=new Parser(proto,"packet");
     inputData.forEach(function(data) {parser.write(data)});
-    function wait(cb) {
-      var i=0;
-      parser.on("data",function(){
-        i++;
-        if(i==inputData.length)
-          cb();
-      });
-    }
-    wait(function(){
+    parser.end();
+    parser.on('finish',function(){
       console.log('Finished read test in ' + (Date.now() - start) / 1000 + ' seconds');
       done();
     });
