@@ -163,29 +163,39 @@ function generateBitMask(n) {
   return (1 << n) - 1;
 }
 
-// rewriting this with promises is a pain, doing it later
-async function readBitField(read, typeArgs) {
-  var curVal = null;
-  var bits = 0;
-  return await typeArgs.reduce(async function(acc_, {size,signed,name}) {
-    var acc=await acc_;
-    var currentSize = size;
-    var val = 0;
-    while (currentSize > 0) {
-      if (bits == 0) {
-        curVal = (await read(1))[0];
-        bits = 8;
-      }
-      var bitsToRead = Math.min(currentSize, bits);
-      val = (val << bitsToRead) | (curVal & generateBitMask(bits)) >> (bits - bitsToRead);
-      bits -= bitsToRead;
-      currentSize -= bitsToRead;
+function readBitField(read, typeArgs) {
+
+  function compute({currentSize,val,curVal,bits}) {
+    if(currentSize <= 0)
+      return Promise.resolve({currentSize,val,curVal,bits});
+
+    var p2=Promise.resolve(curVal);
+    if (bits == 0) {
+      bits = 8;
+      p2=read(1).then(buf => buf[0]);
     }
-    if (signed && val >= 1 << (size - 1))
-      val -= 1 << size;
-    acc[name] = val;
-    return acc;
-  }, Promise.resolve({}));
+    return p2.then(curVal => {
+        var bitsToRead = Math.min(currentSize, bits);
+        val = (val << bitsToRead) | (curVal & generateBitMask(bits)) >> (bits - bitsToRead);
+        bits -= bitsToRead;
+        currentSize -= bitsToRead;
+        return {currentSize,val,curVal,bits};
+      })
+      .then(compute)
+  }
+
+  return typeArgs.reduce((acc_, {size,signed,name}) =>
+    acc_.then(({values,curVal,bits}) => {
+      return compute({currentSize:size,val:0,curVal,bits})
+      .then(({val,curVal,bits}) => {
+        if (signed && val >= 1 << (size - 1))
+          val -= 1 << size;
+        values[name] = val;
+        return {values,curVal,bits};
+      })
+    }),
+    Promise.resolve({values:{},curVal:null,bits:0}))
+  .then(({values}) => values);
 }
 function writeBitField(value, buffer, offset, typeArgs) {
   var toWrite = 0;
