@@ -1,6 +1,6 @@
 function readLong(read) {
   return read(8)
-    .then(buffer => [buffer.readInt32BE(offset), buffer.readInt32BE(offset + 4)])
+    .then(buffer => [buffer.readInt32BE(0), buffer.readInt32BE(4)])
 }
 
 function writeLong(value, write) {

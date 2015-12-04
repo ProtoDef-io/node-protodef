@@ -27,24 +27,27 @@ class Serializer extends Transform {
 
 const EventEmitter = require('events').EventEmitter;
 
+var BufferList=require("bl");
+
 class DataGetter {
-  incomingBuffer = new Buffer(0);
+  incomingBuffer = new BufferList();
   wait = new EventEmitter();
   asker = new EventEmitter();
+  offset=0;
 
   constructor() {
 
   }
 
   push(chunk) {
-    this.incomingBuffer = Buffer.concat([this.incomingBuffer, chunk]);
+    this.incomingBuffer.append(chunk);
     this.wait.emit("moreData");
   }
 
   moreData(count) {
     this.asker.emit("needMoreData");
     return new Promise((cb) => {
-      if(this.incomingBuffer.length<count)
+      if((this.incomingBuffer.length-this.offset)<count)
         this.wait.once("moreData",function(){
           cb();
         });
@@ -58,12 +61,12 @@ class DataGetter {
 
   get(count) {
     var p=Promise.resolve();
-    if(this.incomingBuffer.length<count)
+    if((this.incomingBuffer.length-this.offset)<count)
       p=this.moreData(count);
     return p.then(() => {
-      var data=this.incomingBuffer.slice(0,count);
-      this.incomingBuffer=this.incomingBuffer.slice(count);
-      return data;
+      var d=this.incomingBuffer.slice(this.offset,this.offset+count);
+      this.offset+=count;
+      return d;
     })
   }
 }
