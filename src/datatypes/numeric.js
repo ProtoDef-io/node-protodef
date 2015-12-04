@@ -1,6 +1,6 @@
 function readLong(read) {
   return read(8)
-    .then(buffer => [buffer.readInt32BE(offset), buffer.readInt32BE(offset + 4)])
+    .then(({buffer,offset}) => [buffer.readInt32BE(offset), buffer.readInt32BE(offset + 4)])
 }
 
 function writeLong(value, write) {
@@ -14,7 +14,7 @@ function generateFunctions(bufferReader,bufferWriter,size)
 {
   var reader=function(read)
   {
-    return read(size).then(buffer => buffer[bufferReader](0));
+    return read(size).then(({buffer,offset}) => buffer[bufferReader](offset));
   };
   var writer=function(value, write) {
     var buffer=new Buffer(size);
