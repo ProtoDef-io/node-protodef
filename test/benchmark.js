@@ -1,4 +1,4 @@
-var ITERATIONS = 100000;
+var ITERATIONS = 10000;
 
 var ProtoDef=require("protodef").ProtoDef;
 var Parser=require("protodef").Parser;
