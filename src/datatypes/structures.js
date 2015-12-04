@@ -65,11 +65,10 @@ function readContainer(read, typeArgs, context) {
       p.then(values =>
         this.read(read, type, values)
         .then(value => {
-          if (anon) {
-            if (value !== undefined) Object.keys(value).forEach(key => values[key] = value[key]);
-          }
-          else
+          if(!anon)
             values[name] = value;
+          else if (value !== undefined)
+            Object.keys(value).forEach(key => values[key] = value[key]);
           return values;
         }))
     , name ? name : "unknown")
