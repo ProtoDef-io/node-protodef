@@ -69,7 +69,7 @@ function writeVarInt(value, write) {
 function readPString(read, {countType,countTypeArgs},rootNode) {
   return tryDoc(() => this.read(read, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count")
   .then(read)
-  .then(buffer => buffer.toString('utf8', 0, size));
+  .then(buffer => buffer.toString('utf8', 0, buffer.length));
 }
 
 function writePString(value, write, {countType,countTypeArgs},rootNode) {
