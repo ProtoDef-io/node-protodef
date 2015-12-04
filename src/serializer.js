@@ -77,7 +77,7 @@ class Parser extends Transform {
 
   _transform(chunk,enc, cb) {
     this.dataGetter.push(chunk);
-    this.readData().then(cb).catch(cb);
+    this.readData().then(() => cb()).catch(() => cb());
   }
 }
 
@@ -86,6 +86,7 @@ Parser.prototype.readData=async function(){
   this.push(packet);
   if(this.dataGetter.hasMore())
     await this.readData();
+  return;
 }
 
 module.exports={
