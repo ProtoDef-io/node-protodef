@@ -34,7 +34,10 @@ gulp.task('compileTest', function() {
       }
     }))
     .pipe(sourcemaps.init())
-    .pipe(babel(options))
+    .pipe(babel({
+      stage: 0, // Dat ES7 goodness
+      optional:'runtime'
+    }))
     .pipe(plumber.stop())
     .pipe(sourcemaps.write('maps/'))
     .pipe(gulp.dest('distTest/'));
