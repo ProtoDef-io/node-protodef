@@ -13,29 +13,19 @@ function evalCount(count, fields) {
   return count["default"];
 }
 
-function readArray(buffer, offset, {type,count,countType,countTypeArgs}, rootNode) {
-  var results = {
-    value: [],
-    size: 0
-  };
+async function readArray(read, {type,count,countType,countTypeArgs}, rootNode) {
   var c;
   if(typeof count === "object")
     c = evalCount(count, rootNode);
   else if (typeof count !== "undefined")
     c = getField(count, rootNode);
   else if (typeof countType !== "undefined") {
-    var {size,value}=tryDoc(() => this.read(buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
-    results.size += size;
-    offset += size;
-    c = value;
+    c=await tryDoc(() => this.read(read, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
   } else // TODO : broken schema, should probably error out.
     c = 0;
-  for(var i = 0; i < c; i++) {
-    ({size,value}=tryDoc(() => this.read(buffer, offset, type, rootNode), i));
-    results.size += size;
-    offset += size;
-    results.value.push(value);
-  }
+  var results=[];
+  for(var i = 0; i < c; i++)
+    results.push(await tryDoc(() => this.read(read, type, rootNode), i));
   return results;
 }
 
@@ -56,26 +46,21 @@ function sizeOfArray(value, {type,count,countType,countTypeArgs}, rootNode) {
 }
 
 
-function readContainer(buffer, offset, typeArgs, context) {
-  var results = {
-    value: { "..": context },
-    size: 0
-  };
-  typeArgs.forEach(({type,name,anon}) => {
-    tryDoc(() => {
-      var readResults = this.read(buffer, offset, type, results.value);
-      results.size += readResults.size;
-      offset += readResults.size;
+async function readContainer(read, typeArgs, context) {
+  var values=await typeArgs.reduce(async (p,{type,name,anon}) =>
+    tryDoc(async () => {
+      var values = await p;
+      var value = await this.read(read, type, values);
       if (anon) {
-        if(readResults.value !== undefined) Object.keys(readResults.value).forEach(function(key) {
-          results.value[key] = readResults.value[key];
-        });
-      } else
-        results.value[name] = readResults.value;
-    }, name ? name : "unknown");
-  });
-  delete results.value[".."];
-  return results;
+        if (value !== undefined) Object.keys(value).forEach(key => values[key] = value[key]);
+      }
+      else
+        values[name] = value;
+      return values;
+    }, name ? name : "unknown")
+  ,Promise.resolve({ "..": context }));
+  delete values[".."];
+  return values;
 }
 
 function writeContainer(value, buffer, offset, typeArgs, context) {
@@ -94,8 +79,8 @@ function sizeOfContainer(value, typeArgs, context) {
   return size;
 }
 
-function readCount(buffer, offset, {type}, rootNode) {
-  return this.read(buffer, offset, type, rootNode);
+function readCount(read, {type}, rootNode) {
+  return this.read(read, type, rootNode);
 }
 
 function writeCount(value, buffer, offset, {countFor,type}, rootNode) {

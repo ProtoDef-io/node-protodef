@@ -1,7 +1,14 @@
 var expect = require('chai').expect;
 
 var numeric = require('../../dist/datatypes/numeric');
-var getReader = function(dataType) { return dataType[0]; };
+var DataGetter = require('protodef').DataGetter;
+var getReader = function(dataType) {
+  return async function(buffer, _fieldInfo, rootNodes) {
+    var dataGetter=new DataGetter();
+    dataGetter.push(buffer);
+    return await dataType[0](dataGetter.get.bind(dataGetter),_fieldInfo,rootNodes);
+  };
+};
 var getWriter = function(dataType) { return dataType[1]; };
 var getSizeOf = function(dataType) { return dataType[2]; };
 /*var getReader = require('../../lib/utils').getReader;
@@ -216,14 +223,11 @@ describe('Numeric', function() {
           writer = getWriter(numeric[key]);
           sizeof = getSizeOf(numeric[key]);
         });
-        it('Returns null if not enough data is provided', function() {
-          expect(reader(new Buffer(0), 0)).to.eql(null);
+        it('Reads positive values', async function() {
+          expect(await reader(value.readPos.buffer, 0)).to.deep.eql(value.readPos.value);
         });
-        it('Reads positive values', function() {
-          expect(reader(value.readPos.buffer, 0).value).to.deep.eql(value.readPos.value);
-        });
-        it('Reads big/negative values', function() {
-          expect(reader(value.readNeg.buffer, 0).value).to.deep.eql(value.readNeg.value);
+        it('Reads big/negative values',async function() {
+          expect(await reader(value.readNeg.buffer, 0)).to.deep.eql(value.readNeg.value);
         });
         it('Writes positive values', function() {
           writer(value.writePos.value, value.writePos.buffer, 0);

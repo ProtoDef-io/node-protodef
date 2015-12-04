@@ -6,5 +6,6 @@ module.exports = {
   Serializer:require("./serializer").Serializer,
   Parser:require("./serializer").Parser,
   types:proto.types,
-  utils:require("./utils")
+  utils:require("./utils"),
+  DataGetter:require("./serializer").DataGetter
 };

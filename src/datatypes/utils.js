@@ -13,15 +13,12 @@ module.exports = {
   'mapper':[readMapper,writeMapper,sizeOfMapper]
 };
 
-function readMapper(buffer,offset,{type,mappings},rootNode)
+async function readMapper(read,{type,mappings},rootNode)
 {
-  var {size,value}=this.read(buffer, offset, type, rootNode);
-  var results={
-    size:size,
-    value:mappings[value]
-  };
-  if(results.value==undefined) throw new Error(value+" is not in the mappings value");
-  return results;
+  var value=await this.read(read, type, rootNode);
+  var mappedValue=mappings[value];
+  if(mappedValue==undefined) throw new Error(value+" is not in the mappings value");
+  return mappedValue;
 }
 
 function writeMapper(value,buffer,offset,{type,mappings},rootNode)
@@ -52,21 +49,15 @@ function sizeOfMapper(value,{type,mappings},rootNode)
   return this.sizeOf(mappedValue,type,rootNode);
 }
 
-function readVarInt(buffer, offset) {
+async function readVarInt(read) {
   var result = 0;
   var shift = 0;
-  var cursor = offset;
 
   while(true) {
-    if(cursor + 1 > buffer.length) return null;
-    var b = buffer.readUInt8(cursor);
+    var b = (await read(1)).readUInt8(0);
     result |= ((b & 0x7f) << shift); // Add the bits to our number, except MSB
-    cursor++;
     if(!(b & 0x80)) { // If the MSB is not set, we return the number
-      return {
-        value: result,
-        size: cursor - offset
-      };
+      return result;
     }
     shift += 7; // we only have 7 bits, MSB being the return-trigger
     assert.ok(shift < 64, "varint is too big"); // Make sure our shift don't overflow.
@@ -94,17 +85,10 @@ function writeVarInt(value, buffer, offset) {
 }
 
 
-function readPString(buffer, offset, {countType,countTypeArgs},rootNode) {
-  var {size,value}=tryDoc(() => this.read(buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
-  var cursor = offset + size;
-  var strEnd = cursor + value;
-  if(strEnd > buffer.length) throw new Error("Missing characters in string, found size is "+buffer.length+
-    " expected size was "+strEnd);
-
-  return {
-    value: buffer.toString('utf8', cursor, strEnd),
-    size: strEnd - offset
-  };
+async function readPString(read, {countType,countTypeArgs},rootNode) {
+  var size=await tryDoc(() => this.read(read, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
+  var buffer=read(size);
+  return buffer.toString('utf8', 0, size);
 }
 
 function writePString(value, buffer, offset, {countType,countTypeArgs},rootNode) {
@@ -121,13 +105,9 @@ function sizeOfPString(value, {countType,countTypeArgs},rootNode) {
   return size + length;
 }
 
-function readBool(buffer, offset) {
-  if(offset + 1 > buffer.length) return null;
-  var value = buffer.readInt8(offset);
-  return {
-    value: !!value,
-    size: 1
-  };
+async function readBool(read) {
+  var buffer=await read(1);
+  return !!buffer.readInt8(0);
 }
 
 function writeBool(value, buffer, offset) {
@@ -136,21 +116,14 @@ function writeBool(value, buffer, offset) {
 }
 
 
-function readBuffer(buffer, offset, {count,countType,countTypeArgs}, rootNode) {
-  var totalSize = 0;
+async function readBuffer(read, {count,countType,countTypeArgs}, rootNode) {
   var totalCount;
   if (typeof count !== "undefined")
     totalCount = getField(count, rootNode);
-  else if (typeof countType !== "undefined") {
-    var {value,size} = this.read(buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode);
-    totalSize += size;
-    offset += size;
-    totalCount = value;
-  }
-  return {
-    value: buffer.slice(offset, offset + totalCount),
-    size: totalSize + totalCount
-  };
+  else if (typeof countType !== "undefined")
+    totalCount = await this.read(read, { type: countType, typeArgs: countTypeArgs }, rootNode);
+
+  return read(totalCount);
 }
 
 function writeBuffer(value, buffer, offset, {count,countType,countTypeArgs}, rootNode) {
@@ -171,11 +144,8 @@ function sizeOfBuffer(value, {count,countType,countTypeArgs}, rootNode) {
   return size + value.length;
 }
 
-function readVoid() {
-  return {
-    value: undefined,
-    size: 0
-  };
+async function readVoid() {
+  return undefined;
 }
 
 function writeVoid(value, buffer, offset) {
@@ -186,17 +156,16 @@ function generateBitMask(n) {
   return (1 << n) - 1;
 }
 
-function readBitField(buffer, offset, typeArgs) {
-  var beginOffset = offset;
+async function readBitField(read, typeArgs) {
   var curVal = null;
   var bits = 0;
-  var results = {};
-  results.value = typeArgs.reduce(function(acc, {size,signed,name}) {
+  return await typeArgs.reduce(async function(acc_, {size,signed,name}) {
+    var acc=await acc_;
     var currentSize = size;
     var val = 0;
     while (currentSize > 0) {
       if (bits == 0) {
-        curVal = buffer[offset++];
+        curVal = (await read(1))[0];
         bits = 8;
       }
       var bitsToRead = Math.min(currentSize, bits);
@@ -208,9 +177,7 @@ function readBitField(buffer, offset, typeArgs) {
       val -= 1 << size;
     acc[name] = val;
     return acc;
-  }, {});
-  results.size = offset - beginOffset;
-  return results;
+  }, Promise.resolve({}));
 }
 function writeBitField(value, buffer, offset, typeArgs) {
   var toWrite = 0;
@@ -246,14 +213,12 @@ function sizeOfBitField(value, typeArgs) {
   }, 0) / 8);
 }
 
-function readCString(buffer, offset) {
+async function readCString(read) {
   var str = "";
-  while (offset < buffer.length && buffer[offset] != 0x00)
-    str += buffer[offset++];
-  if (offset < buffer.length)
-    return null;
-  else
-    return str;
+  var c;
+  while ((c=await read(1)) != 0x00)
+    str += c;
+  return str;
 }
 
 function writeCString(value, buffer, offset) {

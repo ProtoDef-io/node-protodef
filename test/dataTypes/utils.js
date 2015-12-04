@@ -2,21 +2,30 @@ var assert = require('power-assert');
 var expect = require('chai').expect;
 
 var utils = require('../../dist/datatypes/utils');
-var getReader = function(dataType) { return dataType[0]; };
+
+var DataGetter = require('protodef').DataGetter;
+
+var getReader = function(dataType) {
+  return async function(buffer, _fieldInfo, rootNodes) {
+    var dataGetter=new DataGetter();
+    dataGetter.push(buffer);
+    return await dataType[0](dataGetter.get.bind(dataGetter),_fieldInfo,rootNodes);
+  };
+};
 var getWriter = function(dataType) { return dataType[1]; };
 var getSizeOf = function(dataType) { return dataType[2]; };
 
 describe('Utils', function() {
   describe('.bool', function() {
-    it('Reads false value for binary 0', function() {
-      assert.deepEqual(getReader(utils.bool)(new Buffer([0]), 0), {value: false, size: 1});
+    it('Reads false value for binary 0', async function() {
+      assert.deepEqual(await getReader(utils.bool)(new Buffer([0])), false);
     });
-    it('Reads true for every other binary value', function() {
+    it('Reads true for every other binary value', async function() {
       var buf = new Buffer([0]);
       var i = 1;
       while (i < 256) {
         buf[0] = i++;
-        assert.deepEqual(getReader(utils.bool)(buf, 0), {value: true, size: 1});
+        assert.deepEqual(await getReader(utils.bool)(buf, 0), true);
       }
     });
     it('Writes false', function() {
@@ -51,73 +60,55 @@ describe('Utils', function() {
     });
   });
   describe('.bitfield', function() {
-    it('Reads an unsigned 8 bit number', function() {
+    it('Reads an unsigned 8 bit number', async function() {
       var buf = new Buffer([0xff]);
       var typeArgs = [
         { "name": "one", "size": 8, "signed": false }
       ];
-      expect(getReader(utils.bitfield)(buf, 0, typeArgs, {})).to.deep.equal({
-        value: { "one": 255 },
-        size: 1
-      });
+      expect(await (getReader(utils.bitfield))(buf, typeArgs, {})).to.deep.equal({ "one": 255 });
     });
-    it('Reads a signed 8 bit number', function() {
+    it('Reads a signed 8 bit number', async function() {
       var buf = new Buffer([0xff]);
       var typeArgs = [
         { "name": "one", "size": 8, "signed": true }
       ];
-      expect(getReader(utils.bitfield)(buf, 0, typeArgs, {})).to.deep.equal({
-        value: { "one": -1 },
-        size: 1
-      });
+      expect(await getReader(utils.bitfield)(buf, typeArgs, {})).to.deep.equal({ "one": -1 });
     });
-    it('Reads multiple signed 8 bit numbers', function() {
+    it('Reads multiple signed 8 bit numbers', async function() {
       var buf = new Buffer([0xff, 0x80, 0x12]);
       var typeArgs = [
         { "name": "one", "size": 8, "signed": true },
         { "name": "two", "size": 8, "signed": true },
         { "name": "three", "size": 8, "signed": true }
       ];
-      expect(getReader(utils.bitfield)(buf, 0, typeArgs, {})).to.deep.equal({
-        value: { "one": -1, "two": -128, "three": 18 },
-        size: 3
-      });
+      expect(await getReader(utils.bitfield)(buf, typeArgs, {})).to.deep.equal({ "one": -1, "two": -128, "three": 18 });
     });
-    it('Reads multiple unsigned 4 bit numbers', function() {
+    it('Reads multiple unsigned 4 bit numbers', async function() {
       var buf = new Buffer([0xff, 0x80]);
       var typeArgs = [
         { "name": "one", "size": 4, "signed": false },
         { "name": "two", "size": 4, "signed": false },
         { "name": "three", "size": 4, "signed": false }
       ];
-      expect(getReader(utils.bitfield)(buf, 0, typeArgs, {})).to.deep.equal({
-        value: { "one": 15, "two": 15, "three": 8 },
-        size: 2
-      });
+      expect(await getReader(utils.bitfield)(buf, typeArgs, {})).to.deep.equal({ "one": 15, "two": 15, "three": 8 });
     });
-    it('Reads multiple signed 4 bit numbers', function() {
+    it('Reads multiple signed 4 bit numbers', async function() {
       var buf = new Buffer([0xff, 0x80]);
       var typeArgs = [
         { "name": "one", "size": 4, "signed": true },
         { "name": "two", "size": 4, "signed": true },
         { "name": "three", "size": 4, "signed": true }
       ];
-      expect(getReader(utils.bitfield)(buf, 0, typeArgs, {})).to.deep.equal({
-        value: { "one": -1, "two": -1, "three": -8 },
-        size: 2
-      });
+      expect(await getReader(utils.bitfield)(buf, typeArgs, {})).to.deep.equal({ "one": -1, "two": -1, "three": -8 });
     });
-    it('Reads an unsigned 12 bit number', function() {
+    it('Reads an unsigned 12 bit number', async function() {
       var buf = new Buffer([0xff, 0x80]);
       var typeArgs = [
         { "name": "one", "size": 12, "signed": false }
       ];
-      assert.deepEqual(getReader(utils.bitfield)(buf, 0, typeArgs, {}), {
-        value: { "one": 4088 },
-        size: 2
-      });
+      assert.deepEqual(await getReader(utils.bitfield)(buf, typeArgs, {}), { "one": 4088 });
     });
-    it('Reads a complex structure', function() {
+    it('Reads a complex structure', async function() {
       var buf = new Buffer([0x00, 0x00, 0x03, 0x05, 0x30, 0x42, 0xE0, 0x65]);
       var typeArgs = [
         { "name": "x", "size": 26, "signed": true },
@@ -125,10 +116,7 @@ describe('Utils', function() {
         { "name": "z", "size": 26, "signed": true }
       ];
       var value = { x: 12, y: 332, z: 4382821 };
-      assert.deepEqual(getReader(utils.bitfield)(buf, 0, typeArgs, {}), {
-        value: value,
-        size: 8
-      });
+      assert.deepEqual(await getReader(utils.bitfield)(buf, typeArgs, {}), value);
     });
     it('Writes an unsigned 8 bit number', function() {
       var buf = new Buffer(1);

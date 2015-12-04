@@ -1,9 +1,6 @@
-function readLong(buffer, offset) {
-  if(offset + 8 > buffer.length) return null;
-  return {
-    value: [buffer.readInt32BE(offset), buffer.readInt32BE(offset + 4)],
-    size: 8
-  };
+async function readLong(read) {
+  var buffer=await read(8);
+  return [buffer.readInt32BE(offset), buffer.readInt32BE(offset + 4)]
 }
 
 function writeLong(value, buffer, offset) {
@@ -14,14 +11,10 @@ function writeLong(value, buffer, offset) {
 
 function generateFunctions(bufferReader,bufferWriter,size)
 {
-  var reader=function(buffer, offset)
+  var reader=async function(read)
   {
-    if(offset + size > buffer.length) return null;
-    var value = buffer[bufferReader](offset);
-    return {
-      value: value,
-      size: size
-    };
+    var buffer=await read(size);
+    return buffer[bufferReader](0);
   };
   var writer=function(value, buffer, offset) {
     buffer[bufferWriter](value, offset);
