@@ -37,7 +37,7 @@ function sizeOfSwitch(value, {compareTo,fields,...rest}, rootNode) {
 }
 
 function readOption(read, typeArgs, context) {
-  readUInt8(0)
+  read(0)
     .then(buf => buf.readUInt8(0))
     .then(val => (val !== 0) ? this.read(read, typeArgs, context) : undefined);
 }
