@@ -78,13 +78,12 @@ class Parser extends Transform {
   async readData() {
     var packet=await this.parsePacketBuffer(this.dataGetter.get.bind(this.dataGetter));
     this.push(packet);
-    if(this.dataGetter.hasMore())
-      await this.readData();
+    await this.dataGetter.hasMore() ? this.readData() : Promise.resolve();
   }
 
   _transform(chunk,enc, cb) {
     this.dataGetter.push(chunk);
-    this.readData().then(cb).catch(cb);
+    this.readData().then(() => cb()).catch(() => cb());
   }
 }
 
