@@ -12,12 +12,16 @@ class Serializer extends Transform {
   }
 
   _transform(chunk, enc, cb) {
+    var transformedBuffer=new Buffer(0);
+
+    //TODO make an helper for concat buffer like this
     try {
       this.createPacketBuffer(chunk, (size,f) => {
         var buffer=new Buffer(size);
         f(buffer);
-        this.push(buffer);
+        transformedBuffer=Buffer.concat([transformedBuffer,buffer])
       });
+      this.push(transformedBuffer);
       cb();
     }
     catch(err) {
