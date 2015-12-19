@@ -1,5 +1,6 @@
 var { getFieldInfo, tryCatch } = require('./utils');
 var reduce = require('lodash.reduce');
+var DataGetter=require("./data_getter");
 
 function isFieldInfo(type) {
   return typeof type === "string"
@@ -73,39 +74,39 @@ class ProtoDef
   read(read, _fieldInfo, rootNodes) {
     let {type,typeArgs} = getFieldInfo(_fieldInfo);
     var typeFunctions = this.types[type];
-    if(!typeFunctions) {
-      return {
-        error: new Error("missing data type: " + type)
-      };
-    }
+    if(!typeFunctions)
+      throw new Error("missing data type: " + type);
     return typeFunctions[0].call(this, read, typeArgs, rootNodes);
   }
 
   write(value, write, _fieldInfo, rootNode) {
     let {type,typeArgs} = getFieldInfo(_fieldInfo);
     var typeFunctions = this.types[type];
-    if(!typeFunctions) {
-      return {
-        error: new Error("missing data type: " + type)
-      };
-    }
+    if(!typeFunctions)
+      throw new Error("missing data type: " + type);
     typeFunctions[1].call(this, value, write, typeArgs, rootNode);
   }
 
-  createPacketBuffer(type,packet,write) {
-    tryCatch(()=> this.write(packet, write, type, {}),
-      (e)=> {
-        e.message = `Write error for ${e.field} : ${e.message}`;
-        throw e;
-      });
+
+  readBuffer(buffer, _fieldInfo, rootNode={}) {
+    var dataGetter=new DataGetter();
+    dataGetter.push(buffer);
+    return this.read(dataGetter.get.bind(dataGetter),_fieldInfo,rootNode);
   }
 
-  parsePacketBuffer(type,read) {
-    return tryCatch(()=> this.read(read, type, {}),
-      (e) => {
-        e.message=`Read error for ${e.field} : ${e.message}`;
-        throw e;
-      });
+  writeBuffer(value, buffer,offset, _fieldInfo, rootNode) {
+    this.write(value,(size,f) => {f(buffer.slice(offset));offset+=size;},_fieldInfo,rootNode);
+  }
+
+  createBuffer(value, _fieldInfo, rootNode={}) {
+    var newBuffer=new Buffer(0);
+
+    this.write(value, (size,f) => {
+      var buffer=new Buffer(size);
+      f(buffer);
+      newBuffer=Buffer.concat([newBuffer,buffer])
+    },_fieldInfo,rootNode);
+    return newBuffer;
   }
 }
 

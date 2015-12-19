@@ -1,22 +1,9 @@
 var expect = require('chai').expect;
 
-var numeric = require('protodef').types;
-var DataGetter = require('protodef').DataGetter;
-var getReader = function(dataType) {
-  return async function(buffer, _fieldInfo, rootNodes) {
-    var dataGetter=new DataGetter();
-    dataGetter.push(buffer);
-    return await dataType[0](dataGetter.get.bind(dataGetter),_fieldInfo,rootNodes);
-  };
-};
-var getWriter = function(dataType) {
-  return function(value, buffer,offset, typeArgs, context) {
-    dataType[1](value,(size,f) => {
-      f(buffer.slice(offset));
-      offset+=size;
-    },typeArgs,context);
-  }
-};
+var ProtoDef = require('protodef').ProtoDef;
+
+var proto=new ProtoDef();
+
 
 var testData = {
   'byte': {
@@ -182,27 +169,21 @@ var testData = {
 };
 
 describe('Numeric', function() {
-  Object.keys(testData).forEach(function(key){
-    var value = testData[key];
-    describe('.' + key, function() {
-      var reader;
-      var writer;
-      before(function() {
-        reader = getReader(numeric[key]);
-        writer = getWriter(numeric[key]);
-      });
+  Object.keys(testData).forEach(function(type){
+    var value = testData[type];
+    describe('.' + type, function() {
       it('Reads positive values', async function() {
-        expect(await reader(value.readPos.buffer, 0)).to.deep.eql(value.readPos.value);
+        expect(await proto.readBuffer(value.readPos.buffer, type)).to.deep.eql(value.readPos.value);
       });
       it('Reads big/negative values',async function() {
-        expect(await reader(value.readNeg.buffer, 0)).to.deep.eql(value.readNeg.value);
+        expect(await proto.readBuffer(value.readNeg.buffer, type)).to.deep.eql(value.readNeg.value);
       });
       it('Writes positive values', function() {
-        writer(value.writePos.value, value.writePos.buffer, 0);
+        proto.writeBuffer(value.writePos.value, value.writePos.buffer, 0,type);
         expect(value.writePos.buffer).to.deep.eql(value.writePos.bufferAfter);
       });
       it('Writes negative values', function() {
-        writer(value.writeNeg.value, value.writeNeg.buffer, 0);
+        proto.writeBuffer(value.writeNeg.value, value.writeNeg.buffer, 0,type);
         expect(value.writeNeg.buffer).to.deep.eql(value.writeNeg.bufferAfter);
       });
     });
