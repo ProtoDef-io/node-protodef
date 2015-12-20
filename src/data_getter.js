@@ -29,13 +29,13 @@ class DataGetter {
     return this.incomingBuffer.length>0;
   }
 
-  get(count) {
+  get(count,peek=false) {
     var p=Promise.resolve();
     if(this.incomingBuffer.length<count)
       p=this.moreData(count);
     return p.then(() => {
       var data=this.incomingBuffer.slice(0,count);
-      this.incomingBuffer=this.incomingBuffer.slice(count);
+      if(!peek) this.incomingBuffer=this.incomingBuffer.slice(count);
       return data;
     })
   }
