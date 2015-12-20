@@ -30,6 +30,8 @@ class DataGetter {
   }
 
   get(count,peek=false) {
+    if(count==-1)
+      count=this.incomingBuffer.length;
     var p=Promise.resolve();
     if(this.incomingBuffer.length<count)
       p=this.moreData(count);

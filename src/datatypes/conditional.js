@@ -27,7 +27,7 @@ function writeSwitch(value, write, {compareTo,fields,...rest}, rootNode) {
 }
 
 function readOption(read, typeArgs, context) {
-  read(1)
+  return read(1)
     .then(buffer => buffer.readUInt8(0))
     .then(val => (val !== 0) ? this.read(read, typeArgs, context) : undefined);
 }
