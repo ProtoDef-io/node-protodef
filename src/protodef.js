@@ -1,5 +1,6 @@
 var { getFieldInfo, tryCatch } = require('./utils');
 var reduce = require('lodash.reduce');
+var DataGetter=require("./data_getter");
 
 function isFieldInfo(type) {
   return typeof type === "string"
@@ -35,13 +36,8 @@ function extendType(functions, defaultTypeArgs) {
   }
   return [function read(read, typeArgs, context) {
     return functions[0].call(this, read, produceArgs(typeArgs), context);
-  }, function write(value, buffer, offset, typeArgs, context) {
-    return functions[1].call(this, value, buffer, offset, produceArgs(typeArgs), context);
-  }, function sizeOf(value, typeArgs, context) {
-    if (typeof functions[2] === "function")
-      return functions[2].call(this, value, produceArgs(typeArgs), context);
-    else
-      return functions[2];
+  }, function write(value, write, typeArgs, context) {
+    return functions[1].call(this, value, write, produceArgs(typeArgs), context);
   }];
 }
 
@@ -78,59 +74,39 @@ class ProtoDef
   read(read, _fieldInfo, rootNodes) {
     let {type,typeArgs} = getFieldInfo(_fieldInfo);
     var typeFunctions = this.types[type];
-    if(!typeFunctions) {
-      return {
-        error: new Error("missing data type: " + type)
-      };
-    }
+    if(!typeFunctions)
+      throw new Error("missing data type: " + type);
     return typeFunctions[0].call(this, read, typeArgs, rootNodes);
   }
 
-  write(value, buffer, offset, _fieldInfo, rootNode) {
+  write(value, write, _fieldInfo, rootNode) {
     let {type,typeArgs} = getFieldInfo(_fieldInfo);
     var typeFunctions = this.types[type];
-    if(!typeFunctions) {
-      return {
-        error: new Error("missing data type: " + type)
-      };
-    }
-    return typeFunctions[1].call(this, value, buffer, offset, typeArgs, rootNode);
-  }
-
-  sizeOf(value, _fieldInfo, rootNode) {
-    let {type,typeArgs} = getFieldInfo(_fieldInfo);
-    var typeFunctions = this.types[type];
-    if(!typeFunctions) {
+    if(!typeFunctions)
       throw new Error("missing data type: " + type);
-    }
-    if(typeof typeFunctions[2] === 'function') {
-      return typeFunctions[2].call(this, value, typeArgs, rootNode);
-    } else {
-      return typeFunctions[2];
-    }
+    typeFunctions[1].call(this, value, write, typeArgs, rootNode);
   }
 
-  createPacketBuffer(type,packet) {
-    var length=tryCatch(()=> this.sizeOf(packet, type, {}),
-      (e)=> {
-        e.message = `SizeOf error for ${e.field} : ${e.message}`;
-        throw e;
-      });
-    var buffer = new Buffer(length);
-    tryCatch(()=> this.write(packet, buffer, 0, type, {}),
-      (e)=> {
-        e.message = `Write error for ${e.field} : ${e.message}`;
-        throw e;
-      });
-    return buffer;
+
+  readBuffer(buffer, _fieldInfo, rootNode={}) {
+    var dataGetter=new DataGetter();
+    dataGetter.push(buffer);
+    return this.read(dataGetter.get.bind(dataGetter),_fieldInfo,rootNode);
   }
 
-  parsePacketBuffer(type,read) {
-    return tryCatch(()=> this.read(read, type, {}),
-      (e) => {
-        e.message=`Read error for ${e.field} : ${e.message}`;
-        throw e;
-      });
+  writeBuffer(value, buffer,offset, _fieldInfo, rootNode) {
+    this.write(value,(size,f) => {f(buffer.slice(offset));offset+=size;},_fieldInfo,rootNode);
+  }
+
+  createBuffer(value, _fieldInfo, rootNode={}) {
+    var newBuffer=new Buffer(0);
+
+    this.write(value, (size,f) => {
+      var buffer=new Buffer(size);
+      f(buffer);
+      newBuffer=Buffer.concat([newBuffer,buffer])
+    },_fieldInfo,rootNode);
+    return newBuffer;
   }
 }
 

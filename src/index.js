@@ -5,9 +5,9 @@ global.Promise = require('bluebird');
 
 module.exports = {
   ProtoDef:ProtoDef,
-  Serializer:require("./serializer").Serializer,
-  Parser:require("./serializer").Parser,
+  Serializer:require("./serializer"),
+  Parser:require("./parser"),
   types:proto.types,
   utils:require("./utils"),
-  DataGetter:require("./serializer").DataGetter
+  DataGetter:require("./data_getter")
 };

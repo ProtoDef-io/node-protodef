@@ -36,7 +36,7 @@ function addErrorField(e, field) {
 }
 
 function tryCatch(tryfn, catchfn) {
-  try { return tryfn(); } catch (e) { catchfn(e); }
+  try { var a=tryfn();return a && a.catch ? a.catch(catchfn) : a; } catch (e) { catchfn(e); }
 }
 
 function tryDoc(tryfn,field) {

@@ -18,6 +18,7 @@ npm install ProtoDef
 ## Usage
 
 See [example](example.js)
+See [parser_example](parser_example.js)
 
 
 ## API
@@ -31,41 +32,40 @@ Add the type `name` with the data `functions` which can be either:
 * a js object defining a type based on other already defined types
 * `[read,write,sizeOf]` functions
 
-#### ProtoDef.read(buffer, cursor, _fieldInfo, rootNodes)
+#### ProtoDef.read(read, _fieldInfo, rootNodes)
 
-Read the packet defined by `_fieldInfo` in `buffer` starting from `cursor` using the context `rootNodes`.
+Read the packet defined by `_fieldInfo` with `read` function using the context `rootNodes`.
+`read` is a function that takes the `size` to be read and return a Promise with a buffer of `size`.
+Returns a promise containing the parsed type.
 
-#### ProtoDef.write(value, buffer, offset, _fieldInfo, rootNode)
+#### ProtoDef.write(value, write, _fieldInfo, rootNode)
 
-Write the packet defined by `_fieldInfo` in `buffer` starting from `offset` with the value `value` and context `rootNode`
+Write the packet defined by `_fieldInfo` with `write` function with the value `value` and context `rootNode`
+`write` is a function that takes the `size` to write and a function that take a buffer and write to this buffer.
 
-#### ProtoDef.sizeOf(value, _fieldInfo, rootNode)
+#### ProtoDef.createPacketBuffer(type,packet,write)
 
-Size of the packet `value` defined by `_fieldInfo` with context `rootNode`
+`write` a `packet` for `type`.
 
-#### ProtoDef.createPacketBuffer(type,packet)
+#### ProtoDef.parsePacketBuffer(type,read)
 
-Returns a buffer of the `packet` for `type`.
-
-#### ProtoDef.parsePacketBuffer(type,buffer)
-
-Returns a parsed packet of `buffer` for `type`.
+Returns a promise containing the parsed packet that was `read` for `type`.
 
 ### Serializer(proto,mainType)
 
 Create a serializer of `mainType` defined in `proto`. This is a Transform stream.
 
-#### Serializer.createPacketBuffer(packet)
+#### Serializer.createPacketBuffer(packet,write)
 
-Returns a buffer of the `packet`.
+`write` a `packet`.
 
 ### Parser(proto,mainType)
 
 Create a parser of `mainType` defined in `proto`. This is a Transform stream.
 
-#### Parser.parsePacketBuffer(buffer)
+#### Parser.parsePacketBuffer(read)
 
-Returns a parsed packet of `buffer`.
+Returns a promise containing the parsed packet that was `read`.
 
 ### types
 
@@ -104,7 +104,6 @@ Try `tryfn`, it it fails, use addErrorField with `field`
 
 ## TODO
 - Write tests for every datatypes, and the different \*Field behaviors.
-- Rethink datatype function signature
 - Datatypes should include name when creating them, instead of being provided
 by the user, to ease datatype dependencies.
 - Probably more...
