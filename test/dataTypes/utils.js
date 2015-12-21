@@ -30,8 +30,48 @@ describe('Utils', function() {
       assert.notDeepEqual(buffer, new Buffer([0]));
     });
   });
+  var testData=[
+    {
+      type:"varint",
+      description:"varint",
+      data:[
+        {
+          buffer:new Buffer([0x02]),
+          value:2
+        },
+        {
+          buffer:new Buffer([0x0e]),
+          value:14
+        },
+        {
+          buffer:new Buffer([0x80,0x94,0xeb,0xdc,0x03]),
+          value:1000000000
+        }
+      ]
+    }
+  ];
   describe('.varint', function() {
-    it.skip('Has no tests', function() {
+    testData.forEach(function(typeTest){
+      it('writes '+typeTest.description,function(){
+        typeTest.data.forEach(function(test){
+          expect(proto.createBuffer(test.value,typeTest.type)).to.deep.equal(test.buffer);
+        })
+      })
+    });
+    testData.forEach(function(typeTest){
+      it('reads '+typeTest.description,function(){
+        typeTest.data.reduce(function(acc,test){
+          var next=function(){
+            return proto.readBuffer(test.buffer,typeTest.type).then(function(data){
+              expect(data).to.deep.equal(test.value);
+            })
+          };
+          if(acc==null)
+            return next();
+          else
+            return acc.then(next);
+        },null)
+      })
     });
   });
   describe('.buffer', function() {

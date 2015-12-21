@@ -15,6 +15,7 @@ class Parser extends Transform {
       .then(packet => {
         this.push(packet);
       })
+      .catch(err => this.emit('error',err))
       .then(() => this.readData())
   }
 
