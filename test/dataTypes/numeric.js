@@ -1,5 +1,7 @@
 var expect = require('chai').expect;
 
+var PartialReadError=require("../../").utils.PartialReadError;
+
 var numeric = require('../../dist/datatypes/numeric');
 var getReader = function(dataType) { return dataType[0]; };
 var getWriter = function(dataType) { return dataType[1]; };
@@ -216,8 +218,16 @@ describe('Numeric', function() {
           writer = getWriter(numeric[key]);
           sizeof = getSizeOf(numeric[key]);
         });
-        it('Returns null if not enough data is provided', function() {
-          expect(reader(new Buffer(0), 0)).to.eql(null);
+        it('Throw a PartialReadError if not enough data is provided', function() {
+          try {
+            reader(new Buffer(0), 0);
+          }
+          catch (e) {
+            if(!e instanceof PartialReadError)
+              throw e;
+            return;
+          }
+          throw Error("no PartialReadError thrown");
         });
         it('Reads positive values', function() {
           expect(reader(value.readPos.buffer, 0).value).to.deep.eql(value.readPos.value);

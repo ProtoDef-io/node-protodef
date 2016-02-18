@@ -1,6 +1,6 @@
 var assert = require('assert');
 
-var { getField, tryDoc } = require("../utils");
+var { getField, tryDoc, PartialReadError } = require("../utils");
 
 module.exports = {
   'varint': [readVarInt, writeVarInt, sizeOfVarInt],
@@ -58,7 +58,8 @@ function readVarInt(buffer, offset) {
   var cursor = offset;
 
   while(true) {
-    if(cursor + 1 > buffer.length) return null;
+    if(cursor + 1 > buffer.length)
+      throw new PartialReadError();
     var b = buffer.readUInt8(cursor);
     result |= ((b & 0x7f) << shift); // Add the bits to our number, except MSB
     cursor++;
@@ -98,7 +99,7 @@ function readPString(buffer, offset, {countType,countTypeArgs},rootNode) {
   var {size,value}=tryDoc(() => this.read(buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
   var cursor = offset + size;
   var strEnd = cursor + value;
-  if(strEnd > buffer.length) throw new Error("Missing characters in string, found size is "+buffer.length+
+  if(strEnd > buffer.length) throw new PartialReadError("Missing characters in string, found size is "+buffer.length+
     " expected size was "+strEnd);
 
   return {
@@ -122,7 +123,7 @@ function sizeOfPString(value, {countType,countTypeArgs},rootNode) {
 }
 
 function readBool(buffer, offset) {
-  if(offset + 1 > buffer.length) return null;
+  if(offset + 1 > buffer.length) throw new PartialReadError();
   var value = buffer.readInt8(offset);
   return {
     value: !!value,
@@ -198,6 +199,8 @@ function readBitField(buffer, offset, typeArgs) {
     var val = 0;
     while (currentSize > 0) {
       if (bits == 0) {
+        if(buffer.length<offset+1)
+          throw new PartialReadError();
         curVal = buffer[offset++];
         bits = 8;
       }
@@ -253,7 +256,7 @@ function readCString(buffer, offset) {
   while (offset < buffer.length && buffer[offset] != 0x00)
     str += buffer[offset++];
   if (offset < buffer.length)
-    return null;
+    throw new PartialReadError();
   else
     return str;
 }
