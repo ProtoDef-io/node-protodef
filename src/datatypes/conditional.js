@@ -5,8 +5,8 @@ module.exports = {
   'option': [readOption, writeOption, sizeOfOption]
 };
 
-function readSwitch(buffer, offset, {compareTo,fields,...rest}, rootNode) {
-  compareTo = getField(compareTo, rootNode);
+function readSwitch(buffer, offset, {compareTo,fields,compareToValue,...rest}, rootNode) {
+  compareTo = compareToValue!==undefined ? compareToValue : getField(compareTo, rootNode);
   if (typeof fields[compareTo] === 'undefined' && typeof rest.default === "undefined")
     throw new Error(compareTo + " has no associated fieldInfo in switch");
 
@@ -16,8 +16,8 @@ function readSwitch(buffer, offset, {compareTo,fields,...rest}, rootNode) {
   return tryDoc(() => this.read(buffer, offset, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
 }
 
-function writeSwitch(value, buffer, offset, {compareTo,fields,...rest}, rootNode) {
-  compareTo = getField(compareTo, rootNode);
+function writeSwitch(value, buffer, offset, {compareTo,fields,compareToValue,...rest}, rootNode) {
+  compareTo = compareToValue!==undefined ? compareToValue : getField(compareTo, rootNode);
   if (typeof fields[compareTo] === 'undefined' && typeof rest.default === "undefined")
     throw new Error(compareTo + " has no associated fieldInfo in switch");
 
@@ -26,8 +26,8 @@ function writeSwitch(value, buffer, offset, {compareTo,fields,...rest}, rootNode
   return tryDoc(() => this.write(value, buffer, offset, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
 }
 
-function sizeOfSwitch(value, {compareTo,fields,...rest}, rootNode) {
-  compareTo = getField(compareTo, rootNode);
+function sizeOfSwitch(value, {compareTo,fields,compareToValue,...rest}, rootNode) {
+  compareTo = compareToValue!==undefined ? compareToValue : getField(compareTo, rootNode);
   if (typeof fields[compareTo] === 'undefined' && typeof rest.default === "undefined")
     throw new Error(compareTo + " has no associated fieldInfo in switch");
 
