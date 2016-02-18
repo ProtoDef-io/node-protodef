@@ -19,7 +19,9 @@ function readArray(buffer, offset, {type,count,countType,countTypeArgs}, rootNod
     size: 0
   };
   var c;
-  if(typeof count === "object")
+  if(typeof count === "number")
+    c = count;
+  else if(typeof count === "object")
     c = evalCount(count, rootNode);
   else if (typeof count !== "undefined")
     c = getField(count, rootNode);

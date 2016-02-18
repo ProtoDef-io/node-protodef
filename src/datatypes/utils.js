@@ -139,7 +139,9 @@ function writeBool(value, buffer, offset) {
 function readBuffer(buffer, offset, {count,countType,countTypeArgs}, rootNode) {
   var totalSize = 0;
   var totalCount;
-  if (typeof count !== "undefined")
+  if(typeof count === "number")
+    totalCount = count;
+  else if (typeof count !== "undefined")
     totalCount = getField(count, rootNode);
   else if (typeof countType !== "undefined") {
     var {value,size} = this.read(buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode);
