@@ -1,10 +1,3 @@
-module.exports = {
-  getField: getField,
-  getFieldInfo: getFieldInfo,
-  addErrorField: addErrorField,
-  tryCatch: tryCatch,
-  tryDoc: tryDoc
-};
 
 function getField(countField, context) {
   var countFieldArr = countField.split("/");
@@ -42,3 +35,27 @@ function tryCatch(tryfn, catchfn) {
 function tryDoc(tryfn,field) {
   return tryCatch(tryfn,(e) => addErrorField(e,field));
 }
+
+class ExtendableError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = this.constructor.name;
+    this.message = message;
+    Error.captureStackTrace(this, this.constructor.name)
+  }
+}
+
+class PartialReadError extends ExtendableError {
+  constructor(message) {
+    super(message);
+  }
+}
+
+module.exports = {
+  getField: getField,
+  getFieldInfo: getFieldInfo,
+  addErrorField: addErrorField,
+  tryCatch: tryCatch,
+  tryDoc: tryDoc,
+  PartialReadError:PartialReadError
+};

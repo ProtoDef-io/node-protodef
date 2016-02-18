@@ -78,27 +78,16 @@ class ProtoDef
   read(buffer, cursor, _fieldInfo, rootNodes) {
     let {type,typeArgs} = getFieldInfo(_fieldInfo);
     var typeFunctions = this.types[type];
-    if(!typeFunctions) {
-      return {
-        error: new Error("missing data type: " + type)
-      };
-    }
-    var readResults = typeFunctions[0].call(this, buffer, cursor, typeArgs, rootNodes);
-    if(readResults == null) {
-      throw new Error("Reader returned null : " + JSON.stringify({type,typeArgs}));
-    }
-    if(readResults && readResults.error) return {error: readResults.error};
-    return readResults;
+    if(!typeFunctions)
+      throw new Error("missing data type: " + type);
+    return typeFunctions[0].call(this, buffer, cursor, typeArgs, rootNodes);
   }
 
   write(value, buffer, offset, _fieldInfo, rootNode) {
     let {type,typeArgs} = getFieldInfo(_fieldInfo);
     var typeFunctions = this.types[type];
-    if(!typeFunctions) {
-      return {
-        error: new Error("missing data type: " + type)
-      };
-    }
+    if(!typeFunctions)
+      throw new Error("missing data type: " + type);
     return typeFunctions[1].call(this, value, buffer, offset, typeArgs, rootNode);
   }
 

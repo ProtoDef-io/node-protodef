@@ -1,4 +1,4 @@
-var { getField, getFieldInfo, tryDoc} = require('../utils');
+var { getField, getFieldInfo, tryDoc, PartialReadError} = require('../utils');
 
 module.exports = {
   'switch': [readSwitch, writeSwitch, sizeOfSwitch],
@@ -37,6 +37,8 @@ function sizeOfSwitch(value, {compareTo,fields,compareToValue,...rest}, rootNode
 }
 
 function readOption(buffer, offset, typeArgs, context) {
+  if(buffer.length<offset+1)
+    throw new PartialReadError();
   var val = buffer.readUInt8(offset++);
   if (val !== 0) {
     var retval = this.read(buffer, offset, typeArgs, context);

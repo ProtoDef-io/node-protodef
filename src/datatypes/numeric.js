@@ -1,3 +1,5 @@
+var { PartialReadError} = require('../utils');
+
 function readLong(buffer, offset) {
   if(offset + 8 > buffer.length) return null;
   return {
@@ -16,7 +18,8 @@ function generateFunctions(bufferReader,bufferWriter,size)
 {
   var reader=function(buffer, offset)
   {
-    if(offset + size > buffer.length) return null;
+    if(offset + size > buffer.length)
+      throw new PartialReadError();
     var value = buffer[bufferReader](offset);
     return {
       value: value,
