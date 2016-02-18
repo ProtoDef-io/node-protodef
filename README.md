@@ -111,6 +111,9 @@ by the user, to ease datatype dependencies.
 
 ## History
 
+### 0.3.0
+* add partial packet support
+
 ### 0.2.6
 * add compareToValue (optional) option to switch
 
