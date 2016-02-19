@@ -70,7 +70,7 @@ function readVarInt(buffer, offset) {
       };
     }
     shift += 7; // we only have 7 bits, MSB being the return-trigger
-    assert.ok(shift < 64, "varint is too big"); // Make sure our shift don't overflow.
+    assert.ok(shift < 32, "varint is too big"); // Make sure our shift don't overflow.
   }
 }
 

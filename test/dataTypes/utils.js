@@ -103,6 +103,24 @@ describe('Utils', function() {
       assert.equal(getWriter(utils.varint)(-1, buf, 0, [], {}), 5);
       assert.deepEqual(buf, new Buffer([0xff, 0xff, 0xff, 0xff, 0x0f]));
     });
+
+    it('Throws on read >32-bit integer', function() {
+      var buf = new Buffer([0xff, 0xff, 0xff, 0xff, 0xff, 0x0f]);
+
+      try {
+        // 0xffffffff0f (5 bytes) is -1, as expected for varint (32-bit)
+        // 0xffffffffff0f (6 bytes) and longer should not parse
+        expect(getReader(utils.varint)(buf, 0, [], {})).to.deep.equal({
+          value: -1, // 0xffffffff,
+          size: 6
+        });
+        throw new Error('unexpectedly did not fail to read >32-bit varint');
+      } catch (e) {
+        assert.equal(e.name, 'AssertionError');
+        // expect exception
+        // TODO: other return value?
+      }
+    });
   });
   describe('.buffer', function() {
     it.skip('Has no tests', function() {
