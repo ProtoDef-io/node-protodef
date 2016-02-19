@@ -43,7 +43,7 @@ function readEntityMetadata(buffer, offset, {type,endVal}) {
     cursor += results.size;
   }
 }
-```js
+```
 
 Useful function: this.read which takes 5 arguments:
 
