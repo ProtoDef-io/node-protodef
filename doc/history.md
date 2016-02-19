@@ -1,9 +1,17 @@
 # History
 
+## 1.0.0
+
+* change the name of numerical types
+* add doc
+
+
 ## 0.3.0
+
 * add partial packet support
 
 ## 0.2.6
+
 * add compareToValue (optional) option to switch
 
 ## 0.2.5
