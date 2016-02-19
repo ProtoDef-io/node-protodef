@@ -35,7 +35,73 @@ describe('Utils', function() {
     });
   });
   describe('.varint', function() {
-    it.skip('Has no tests', function() {
+    it('Reads 8-bit integer', function() {
+      var buf = new Buffer([0x01]);
+      expect(getReader(utils.varint)(buf, 0, [], {})).to.deep.equal({
+        value: 1,
+        size: 1
+      });
+    });
+    it('Reads 8-bit maximum integer', function() {
+      var buf = new Buffer([0x7f]);
+      expect(getReader(utils.varint)(buf, 0, [], {})).to.deep.equal({
+        value: 0x7f,
+        size: 1
+      });
+    });
+    it('Reads 16-bit integer', function() { // example from https://developers.google.com/protocol-buffers/docs/encoding#varints
+      var buf = new Buffer([0xac, 0x02]);
+      expect(getReader(utils.varint)(buf, 0, [], {})).to.deep.equal({
+        value: 300,
+        size: 2
+      });
+    });
+    it('Reads 24-bit integer', function() {
+      var buf = new Buffer([0xa0, 0x8d, 0x06]);
+      expect(getReader(utils.varint)(buf, 0, [], {})).to.deep.equal({
+        value: 100000,
+        size: 3
+      });
+    });
+    it('Reads 32-bit integer', function() {
+      var buf = new Buffer([0x84, 0x86, 0x88, 0x08]);
+      expect(getReader(utils.varint)(buf, 0, [], {})).to.deep.equal({
+        value: 0x01020304,
+        size: 4
+      });
+    });
+    it('Reads negative integer', function() {
+      var buf = new Buffer([0xff, 0xff, 0xff, 0xff, 0x0f]);
+      expect(getReader(utils.varint)(buf, 0, [], {})).to.deep.equal({
+        value: -1, // 0xffffffff,
+        size: 5
+      });
+    });
+
+    it('Writes 8-bit maximum integer', function() {
+      var buf = new Buffer(1);
+      assert.equal(getWriter(utils.varint)(0x7f, buf, 0, [], {}), 1);
+      assert.deepEqual(buf, new Buffer([0x7f]));
+    });
+    it('Writes 16-bit integer', function() {
+      var buf = new Buffer(2);
+      assert.equal(getWriter(utils.varint)(300, buf, 0, [], {}), 2);
+      assert.deepEqual(buf, new Buffer([0xac, 0x02]));
+    });
+    it('Writes 24-bit integer', function() {
+      var buf = new Buffer(3);
+      assert.equal(getWriter(utils.varint)(100000, buf, 0, [], {}), 3);
+      assert.deepEqual(buf, new Buffer([0xa0, 0x8d, 0x06]));
+    });
+    it('Writes 32-bit integer', function() {
+      var buf = new Buffer(4);
+      assert.equal(getWriter(utils.varint)(0x01020304, buf, 0, [], {}), 4);
+      assert.deepEqual(buf, new Buffer([0x84, 0x86, 0x88, 0x08]));
+    });
+    it('Writes negative integer', function() {
+      var buf = new Buffer(5);
+      assert.equal(getWriter(utils.varint)(-1, buf, 0, [], {}), 5);
+      assert.deepEqual(buf, new Buffer([0xff, 0xff, 0xff, 0xff, 0x0f]));
     });
   });
   describe('.buffer', function() {
