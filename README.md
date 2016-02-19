@@ -19,6 +19,9 @@ npm install ProtoDef
 
 See [example](example.js)
 
+## Datatype documentation
+
+[datatypes.md](doc/datatypes.md) documents the default datatypes provided by Protodef.
 
 ## API
 
