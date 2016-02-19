@@ -32,6 +32,7 @@ If the value of someField is different, then the value encoded is of type void.
       "3": "string"
       },
     "default": "void"  
+   }
 ]
 ```
 
