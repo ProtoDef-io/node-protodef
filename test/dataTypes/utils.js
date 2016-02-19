@@ -121,6 +121,24 @@ describe('Utils', function() {
         // TODO: other return value?
       }
     });
+
+    it('Writes 2**32 - 1', function() {
+      var buf = new Buffer(5);
+      // 0xffffffff encodes same as -1 with varint 32-bit
+      assert.equal(getWriter(utils.varint)(0xffffffff, buf, 0, [], {}), 5);
+      assert.deepEqual(buf, new Buffer([0xff, 0xff, 0xff, 0xff, 0x0f]));
+    });
+    it('Throws on writing 2**32', function() {
+      var buf = new Buffer(5);
+      try {
+        getWriter(utils.varint)(0x100000000, buf, 0, [], {});
+        throw new Error('unexpectedly did not fail to write 2**32 varint');
+      } catch (e) {
+        assert.equal(e.name, 'TypeError');
+        assert.equal(e.toString(), 'TypeError: value is out of bounds');
+        //throw e;
+      }
+    });
   });
   describe('.buffer', function() {
     it.skip('Has no tests', function() {
