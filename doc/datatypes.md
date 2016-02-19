@@ -61,17 +61,17 @@ Example of value: `"my string"`
 
 These datatypes don't take any arguments. They represent numbers.
 
-| Name    | Size in bytes | Example of value    |
-| ---     | ---           | ---                 |
-| i8      | 1             | -125                |
-| u8      | 1             | 255                 |
-| i16     | 2             | -32000              |
-| u16     | 2             | 60000               |
-| i32     | 4             | -2000000000         |
-| u32     | 4             | 3000000000          |
-| f32     | 4             | 4.5                 |
-| f64     | 8             | 4.5                 |
-| long    | 8             | [0,1]               |
+| Name    | Size in bytes | Example of value    | Also called    |
+| ---     | ---           | ---                 | ---            |
+| i8      | 1             | -125                | byte           |
+| u8      | 1             | 255                 | unsigned byte  |
+| i16     | 2             | -32000              | short          | 
+| u16     | 2             | 60000               | unsigned short |
+| i32     | 4             | -2000000000         | int            |
+| u32     | 4             | 3000000000          | unsigned int   |
+| f32     | 4             | 4.5                 | float          |
+| f64     | 8             | 4.5                 | double         |
+| i64     | 8             | [0,1]               | long           |
 
 ## Structures
 
@@ -250,16 +250,16 @@ mappers maps values. It takes as argument the type of the input, and a mappings 
 
 Example:
 
-Maps a byte to a string, 1 to byte, 2 to short, 3 to int, 4 to long.
+Maps a byte to a string, 1 to "byte", 2 to "short", 3 to "int", 4 to "long".
 ```json
 [
     "mapper",
     {
       "type": "i8",
       "mappings": {
-        "1": "i8",
-        "2": "i16",
-        "3": "i32",
+        "1": "byte",
+        "2": "short",
+        "3": "int",
         "4": "long"
       }
     }
