@@ -178,6 +178,128 @@ describe('Utils', function() {
       }
     });
   });
+
+  describe('.varlong', function() {
+    // first, ensure same tests pass as varint
+    it('Reads 8-bit integer', function() {
+      var buf = new Buffer([0x01]);
+      expect(getReader(utils.varlong)(buf, 0, [], {})).to.deep.equal({
+        value: 1,
+        size: 1
+      });
+    });
+    it('Reads 8-bit maximum integer', function() {
+      var buf = new Buffer([0x7f]);
+      expect(getReader(utils.varlong)(buf, 0, [], {})).to.deep.equal({
+        value: 0x7f,
+        size: 1
+      });
+    });
+    it('Reads 16-bit integer', function() { // example from https://developers.google.com/protocol-buffers/docs/encoding#varlongs
+      var buf = new Buffer([0xac, 0x02]);
+      expect(getReader(utils.varlong)(buf, 0, [], {})).to.deep.equal({
+        value: 300,
+        size: 2
+      });
+    });
+    it('Reads 24-bit integer', function() {
+      var buf = new Buffer([0xa0, 0x8d, 0x06]);
+      expect(getReader(utils.varlong)(buf, 0, [], {})).to.deep.equal({
+        value: 100000,
+        size: 3
+      });
+    });
+    it('Reads 32-bit integer', function() {
+      var buf = new Buffer([0x84, 0x86, 0x88, 0x08]);
+      expect(getReader(utils.varlong)(buf, 0, [], {})).to.deep.equal({
+        value: 0x01020304,
+        size: 4
+      });
+    });
+    it('Reads negative integer', function() {
+      var buf = new Buffer([0xff, 0xff, 0xff, 0xff, 0x0f]);
+      expect(getReader(utils.varlong)(buf, 0, [], {})).to.deep.equal({
+        value: -1, // 0xffffffff,
+        size: 5
+      });
+    });
+
+    it('Writes 8-bit maximum integer', function() {
+      var buf = new Buffer(1);
+      assert.equal(getWriter(utils.varlong)(0x7f, buf, 0, [], {}), 1);
+      assert.deepEqual(buf, new Buffer([0x7f]));
+    });
+    it('Writes 16-bit integer', function() {
+      var buf = new Buffer(2);
+      assert.equal(getWriter(utils.varlong)(300, buf, 0, [], {}), 2);
+      assert.deepEqual(buf, new Buffer([0xac, 0x02]));
+    });
+    it('Writes 24-bit integer', function() {
+      var buf = new Buffer(3);
+      assert.equal(getWriter(utils.varlong)(100000, buf, 0, [], {}), 3);
+      assert.deepEqual(buf, new Buffer([0xa0, 0x8d, 0x06]));
+    });
+    it('Writes 32-bit integer', function() {
+      var buf = new Buffer(4);
+      assert.equal(getWriter(utils.varlong)(0x01020304, buf, 0, [], {}), 4);
+      assert.deepEqual(buf, new Buffer([0x84, 0x86, 0x88, 0x08]));
+    });
+    it('Writes negative integer', function() {
+      var buf = new Buffer(5);
+      assert.equal(getWriter(utils.varlong)(-1, buf, 0, [], {}), 5);
+      assert.deepEqual(buf, new Buffer([0xff, 0xff, 0xff, 0xff, 0x0f]));
+    });
+
+    // >32-bit varlong-specific test code
+
+    it('Does not throw on read >32-bit integer', function() {
+      var buf = new Buffer([0xff, 0xff, 0xff, 0xff, 0xff, 0x0f]);
+
+      // 0xffffffff0f (5 bytes) is -1, as expected for varint (32-bit)
+      // 0xffffffffff0f (6 bytes) and longer is varlong
+      expect(getReader(utils.varlong)(buf, 0, [], {})).to.deep.equal({
+        value: -1, // 0xffffffff, TODO: this is wrong, but varlong needs 64-bit (or at least 53-bit bitwise?)
+        size: 6
+      });
+    });
+
+    it('Writes maximum varint 2147483647', function() {
+      var buf = new Buffer(5);
+      assert.equal(getWriter(utils.varlong)(2147483647, buf, 0, [], {}), 5);
+      assert.deepEqual(buf, new Buffer([0xff, 0xff, 0xff, 0xff, 0x07]));
+    });
+    it('Writes minimum varint -2147483648', function() {
+      var buf = new Buffer(5);
+      assert.equal(getWriter(utils.varlong)(-2147483648, buf, 0, [], {}), 5);
+      assert.deepEqual(buf, new Buffer([0x80, 0x80, 0x80, 0x80, 0x08]));
+    });
+
+    // TODO: add checks for values written - not currently correct
+
+    it('Does not throw on writing varint maximum+1', function() {
+      var buf = new Buffer(5);
+      getWriter(utils.varlong)(2147483647 + 1, buf, 0, [], {});
+      // 2147483647 + 1 = 2147483648 (floating), but deserialized as -2147483648 (32-bit wrap)
+    });
+    it('Does not throw on writing varint minimum-1', function() {
+      var buf = new Buffer(5);
+      getWriter(utils.varlong)(-2147483648 - 1, buf, 0, [], {});
+      // -2147483648 - 1 = -2147483649 (floating), but deserialized as +2147483647 (32-bit wrap)
+    });
+    it('Does not throw on writing 2**32-1', function() {
+      var buf = new Buffer(5);
+      getWriter(utils.varlong)(0xffffffff, buf, 0, [], {});
+      // 0xffffffff = 4294967295 (floating), but deserialized as -1 (32-bit wrap)
+    });
+    /*
+    it('Does not throw on writing 2**32', function() {
+      var buf = new Buffer(5);
+      getWriter(utils.varlong)(0x100000000, buf, 0, [], {});
+      // fails due to & ~0x7f 32-bit bitwise check, so tries to write a byte >255
+    });
+    */
+  });
+
   describe('.buffer', function() {
     it.skip('Has no tests', function() {
     });

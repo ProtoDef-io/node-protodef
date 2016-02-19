@@ -4,6 +4,7 @@ var { getField, tryDoc, PartialReadError } = require("../utils");
 
 module.exports = {
   'varint': [readVarInt, writeVarInt, sizeOfVarInt],
+  'varlong': [readVarLong, writeVarLong, sizeOfVarLong],
   'bool': [readBool, writeBool, 1],
   'pstring': [readPString, writePString, sizeOfPString],
   'buffer': [readBuffer, writeBuffer, sizeOfBuffer],
@@ -76,6 +77,7 @@ function readVarInt(buffer, offset) {
 
 function sizeOfVarInt(value) {
   var cursor = 0;
+  assert.ok(value >= -2147483648 && value <= 2147483647, "value is out of range for 32-bit varint");
   while(value & ~0x7F) {
     value >>>= 7;
     cursor++;
@@ -94,6 +96,53 @@ function writeVarInt(value, buffer, offset) {
   buffer.writeUInt8(value, offset + cursor);
   return offset + cursor + 1;
 }
+
+// TODO: instead return https://www.npmjs.com/package/node-int64, since JS doesn't have 64-bit integers
+function readVarLong(buffer, offset) {
+  var result = 0;
+  var shift = 0;
+  var cursor = offset;
+
+  while(true) {
+    if(cursor + 1 > buffer.length)
+      throw new PartialReadError();
+    var b = buffer.readUInt8(cursor);
+    result |= ((b & 0x7f) << shift); // Add the bits to our number, except MSB
+    cursor++;
+    if(!(b & 0x80)) { // If the MSB is not set, we return the number
+      return {
+        value: result,
+        size: cursor - offset
+      };
+    }
+    shift += 7; // we only have 7 bits, MSB being the return-trigger
+    // TODO: fix overflow when >53-bit
+    assert.ok(shift < 64, "varint is too big"); // Make sure our shift don't overflow.
+  }
+}
+
+function sizeOfVarLong(value) {
+  var cursor = 0;
+  assert.ok(value >= -9223372036854775808 && value <= 9223372036854775807, "value is out of range for 64-bit varint"); // XXX: these numbers are actually unrepresentable in JS
+  while(value & 0xffffffffffffff80) { /// XXX: can't actually do this because 1) 53-bit precision max values, and 2) bitwise & >>> ~ in JS is 32-bit!
+    value >>>= 7;
+    cursor++;
+  }
+  return cursor + 1;
+}
+
+function writeVarLong(value, buffer, offset) {
+  var cursor = 0;
+  assert.ok(value >= -9223372036854775808 && value <= 9223372036854775807, "value is out of range for 64-bit varint"); // XXX: these numbers are actually unrepresentable in JS
+  while(value & ~0x7F) {
+    buffer.writeUInt8((value & 0xFF) | 0x80, offset + cursor);
+    cursor++;
+    value >>>= 7;
+  }
+  buffer.writeUInt8(value, offset + cursor);
+  return offset + cursor + 1;
+}
+
 
 
 function readPString(buffer, offset, {countType,countTypeArgs},rootNode) {
