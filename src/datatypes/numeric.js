@@ -1,6 +1,6 @@
 var { PartialReadError} = require('../utils');
 
-function readLong(buffer, offset) {
+function readI64(buffer, offset) {
   if(offset + 8 > buffer.length) return null;
   return {
     value: [buffer.readInt32BE(offset), buffer.readInt32BE(offset + 4)],
@@ -8,7 +8,7 @@ function readLong(buffer, offset) {
   };
 }
 
-function writeLong(value, buffer, offset) {
+function writeI64(value, buffer, offset) {
   buffer.writeInt32BE(value[0], offset);
   buffer.writeInt32BE(value[1], offset + 4);
   return offset + 8;
@@ -48,7 +48,7 @@ var types=Object.keys(nums).reduce(function(types,num){
   types[num]=generateFunctions(nums[num][0], nums[num][1], nums[num][2]);
   return types;
 },{});
-types["long"]=[readLong, writeLong, 8];
+types["i64"]=[readI64, writeI64, 8];
 
 
 module.exports = types;
