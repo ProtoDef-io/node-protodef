@@ -26,9 +26,9 @@ If the value of someField is different, then the value encoded is of type void.
   {
     "compareTo": "someField",
     "fields": {
-      "0": "byte",
+      "0": "i8",
       "1": "varint",
-      "2": "float",
+      "2": "f32",
       "3": "string"
       },
     "default": "void"  
@@ -63,13 +63,14 @@ These datatypes don't take any arguments. They represent numbers.
 
 | Name    | Size in bytes | Example of value    |
 | ---     | ---           | ---                 |
-| byte    | 1             | -125                |
-| ubyte   | 1             | 255                 |
-| short   | 2             | -32000              |
-| ushort  | 2             | 60000               |
-| int     | 4             | 2000000000          |
-| float   | 4             | 4.5                 |
-| double  | 8             | 4.5                 |
+| i8      | 1             | -125                |
+| u8      | 1             | 255                 |
+| i16     | 2             | -32000              |
+| u16     | 2             | 60000               |
+| i32     | 4             | -2000000000         |
+| u32     | 4             | 3000000000          |
+| f32     | 4             | 4.5                 |
+| f64     | 8             | 4.5                 |
 | long    | 8             | [0,1]               |
 
 ## Structures
@@ -92,8 +93,8 @@ An array of int prefixed by a short length.
 [
   "array",
   {
-    "countType": "short",
-    "type": "int"
+    "countType": "i16",
+    "type": "i32"
   }
 ]
 ```
@@ -111,7 +112,7 @@ A count for a field name records, of type short.
 [
     "count",
     {
-      "type": "short",
+      "type": "i16",
       "countFor": "records"
     }
 ]
@@ -132,19 +133,19 @@ A container with fields of type int, int, ushort and ushort.
     [
       {
         "name": "x",
-        "type": "int"
+        "type": "i32"
       },
       {
         "name": "z",
-        "type": "int"
+        "type": "i32"
       },
       {
         "name": "bitMap",
-        "type": "ushort"
+        "type": "u16"
       },
       {
         "name": "addBitMap",
-        "type": "ushort"
+        "type": "u16"
       }
     ]
 ]
@@ -254,11 +255,11 @@ Maps a byte to a string, 1 to byte, 2 to short, 3 to int, 4 to long.
 [
     "mapper",
     {
-      "type": "byte",
+      "type": "i8",
       "mappings": {
-        "1": "byte",
-        "2": "short",
-        "3": "int",
+        "1": "i8",
+        "2": "i16",
+        "3": "i32",
         "4": "long"
       }
     }

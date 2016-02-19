@@ -34,13 +34,14 @@ function generateFunctions(bufferReader,bufferWriter,size)
 }
 
 var nums= {
-  'byte': ["readInt8", "writeInt8", 1],
-  'ubyte': ["readUInt8", "writeUInt8", 1],
-  'short': ["readInt16BE", "writeInt16BE", 2],
-  'ushort': ["readUInt16BE", "writeUInt16BE", 2],
-  'int': ["readInt32BE", "writeInt32BE", 4],
-  'float': ["readFloatBE", "writeFloatBE", 4],
-  'double': ["readDoubleBE", "writeDoubleBE", 8]
+  'i8': ["readInt8", "writeInt8", 1],
+  'u8': ["readUInt8", "writeUInt8", 1],
+  'i16': ["readInt16BE", "writeInt16BE", 2],
+  'u16': ["readUInt16BE", "writeUInt16BE", 2],
+  'i32': ["readInt32BE", "writeInt32BE", 4],
+  'u32': ["readUInt32BE", "writeUInt32BE", 4],
+  'f32': ["readFloatBE", "writeFloatBE", 4],
+  'f64': ["readDoubleBE", "writeDoubleBE", 8]
 };
 
 var types=Object.keys(nums).reduce(function(types,num){

@@ -6,12 +6,9 @@ var numeric = require('../../dist/datatypes/numeric');
 var getReader = function(dataType) { return dataType[0]; };
 var getWriter = function(dataType) { return dataType[1]; };
 var getSizeOf = function(dataType) { return dataType[2]; };
-/*var getReader = require('../../lib/utils').getReader;
-var getWriter = require('../../lib/utils').getWriter;
-var getSizeOf = require('../../lib/utils').getSizeOf;*/
 
 var testData = {
-  'byte': {
+  'i8': {
     'readPos': {
       'buffer': new Buffer([0x3d]),
       'value': 61
@@ -35,7 +32,7 @@ var testData = {
       'size': 1,
     }
   },
-  'ubyte': {
+  'u8': {
     'readPos': {
       'buffer': new Buffer([0x3d]),
       'value': 61
@@ -59,7 +56,7 @@ var testData = {
       'size': 1,
     }
   },
-  'short': {
+  'i16': {
     'readPos': {
       'buffer': new Buffer([0x30, 0x87]),
       'value': 12423
@@ -83,7 +80,7 @@ var testData = {
       'size': 2,
     }
   },
-  'ushort': {
+  'u16': {
     'readPos': {
       'buffer': new Buffer([0x30, 0x87]),
       'value': 12423
@@ -107,7 +104,7 @@ var testData = {
       'size': 2,
     }
   },
-  'int': {
+  'i32': {
     'readPos': {
       'buffer': new Buffer([0x00, 0x00, 0x00, 0xea]),
       'value': 234
@@ -131,7 +128,7 @@ var testData = {
       'size': 4
     }
   },
-  'uint': {
+  'u32': {
     'readPos': {
       'buffer': new Buffer([0x00, 0x00, 0x00, 0xea]),
       'value': 234
@@ -155,7 +152,7 @@ var testData = {
       'size': 4
     }
   },
-  'float': {
+  'f32': {
     'readPos': {
       'buffer': new Buffer([0x47, 0x05, 0xc3, 0x00]),
       'value': 34243
@@ -179,7 +176,7 @@ var testData = {
       'size': 4
     }
   },
-  'double': {
+  'f64': {
     'readPos': {
       'buffer': new Buffer([0x40, 0xe0, 0xb8, 0x60, 0x00, 0x00, 0x00, 0x00]),
       'value': 34243

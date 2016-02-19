@@ -33,11 +33,11 @@ var example_protocol={
       },
       {
         "name": "yaw",
-        "type": "byte"
+        "type": "i8"
       },
       {
         "name": "pitch",
-        "type": "byte"
+        "type": "i8"
       },
       {
         "name": "onGround",
