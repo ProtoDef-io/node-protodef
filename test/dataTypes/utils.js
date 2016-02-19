@@ -122,12 +122,18 @@ describe('Utils', function() {
       }
     });
 
-    it('Writes 2**32 - 1', function() {
+    it('Writes maximum varint 2147483647', function() {
       var buf = new Buffer(5);
-      // 0xffffffff encodes same as -1 with varint 32-bit
-      assert.equal(getWriter(utils.varint)(0xffffffff, buf, 0, [], {}), 5);
-      assert.deepEqual(buf, new Buffer([0xff, 0xff, 0xff, 0xff, 0x0f]));
+      assert.equal(getWriter(utils.varint)(2147483647, buf, 0, [], {}), 5);
+      assert.deepEqual(buf, new Buffer([0xff, 0xff, 0xff, 0xff, 0x07]));
     });
+    it('Writes minimum varint -2147483648', function() {
+      var buf = new Buffer(5);
+      assert.equal(getWriter(utils.varint)(-2147483648, buf, 0, [], {}), 5);
+      assert.deepEqual(buf, new Buffer([0x80, 0x80, 0x80, 0x80, 0x08]));
+    });
+
+
     it('Throws on writing 2**32', function() {
       var buf = new Buffer(5);
       try {
