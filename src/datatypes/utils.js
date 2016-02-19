@@ -85,6 +85,7 @@ function sizeOfVarInt(value) {
 
 function writeVarInt(value, buffer, offset) {
   var cursor = 0;
+  assert.ok(value >= -2147483648 && value <= 2147483647, "value is out of range for 32-bit varint");
   while(value & ~0x7F) {
     buffer.writeUInt8((value & 0xFF) | 0x80, offset + cursor);
     cursor++;

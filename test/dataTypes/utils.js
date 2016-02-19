@@ -133,15 +133,47 @@ describe('Utils', function() {
       assert.deepEqual(buf, new Buffer([0x80, 0x80, 0x80, 0x80, 0x08]));
     });
 
-
+    it('Throws on writing maximum+1', function() {
+      var buf = new Buffer(5);
+      try {
+        getWriter(utils.varint)(2147483647 + 1, buf, 0, [], {});
+        throw new Error('unexpectedly did not fail to write 2147483647 + 1 varint');
+      } catch (e) {
+        assert.equal(e.name, 'AssertionError');
+        assert.equal(e.toString(), 'AssertionError: value is out of range for 32-bit varint');
+        //throw e;
+      }
+    });
+    it('Throws on writing minimum-1', function() {
+      var buf = new Buffer(5);
+      try {
+        getWriter(utils.varint)(-2147483648 - 1, buf, 0, [], {});
+        throw new Error('unexpectedly did not fail to write -2147483648 - 1varint');
+      } catch (e) {
+        assert.equal(e.name, 'AssertionError');
+        assert.equal(e.toString(), 'AssertionError: value is out of range for 32-bit varint');
+        //throw e;
+      }
+    });
+    it('Throws on writing 2**32-1', function() {
+      var buf = new Buffer(5);
+      try {
+        getWriter(utils.varint)(0xffffffff, buf, 0, [], {});
+        throw new Error('unexpectedly did not fail to write 2**32-1 varint');
+      } catch (e) {
+        assert.equal(e.name, 'AssertionError');
+        assert.equal(e.toString(), 'AssertionError: value is out of range for 32-bit varint');
+        //throw e;
+      }
+    });
     it('Throws on writing 2**32', function() {
       var buf = new Buffer(5);
       try {
         getWriter(utils.varint)(0x100000000, buf, 0, [], {});
         throw new Error('unexpectedly did not fail to write 2**32 varint');
       } catch (e) {
-        assert.equal(e.name, 'TypeError');
-        assert.equal(e.toString(), 'TypeError: value is out of bounds');
+        assert.equal(e.name, 'AssertionError');
+        assert.equal(e.toString(), 'AssertionError: value is out of range for 32-bit varint');
         //throw e;
       }
     });
