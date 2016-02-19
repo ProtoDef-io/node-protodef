@@ -31,7 +31,7 @@ If the value of someField is different, then the value encoded is of type void.
       "2": "float",
       "3": "string"
       },
-    "default": void  
+    "default": "void"  
 ]
 ```
 
@@ -178,7 +178,7 @@ A string length prefixed by a varint.
 ```json
 [
     "pstring",{
-        countType:"varint"
+        "countType":"varint"
       }
 ]
 ```
