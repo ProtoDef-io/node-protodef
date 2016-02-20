@@ -156,11 +156,20 @@ Example of value: `{"x":10,"z":10,"bitMap":10,"addBitMap":10}`
 
 ### varint
 
-A variable-length number representation.
+A variable-length representation of a 32-bit integer.
 
 Size: between 1 and 5
 
 Example of value : `5`
+
+### varlong
+
+A variable-length representation of a 64-bit integer.
+
+Size: between 1 and 10
+
+Example of value : `6`
+
 
 ### bool
 
