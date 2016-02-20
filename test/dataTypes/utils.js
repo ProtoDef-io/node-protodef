@@ -137,6 +137,19 @@ describe('Utils', function() {
     it('Size of 32-bit integer', function() {
       assert.equal(getSizeOf(utils.varint)(0xabcdef), 4);
     });
+    it('Size of 40-bit integer', function() {
+      assert.equal(getSizeOf(utils.varint)(0x7fffffff), 5);
+    });
+    it('Size of 48-bit integer throws', function() {
+      try {
+        getSizeOf(utils.varint)(0x7fffffffff);
+        throw new Error('unexpectedly did not throw getting varint size of 40-bit');
+      } catch (e) {
+        assert.equal(e.name, 'AssertionError');
+        assert.equal(e.toString(), 'AssertionError: value is out of range for 32-bit varint');
+      }
+    });
+
 
 
     it('Writes maximum varint 2147483647', function() {
@@ -279,6 +292,37 @@ describe('Utils', function() {
       assert.equal(getWriter(utils.varlong)(-1, buf, 0, [], {}), 5);
       assert.deepEqual(buf, new Buffer([0xff, 0xff, 0xff, 0xff, 0x0f]));
     });
+
+    it('Size of small positive integer', function() {
+      assert.equal(getSizeOf(utils.varlong)(1), 1);
+    });
+    /* TODO: fix negatives, should be 10! (ff's)
+    it('Size of small negative integer', function() {
+      assert.equal(getSizeOf(utils.varlong)(-1), 10);
+    });
+    */
+    it('Size of 16-bit integer', function() {
+      assert.equal(getSizeOf(utils.varlong)(0x100), 2);
+    });
+    it('Size of 24-bit integer', function() {
+      assert.equal(getSizeOf(utils.varlong)(0x10000), 3);
+    });
+    it('Size of 32-bit integer', function() {
+      assert.equal(getSizeOf(utils.varlong)(0xabcdef), 4);
+    });
+    it('Size of 48-bit integer', function() {
+      assert.equal(getSizeOf(utils.varint)(0x7fffffff), 5);
+    });
+    it('Size of 48-bit integer', function() {
+      assert.equal(getSizeOf(utils.varlong)(0x7fffffffff), 6);
+    });
+    it('Size of 56-bit integer', function() {
+      assert.equal(getSizeOf(utils.varlong)(0x7fffffffffff), 7);
+    });
+    it('Size of 64-bit integer', function() {
+      assert.equal(getSizeOf(utils.varlong)(0x7ffffffffffff), 8);
+    });
+    // can't go much higher in JavaScript numeric type - 0x7fffffffffffff rounds to 0x80000000000000
 
 
     // >32-bit varlong-specific test code

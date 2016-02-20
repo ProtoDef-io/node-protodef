@@ -126,9 +126,11 @@ function readVarLong(buffer, offset) {
 
 function sizeOfVarLong(value) {
   var cursor = 0;
-  assert.ok(value >= -9223372036854775808 && value <= 9223372036854775807, "value is out of range for 64-bit varint"); // XXX: these numbers are actually unrepresentable in JS
-  while(value & 0xffffffffffffff80) { /// XXX: can't actually do this because 1) 53-bit precision max values, and 2) bitwise & >>> ~ in JS is 32-bit!
-    value >>>= 7;
+  assert.ok(value >= -9223372036854775808 && value <= 9223372036854775807, "value is out of range for 64-bit varint"); // warning: these are rounded
+  while(bitwise64.and(value, 0x0fffffffffffff80)) { // cannot use full 0xffffffffffffff80 because it is inexpressible in JavaScript, rounds to 0x10000000000000000
+    //value >>>= 7;
+    value /= Math.pow(2, 7);
+    value = Math.floor(value);
     cursor++;
   }
   return cursor + 1;
