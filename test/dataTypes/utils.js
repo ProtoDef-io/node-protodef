@@ -122,6 +122,23 @@ describe('Utils', function() {
       }
     });
 
+    it('Size of small positive integer', function() {
+      assert.equal(getSizeOf(utils.varint)(1), 1);
+    });
+    it('Size of small negative integer', function() {
+      assert.equal(getSizeOf(utils.varint)(-1), 5);
+    });
+    it('Size of 16-bit integer', function() {
+      assert.equal(getSizeOf(utils.varint)(0x100), 2);
+    });
+    it('Size of 24-bit integer', function() {
+      assert.equal(getSizeOf(utils.varint)(0x10000), 3);
+    });
+    it('Size of 32-bit integer', function() {
+      assert.equal(getSizeOf(utils.varint)(0xabcdef), 4);
+    });
+
+
     it('Writes maximum varint 2147483647', function() {
       var buf = new Buffer(5);
       assert.equal(getWriter(utils.varint)(2147483647, buf, 0, [], {}), 5);
