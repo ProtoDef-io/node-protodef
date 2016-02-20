@@ -163,6 +163,14 @@ Size: between 1 and 5
 
 Example of value : `5`
 
+### varshort
+
+A variable-length extended unsigned short, ranging from 0 to 0x7fffff
+
+Size: 2 (up to 0x7fff, similar to `short`) or 3 bytes
+
+Example of value : `255047`
+
 ### bool
 
 A boolean, encoded in one byte.
