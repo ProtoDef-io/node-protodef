@@ -130,7 +130,7 @@ class ProtoDef
       metadata:{
         size:size
       },
-      buffer
+      buffer:buffer.slice(size)
     };
   }
 }
