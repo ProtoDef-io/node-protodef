@@ -130,7 +130,7 @@ function sizeOfVarLong(value) {
   while(bitwise64.and(value, 0x0fffffffffffff80)) { // cannot use full 0xffffffffffffff80 because it is inexpressible in JavaScript, rounds to 0x10000000000000000
     //value >>>= 7;
     value /= Math.pow(2, 7);
-    value = Math.floor(value);
+    value = Math.floor(value); // TODO: correct direction?
     cursor++;
   }
   return cursor + 1;
@@ -139,10 +139,12 @@ function sizeOfVarLong(value) {
 function writeVarLong(value, buffer, offset) {
   var cursor = 0;
   assert.ok(value >= -9223372036854775808 && value <= 9223372036854775807, "value is out of range for 64-bit varint"); // XXX: these numbers are actually unrepresentable in JS
-  while(value & ~0x7F) {
-    buffer.writeUInt8((value & 0xFF) | 0x80, offset + cursor);
+  while(bitwise64.and(value, 0x0fffffffffffff80)) {
+    buffer.writeUInt8(bitwise64.or(value & 0xFF), 0x80), offset + cursor);
     cursor++;
-    value >>>= 7;
+    //value >>>= 7;
+    value /= Math.pow(2, 7);
+    value = Math.floor(value); // TODO: correct direction?
   }
   buffer.writeUInt8(value, offset + cursor);
   return offset + cursor + 1;
