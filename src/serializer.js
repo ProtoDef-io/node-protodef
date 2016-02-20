@@ -47,8 +47,11 @@ class Parser extends Transform {
       } catch (e) {
         if (e instanceof PartialReadError)
           return cb();
-        else
+        else {
+          e.buffer=this.queue;
+          this.queue=new Buffer(0);
           return cb(e);
+        }
       }
     }
   }
