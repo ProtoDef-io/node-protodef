@@ -1,5 +1,9 @@
 # History
 
+## 1.0.1
+
+* let the parser error out without crashing on errors
+
 ## 1.0.0
 
 * change the name of numerical types
