@@ -216,13 +216,26 @@ describe('Utils', function() {
         size: 4
       });
     });
-    it('Reads negative integer', function() {
+
+    // varlong differs from varint here
+
+    it('Reads large unsigned 32-bit integer without negative wraparound', function() {
       var buf = new Buffer([0xff, 0xff, 0xff, 0xff, 0x0f]);
       expect(getReader(utils.varlong)(buf, 0, [], {})).to.deep.equal({
-        value: -1, // 0xffffffff,
+        value: 0xffffffff, // varlong 4294967295, not -1! (varint = -1)
         size: 5
       });
     });
+    it('Read even larger >32-bit integer', function() {
+      var buf = new Buffer([0xff, 0xff, 0xff, 0xff, 0xff, 0x0f]);
+      // 0xffffffff0f (5 bytes) is -1 for varint (32-bit)
+      // 0xffffffffff0f (6 bytes) and longer is varlong
+      expect(getReader(utils.varlong)(buf, 0, [], {})).to.deep.equal({
+        value: 0x7fffffffff, // 549755813887
+        size: 6
+      });
+    });
+
 
     it('Writes 8-bit maximum integer', function() {
       var buf = new Buffer(1);
@@ -250,18 +263,8 @@ describe('Utils', function() {
       assert.deepEqual(buf, new Buffer([0xff, 0xff, 0xff, 0xff, 0x0f]));
     });
 
+
     // >32-bit varlong-specific test code
-
-    it('Does not throw on read >32-bit integer', function() {
-      var buf = new Buffer([0xff, 0xff, 0xff, 0xff, 0xff, 0x0f]);
-
-      // 0xffffffff0f (5 bytes) is -1, as expected for varint (32-bit)
-      // 0xffffffffff0f (6 bytes) and longer is varlong
-      expect(getReader(utils.varlong)(buf, 0, [], {})).to.deep.equal({
-        value: -1, // 0xffffffff, TODO: this is wrong, but varlong needs 64-bit (or at least 53-bit bitwise?)
-        size: 6
-      });
-    });
 
     it('Writes maximum varint 2147483647', function() {
       var buf = new Buffer(5);

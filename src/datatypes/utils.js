@@ -1,4 +1,5 @@
 var assert = require('assert');
+var bitwise64 = require('bitwise64');
 
 var { getField, tryDoc, PartialReadError } = require("../utils");
 
@@ -107,7 +108,9 @@ function readVarLong(buffer, offset) {
     if(cursor + 1 > buffer.length)
       throw new PartialReadError();
     var b = buffer.readUInt8(cursor);
-    result |= ((b & 0x7f) << shift); // Add the bits to our number, except MSB
+
+    result = bitwise64.or(result, (b & 0x7f) * Math.pow(2, shift)); // 53-bit safe
+    //result |= ((b & 0x7f) << shift); // Add the bits to our number, except MSB
     cursor++;
     if(!(b & 0x80)) { // If the MSB is not set, we return the number
       return {
