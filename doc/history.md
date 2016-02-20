@@ -1,5 +1,9 @@
 # History
 
+## 1.0.2
+
+* slice the buffer in parsePacketBuffer
+
 ## 1.0.1
 
 * let the parser error out without crashing on errors
