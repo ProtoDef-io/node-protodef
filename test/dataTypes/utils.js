@@ -35,8 +35,183 @@ describe('Utils', function() {
     });
   });
   describe('.varint', function() {
-    it.skip('Has no tests', function() {
+    it('Reads 8-bit integer', function() {
+      var buf = new Buffer([0x01]);
+      expect(getReader(utils.varint)(buf, 0, [], {})).to.deep.equal({
+        value: 1,
+        size: 1
+      });
     });
+    it('Reads 8-bit maximum integer', function() {
+      var buf = new Buffer([0x7f]);
+      expect(getReader(utils.varint)(buf, 0, [], {})).to.deep.equal({
+        value: 0x7f,
+        size: 1
+      });
+    });
+    it('Reads 16-bit integer', function() { // example from https://developers.google.com/protocol-buffers/docs/encoding#varints
+      var buf = new Buffer([0xac, 0x02]);
+      expect(getReader(utils.varint)(buf, 0, [], {})).to.deep.equal({
+        value: 300,
+        size: 2
+      });
+    });
+    it('Reads 24-bit integer', function() {
+      var buf = new Buffer([0xa0, 0x8d, 0x06]);
+      expect(getReader(utils.varint)(buf, 0, [], {})).to.deep.equal({
+        value: 100000,
+        size: 3
+      });
+    });
+    it('Reads 32-bit integer', function() {
+      var buf = new Buffer([0x84, 0x86, 0x88, 0x08]);
+      expect(getReader(utils.varint)(buf, 0, [], {})).to.deep.equal({
+        value: 0x01020304,
+        size: 4
+      });
+    });
+    it('Reads negative integer', function() {
+      var buf = new Buffer([0xff, 0xff, 0xff, 0xff, 0x0f]);
+      expect(getReader(utils.varint)(buf, 0, [], {})).to.deep.equal({
+        value: -1, // 0xffffffff,
+        size: 5
+      });
+    });
+
+    it('Writes 8-bit maximum integer', function() {
+      var buf = new Buffer(1);
+      assert.equal(getWriter(utils.varint)(0x7f, buf, 0, [], {}), 1);
+      assert.deepEqual(buf, new Buffer([0x7f]));
+    });
+    it('Writes 16-bit integer', function() {
+      var buf = new Buffer(2);
+      assert.equal(getWriter(utils.varint)(300, buf, 0, [], {}), 2);
+      assert.deepEqual(buf, new Buffer([0xac, 0x02]));
+    });
+    it('Writes 24-bit integer', function() {
+      var buf = new Buffer(3);
+      assert.equal(getWriter(utils.varint)(100000, buf, 0, [], {}), 3);
+      assert.deepEqual(buf, new Buffer([0xa0, 0x8d, 0x06]));
+    });
+    it('Writes 32-bit integer', function() {
+      var buf = new Buffer(4);
+      assert.equal(getWriter(utils.varint)(0x01020304, buf, 0, [], {}), 4);
+      assert.deepEqual(buf, new Buffer([0x84, 0x86, 0x88, 0x08]));
+    });
+    it('Writes negative integer', function() {
+      var buf = new Buffer(5);
+      assert.equal(getWriter(utils.varint)(-1, buf, 0, [], {}), 5);
+      assert.deepEqual(buf, new Buffer([0xff, 0xff, 0xff, 0xff, 0x0f]));
+    });
+
+    /* TODO: restore check after https://github.com/roblabla/ProtoDef/pull/51 (currently, overflows)
+    it('Throws on read >32-bit integer', function() {
+      var buf = new Buffer([0xff, 0xff, 0xff, 0xff, 0xff, 0x0f]);
+
+      try {
+        // 0xffffffff0f (5 bytes) is -1, as expected for varint (32-bit)
+        // 0xffffffffff0f (6 bytes) and longer should not parse
+        expect(getReader(utils.varint)(buf, 0, [], {})).to.deep.equal({
+          value: -1, // 0xffffffff,
+          size: 6
+        });
+        throw new Error('unexpectedly did not fail to read >32-bit varint');
+      } catch (e) {
+        assert.equal(e.name, 'AssertionError');
+        // expect exception
+        // TODO: other return value?
+      }
+    });
+    */
+
+    it('Size of small positive integer', function() {
+      assert.equal(getSizeOf(utils.varint)(1), 1);
+    });
+    it('Size of small negative integer', function() {
+      assert.equal(getSizeOf(utils.varint)(-1), 5);
+    });
+    it('Size of 16-bit integer', function() {
+      assert.equal(getSizeOf(utils.varint)(0x100), 2);
+    });
+    it('Size of 24-bit integer', function() {
+      assert.equal(getSizeOf(utils.varint)(0x10000), 3);
+    });
+    it('Size of 32-bit integer', function() {
+      assert.equal(getSizeOf(utils.varint)(0xabcdef), 4);
+    });
+    it('Size of 40-bit integer', function() {
+      assert.equal(getSizeOf(utils.varint)(0x7fffffff), 5);
+    });
+    /* TODO: restore checks after https://github.com/roblabla/ProtoDef/pull/51 (currently, overflows)
+    it('Size of 48-bit integer throws', function() {
+      try {
+        getSizeOf(utils.varint)(0x7fffffffff);
+        throw new Error('unexpectedly did not throw getting varint size of 40-bit');
+      } catch (e) {
+        assert.equal(e.name, 'AssertionError');
+        assert.equal(e.toString(), 'AssertionError: value is out of range for 32-bit varint');
+      }
+    });
+    */
+
+
+    it('Writes maximum varint 2147483647', function() {
+      var buf = new Buffer(5);
+      assert.equal(getWriter(utils.varint)(2147483647, buf, 0, [], {}), 5);
+      assert.deepEqual(buf, new Buffer([0xff, 0xff, 0xff, 0xff, 0x07]));
+    });
+    it('Writes minimum varint -2147483648', function() {
+      var buf = new Buffer(5);
+      assert.equal(getWriter(utils.varint)(-2147483648, buf, 0, [], {}), 5);
+      assert.deepEqual(buf, new Buffer([0x80, 0x80, 0x80, 0x80, 0x08]));
+    });
+
+    /* TODO: restore checks after https://github.com/roblabla/ProtoDef/pull/51 (currently, overflows)
+    it('Throws on writing maximum+1', function() {
+      var buf = new Buffer(5);
+      try {
+        getWriter(utils.varint)(2147483647 + 1, buf, 0, [], {});
+        throw new Error('unexpectedly did not fail to write 2147483647 + 1 varint');
+      } catch (e) {
+        assert.equal(e.name, 'AssertionError');
+        assert.equal(e.toString(), 'AssertionError: value is out of range for 32-bit varint');
+        //throw e;
+      }
+    });
+    it('Throws on writing minimum-1', function() {
+      var buf = new Buffer(5);
+      try {
+        getWriter(utils.varint)(-2147483648 - 1, buf, 0, [], {});
+        throw new Error('unexpectedly did not fail to write -2147483648 - 1varint');
+      } catch (e) {
+        assert.equal(e.name, 'AssertionError');
+        assert.equal(e.toString(), 'AssertionError: value is out of range for 32-bit varint');
+        //throw e;
+      }
+    });
+    it('Throws on writing 2**32-1', function() {
+      var buf = new Buffer(5);
+      try {
+        getWriter(utils.varint)(0xffffffff, buf, 0, [], {});
+        throw new Error('unexpectedly did not fail to write 2**32-1 varint');
+      } catch (e) {
+        assert.equal(e.name, 'AssertionError');
+        assert.equal(e.toString(), 'AssertionError: value is out of range for 32-bit varint');
+        //throw e;
+      }
+    });
+    it('Throws on writing 2**32', function() {
+      var buf = new Buffer(5);
+      try {
+        getWriter(utils.varint)(0x100000000, buf, 0, [], {});
+        throw new Error('unexpectedly did not fail to write 2**32 varint');
+      } catch (e) {
+        assert.equal(e.name, 'AssertionError');
+        assert.equal(e.toString(), 'AssertionError: value is out of range for 32-bit varint');
+        //throw e;
+      }
+    });
+    */
   });
   describe('.buffer', function() {
     it.skip('Has no tests', function() {
