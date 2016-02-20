@@ -1,5 +1,9 @@
 # History
 
+## 1.0.3
+
+* fix slice the buffer in parsePacketBuffer
+
 ## 1.0.2
 
 * slice the buffer in parsePacketBuffer
