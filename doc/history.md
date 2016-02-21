@@ -1,5 +1,9 @@
 # History
 
+## 1.1.1
+
+* update some more dependencies
+
 ## 1.1.0
 
 * update to babel6, remove some dependencies
