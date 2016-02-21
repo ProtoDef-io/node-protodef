@@ -45,7 +45,7 @@ class Parser extends Transform {
         this.push(packet);
         this.queue=this.queue.slice(packet.metadata.size);
       } catch (e) {
-        if (e instanceof PartialReadError)
+        if (e.partialReadError)
           return cb();
         else {
           e.buffer=this.queue;

@@ -1,4 +1,4 @@
-var assert = require('power-assert');
+var assert = require('chai').assert;
 var expect = require('chai').expect;
 
 var utils = require('../../dist/datatypes/utils');

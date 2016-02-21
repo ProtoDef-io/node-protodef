@@ -47,9 +47,8 @@ function extendType(functions, defaultTypeArgs) {
 
 class ProtoDef
 {
-  types={};
-
   constructor() {
+    this.types={};
     this.addDefaultTypes();
   }
 

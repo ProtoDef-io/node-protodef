@@ -48,6 +48,7 @@ class ExtendableError extends Error {
 class PartialReadError extends ExtendableError {
   constructor(message) {
     super(message);
+    this.partialReadError=true;
   }
 }
 
