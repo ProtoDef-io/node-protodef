@@ -1,5 +1,9 @@
 # History
 
+## 1.1.0
+
+* update to babel6, remove some dependencies
+
 ## 1.0.3
 
 * fix slice the buffer in parsePacketBuffer
