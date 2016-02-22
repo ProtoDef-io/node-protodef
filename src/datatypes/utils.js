@@ -16,12 +16,19 @@ module.exports = {
 function readMapper(buffer,offset,{type,mappings},rootNode)
 {
   var {size,value}=this.read(buffer, offset, type, rootNode);
-  var results={
+  var mappedValue=null;
+  var keys=Object.keys(mappings);
+  for(var i=0;i<keys.length;i++) {
+    if(keys[i]==value) {
+      mappedValue = mappings[keys[i]];
+      break;
+    }
+  }
+  if(mappedValue==null) throw new Error(value+" is not in the mappings value");
+  return {
     size:size,
-    value:mappings[value]
+    value:mappedValue
   };
-  if(results.value==undefined) throw new Error(value+" is not in the mappings value");
-  return results;
 }
 
 function writeMapper(value,buffer,offset,{type,mappings},rootNode)
