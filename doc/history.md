@@ -1,5 +1,9 @@
 # History
 
+## 1.1.2
+
+* allow hex values in mappings
+
 ## 1.1.1
 
 * update some more dependencies
