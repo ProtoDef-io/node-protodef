@@ -1,6 +1,11 @@
 var ProtoDef = require("protodef").ProtoDef;
 var expect = require('chai').expect;
 var PartialReadError=require("../../").utils.PartialReadError;
+var Validator = require('jsonschema').Validator;
+var v = new Validator();
+var assert = require('assert');
+
+Error.stackTraceLimit=0;
 
 var proto = new ProtoDef();
 
@@ -63,6 +68,12 @@ function testType(type,values)
 
 testData.forEach(tests => {
   describe(tests.kind,()=> {
+    it("validates the json schema",()=>{
+      var schema = require('./datatype_tests_schema.json');
+      var result = v.validate(tests.data, schema);
+      assert.strictEqual(result.errors.length,0,require('util').inspect(result.errors,{'depth':null}));
+    });
+
     tests.data.forEach(test => {
       describe(test.type,() => {
         if(test.subtypes)
