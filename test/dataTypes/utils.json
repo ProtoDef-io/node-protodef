@@ -1,0 +1,198 @@
+[
+  {
+    "type":"bool",
+    "values":[
+      {
+        "description":"binary 0 is false",
+        "buffer":[
+          "0x00"
+        ],
+        "value": false
+      },
+      {
+        "description":"1 is true",
+        "buffer":[
+          "0x01"
+        ],
+        "value": true
+      }
+    ]
+  },
+  {
+    "type":"varint",
+    "values":[
+
+    ]
+  },
+  {
+    "type":"buffer",
+    "values":[
+
+    ]
+  },
+  {
+    "type":"string",
+    "values":[
+
+    ]
+  },
+  {
+    "type":"void",
+    "values":[
+
+    ]
+  },
+  {
+    "type":"bitfield",
+    "subtypes":[
+      {
+        "description":"an unsigned 8 bit number",
+        "type":[
+          "bitfield",[
+            {
+              "name": "one",
+              "size": 8,
+              "signed": false
+            }
+          ]
+        ],
+        "values":[
+          {
+            "buffer":[
+              "0xff"
+            ],
+            "value":{
+              "one": 255
+            }
+          }
+        ]
+      },
+      {
+        "description":"a signed 8 bit number",
+        "type":[
+          "bitfield",[
+            {
+              "name": "one",
+              "size": 8,
+              "signed": true
+            }
+          ]
+        ],
+        "values":[
+          {
+            "buffer":[
+              "0xff"
+            ],
+            "value":{
+              "one": -1
+            }
+          }
+        ]
+      },
+      {
+        "description":"multiple signed 8 bit numbers",
+        "type":[
+          "bitfield",[
+            { "name": "one", "size": 8, "signed": true },
+            { "name": "two", "size": 8, "signed": true },
+            { "name": "three", "size": 8, "signed": true }
+          ]
+        ],
+        "values":[
+          {
+            "buffer": [
+              "0xff",
+              "0x80",
+              "0x12"
+            ],
+            "value": {
+              "one": -1,
+              "two": -128,
+              "three": 18
+            }
+          }
+        ]
+      },
+      {
+        "description":"multiple unsigned 4 bit numbers",
+        "type":[
+          "bitfield",[
+            { "name": "one", "size": 4, "signed": false },
+            { "name": "two", "size": 4, "signed": false },
+            { "name": "three", "size": 4, "signed": false }
+          ]
+        ],
+        "values":[
+          {
+            "buffer":[
+                "0xff",
+                "0x80"
+              ],
+              "value":{ "one": 15, "two": 15, "three": 8 }
+            }
+        ]
+      },
+      {
+        "description":"multiple signed 4 bit numbers",
+        "type":[
+          "bitfield",[
+            { "name": "one", "size": 4, "signed": true },
+            { "name": "two", "size": 4, "signed": true },
+            { "name": "three", "size": 4, "signed": true }
+          ]
+        ],
+        "values":[
+          {
+            "buffer":[
+              "0xff",
+              "0x80"
+            ],
+            "value":{ "one": -1, "two": -1, "three": -8 }
+          }
+        ]
+      },
+      {
+        "description":"an unsigned 12 bit number",
+        "type":[
+          "bitfield",[
+            { "name": "one", "size": 12, "signed": false }
+          ]
+        ],
+        "values":[
+          {
+            "buffer":[
+              "0xff",
+              "0x80"
+            ],
+            "value":{ "one": 4088 }
+          }
+        ]
+      },
+      {
+        "description":"a complex structure",
+        "type":[
+          "bitfield",[
+            { "name": "x", "size": 26, "signed": true },
+            { "name": "y", "size": 12, "signed": true },
+            { "name": "z", "size": 26, "signed": true }
+          ]
+        ],
+        "values":[
+          {
+            "buffer":[
+              "0x00",
+              "0x00",
+              "0x03",
+              "0x05",
+              "0x30",
+              "0x42",
+              "0xE0",
+              "0x65"
+            ],
+            "value":{ "x": 12, "y": 332, "z": 4382821 }
+          }
+        ]
+      }
+    ]
+  }
+]
