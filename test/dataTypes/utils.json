@@ -80,7 +80,11 @@
   {
     "type":"void",
     "values":[
-
+      {
+        "description":"undefined",
+        "buffer":[],
+        "value":null
+      }
     ]
   },
   {

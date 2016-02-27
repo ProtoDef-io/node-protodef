@@ -32,7 +32,10 @@ function testValue(type,value,buffer)
   });
   it('reads',function(){
     var actualResult=proto.parsePacketBuffer(type,buffer);
-    expect(actualResult.data).to.deep.equal(value);
+    if(value===null)
+      assert.ok(actualResult.data == undefined);
+    else
+      expect(actualResult.data).to.deep.equal(value);
     expect(actualResult.metadata.size).to.deep.equal(buffer.length);
   });
 }
