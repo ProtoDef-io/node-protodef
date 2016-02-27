@@ -15,6 +15,10 @@ var testData=[
     "data":require("./numeric.json")
   },
   {
+    "kind":"structures",
+    "data":require("./structures.json")
+  },
+  {
     "kind":"utils",
     "data":require("./utils.json")
   }

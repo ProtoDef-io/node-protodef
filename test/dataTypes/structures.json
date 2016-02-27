@@ -1,0 +1,37 @@
+[
+  {
+    "type":"container",
+    "subtypes":[
+      {
+        "description":"simple container with 2 u8 and one varint",
+        "type":[
+          "container",
+          [
+            {
+              "name": "horizontalPos",
+              "type": "u8"
+            },
+            {
+              "name": "y",
+              "type": "u8"
+            },
+            {
+              "name": "blockId",
+              "type": "varint"
+            }
+          ]
+        ],
+        "values":[
+          {
+            "value":{
+              "horizontalPos":56,
+              "y":25,
+              "blockId":5
+            },
+            "buffer":["0x38","0x19","0x05"]
+          }
+        ]
+      }
+    ]
+  }
+]
