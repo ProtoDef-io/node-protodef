@@ -31,9 +31,50 @@
     ]
   },
   {
-    "type":"string",
-    "values":[
-
+    "type":"pstring",
+    "subtypes":[
+      {
+        "description":"i16 prefixed string",
+        "type":[
+          "pstring",{
+            "countType":"i16"
+          }
+        ],
+        "values":[
+          {
+            "description":"simple hello",
+            "buffer":["0x00","0x06", "0x48", "0x65", "0x6C", "0x6C", "0x6F", "0x21"],
+            "value":"Hello!"
+          },
+          {
+            "description":"japanese",
+            "buffer":["0x00","0x10", "0xE3", "0x81", "0x93", "0xE3", "0x82", "0x93", "0xE3", "0x81",
+              "0xAB", "0xE3", "0x81", "0xA1", "0xE3", "0x81", "0xAF", "0x21"],
+            "value":"こんにちは!"
+          }
+        ]
+      },
+      {
+        "description":"varint prefixed string",
+        "type":[
+          "pstring",{
+            "countType":"varint"
+          }
+        ],
+        "values":[
+          {
+            "description":"simple hello",
+            "buffer":["0x06", "0x48", "0x65", "0x6C", "0x6C", "0x6F", "0x21"],
+            "value":"Hello!"
+          },
+          {
+            "description":"japanese",
+            "buffer":["0x10", "0xE3", "0x81", "0x93", "0xE3", "0x82", "0x93", "0xE3", "0x81",
+              "0xAB", "0xE3", "0x81", "0xA1", "0xE3", "0x81", "0xAF", "0x21"],
+            "value":"こんにちは!"
+          }
+        ]
+      }
     ]
   },
   {
