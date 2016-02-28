@@ -26,8 +26,21 @@
   },
   {
     "type":"buffer",
-    "values":[
-
+    "subtypes":[
+      {
+        "description":"an u8 prefixed buffer",
+        "type":["buffer",
+          {
+            "countType":"u8"
+          }
+        ],
+        "values":[
+          {
+            "value":["0x05","0x10","0xAE"],
+            "buffer":["0x03","0x05","0x10","0xAE"]
+          }
+        ]
+      }
     ]
   },
   {

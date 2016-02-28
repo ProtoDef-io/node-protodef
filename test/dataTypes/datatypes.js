@@ -35,6 +35,8 @@ function arrayToBuffer(arr)
 
 function testValue(type,value,buffer)
 {
+  if(type.indexOf("buffer")==0)
+    value=arrayToBuffer(value);
   it('writes',function(){
     expect(proto.createPacketBuffer(type,value)).to.deep.equal(buffer);
   });
