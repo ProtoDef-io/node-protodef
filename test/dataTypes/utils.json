@@ -21,7 +21,46 @@
   {
     "type":"varint",
     "values":[
-
+      {
+        "description":"8-bit integer",
+        "value":1,
+        "buffer":["0x01"]
+      },
+      {
+        "description":"8-bit maximum integer",
+        "value":127,
+        "buffer":["0x7f"]
+      },
+      {
+        "description":"16-bit integer",
+        "value":300,
+        "buffer":["0xac", "0x02"]
+      },
+      {
+        "description":"24-bit integer",
+        "value":100000,
+        "buffer":["0xa0", "0x8d", "0x06"]
+      },
+      {
+        "description":"32-bit integer",
+        "value":16909060,
+        "buffer":["0x84", "0x86", "0x88", "0x08"]
+      },
+      {
+        "description":"negative integer",
+        "value":-1,
+        "buffer":["0xff", "0xff", "0xff", "0xff", "0x0f"]
+      },
+      {
+        "description":"maximum varint",
+        "value":2147483647,
+        "buffer":["0xff", "0xff", "0xff", "0xff", "0x07"]
+      },
+      {
+        "description":"minimum varint",
+        "value":-2147483648,
+        "buffer":["0x80", "0x80", "0x80", "0x80", "0x08"]
+      }
     ]
   },
   {
