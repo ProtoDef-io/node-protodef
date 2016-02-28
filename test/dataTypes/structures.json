@@ -35,6 +35,50 @@
     ]
   },
   {
+    "type":"count",
+    "subtypes":[
+      {
+        "description":"a container with a count, a second field and an array using the count",
+        "type":["container",
+          [
+            {
+              "name":"number",
+              "type":["count",
+                {
+                  "type":"u8",
+                  "countFor":"records"
+                }
+              ]
+            },
+            {
+              "name":"diameter",
+              "type":"u8"
+            },
+            {
+              "name":"records",
+              "type":["array",
+                {
+                  "count":"number",
+                  "type":"u8"
+                }
+              ]
+            }
+          ]
+        ],
+        "values":[
+          {
+            "value":{
+              "number":2,
+              "diameter":5,
+              "records":[1,2]
+            },
+            "buffer":["0x02","0x05","0x01","0x02"]
+          }
+        ]
+      }
+    ]
+  },
+  {
     "type":"array",
     "subtypes":[
       {
