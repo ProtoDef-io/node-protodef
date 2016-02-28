@@ -239,5 +239,35 @@
         ]
       }
     ]
+  },
+  {
+    "type":"mapper",
+    "subtypes":[
+      {
+        "description": "a mapper mapping 0 to zero, 1 to one and 2 to two",
+        "type": ["mapper",
+          {
+            "type":"u8",
+            "mappings":{
+              "0":"zero",
+              "1":"one",
+              "2":"two"
+            }
+          }
+        ],
+        "values":[
+          {
+            "description":"zero",
+            "value":"zero",
+            "buffer":["0x00"]
+          },
+          {
+            "description":"two",
+            "value":"two",
+            "buffer":["0x02"]
+          }
+        ]
+      }
+    ]
   }
 ]
