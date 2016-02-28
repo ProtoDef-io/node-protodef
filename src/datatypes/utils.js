@@ -259,22 +259,27 @@ function sizeOfBitField(value, typeArgs) {
 }
 
 function readCString(buffer, offset) {
-  var str = "";
-  while (offset < buffer.length && buffer[offset] != 0x00)
-    str += buffer[offset++];
-  if (offset < buffer.length)
+  var size=0;
+  while (offset+size < buffer.length && buffer[offset+size] != 0x00)
+    size++;
+  if (buffer.length<offset+size+1)
     throw new PartialReadError();
-  else
-    return str;
+
+  return {
+    value:buffer.toString('utf8', offset, offset+size),
+    size:size+1
+  };
 }
 
 function writeCString(value, buffer, offset) {
-  buffer.write(value, offset);
-  offset += value.length;
+  var length = Buffer.byteLength(value, 'utf8');
+  buffer.write(value, offset,length,'utf8');
+  offset += length;
   buffer.writeInt8(0x00, offset);
   return offset + 1;
 }
 
 function sizeOfCString(value) {
-  return value.length + 1;
+  var length = Buffer.byteLength(value, 'utf8');
+  return length + 1;
 }

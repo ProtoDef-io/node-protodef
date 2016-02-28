@@ -91,6 +91,22 @@
     ]
   },
   {
+    "type":"cstring",
+    "values":[
+      {
+        "description":"simple hello",
+        "buffer":["0x48", "0x65", "0x6C", "0x6C", "0x6F", "0x21","0x00"],
+        "value":"Hello!"
+      },
+      {
+        "description":"japanese",
+        "buffer":["0xE3", "0x81", "0x93", "0xE3", "0x82", "0x93", "0xE3", "0x81",
+          "0xAB", "0xE3", "0x81", "0xA1", "0xE3", "0x81", "0xAF", "0x21","0x00"],
+        "value":"こんにちは!"
+      }
+    ]
+  },
+  {
     "type":"void",
     "values":[
       {
