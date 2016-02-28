@@ -11,6 +11,10 @@ var proto = new ProtoDef();
 
 var testData=[
   {
+    "kind":"conditional",
+    "data":require("./conditional.json")
+  },
+  {
     "kind":"numeric",
     "data":require("./numeric.json")
   },

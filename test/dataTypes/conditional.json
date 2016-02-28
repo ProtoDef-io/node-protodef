@@ -1,0 +1,17 @@
+[
+  {
+    "type":"option",
+    "subtypes":[
+      {
+        "description":"optional u16",
+        "type":["option","u16"],
+        "values":[
+          {
+            "value":61303,
+            "buffer":["0x01", "0xef","0x77"]
+          }
+        ]
+      }
+    ]
+  }
+]
