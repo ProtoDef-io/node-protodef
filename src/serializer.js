@@ -57,7 +57,28 @@ class Parser extends Transform {
   }
 }
 
+
+class FullPacketParser extends Transform {
+  constructor(proto,mainType) {
+    super({ readableObjectMode: true });
+    this.proto=proto;
+    this.mainType=mainType;
+  }
+
+  parsePacketBuffer(buffer) {
+    return this.proto.parsePacketBuffer(this.mainType,buffer);
+  }
+
+  _transform(chunk, enc, cb) {
+    var packet = this.parsePacketBuffer(chunk);
+    if(packet.metadata.size!=chunk.length)
+      throw new Error("Chunk size is "+chunk.length+" but only "+packet.metadata.size+" was read "+chunk.buffer.toString("hex"));
+    this.push(packet);
+  }
+}
+
 module.exports={
   Serializer:Serializer,
-  Parser:Parser
+  Parser:Parser,
+  FullPacketParser:FullPacketParser
 };
