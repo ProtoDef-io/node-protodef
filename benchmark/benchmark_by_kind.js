@@ -1,65 +1,10 @@
-var ProtoDef = require("protodef").ProtoDef;
+var testData=require("../test/dataTypes/prepareTests").testData;
+var proto=require("../test/dataTypes/prepareTests").proto;
 var Benchmark = require('benchmark');
-
-Error.stackTraceLimit=0;
-
-var proto = new ProtoDef();
-
-var testData=[
-  {
-    "kind":"conditional",
-    "data":require("./../test/dataTypes/conditional.json")
-  },
-  {
-    "kind":"numeric",
-    "data":require("./../test/dataTypes/numeric.json")
-  },
-  {
-    "kind":"structures",
-    "data":require("./../test/dataTypes/structures.json")
-  },
-  {
-    "kind":"utils",
-    "data":require("./../test/dataTypes/utils.json")
-  }
-];
-
-function arrayToBuffer(arr)
-{
-  return new Buffer(arr.map(e => parseInt(e)));
-}
-
-function transformValues(type,values)
-{
-  return values.map(value => ({
-    buffer: arrayToBuffer(value.buffer),
-    value: type.indexOf("buffer") == 0 ? arrayToBuffer(value.value) : value.value,
-    description: value.description
-  }));
-}
 
 testData.forEach(tests => {
   describe(tests.kind,function(){
     this.timeout(1000*60*10);
-
-
-    tests.data.forEach(test => {
-      var subTypes = [];
-      if (test.subtypes)
-        test.subtypes.forEach((subtype, i) => {
-          var type = test.type + "_" + i;
-          proto.addType(type, subtype.type);
-
-          subtype.values = transformValues(test.type, subtype.values);
-          subtype.type = type;
-          subTypes.push(subtype);
-        });
-      else {
-        test.values = transformValues(test.type, test.values);
-        subTypes.push({type: test.type, values: test.values});
-      }
-      test.subtypes=subTypes;
-    });
 
     it('reads',function() {
       var readSuite = new Benchmark.Suite;

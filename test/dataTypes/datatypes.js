@@ -1,42 +1,14 @@
-var ProtoDef = require("protodef").ProtoDef;
 var expect = require('chai').expect;
 var PartialReadError=require("../../").utils.PartialReadError;
 var Validator = require('jsonschema').Validator;
 var v = new Validator();
 var assert = require('assert');
 
-Error.stackTraceLimit=0;
-
-var proto = new ProtoDef();
-
-var testData=[
-  {
-    "kind":"conditional",
-    "data":require("./conditional.json")
-  },
-  {
-    "kind":"numeric",
-    "data":require("./numeric.json")
-  },
-  {
-    "kind":"structures",
-    "data":require("./structures.json")
-  },
-  {
-    "kind":"utils",
-    "data":require("./utils.json")
-  }
-];
-
-function arrayToBuffer(arr)
-{
-  return new Buffer(arr.map(e => parseInt(e)));
-}
+var testData=require("./prepareTests").testData;
+var proto=require("./prepareTests").proto;
 
 function testValue(type,value,buffer)
 {
-  if(type.indexOf("buffer")==0)
-    value=arrayToBuffer(value);
   it('writes',function(){
     expect(proto.createPacketBuffer(type,value)).to.deep.equal(buffer);
   });
@@ -57,13 +29,12 @@ function testType(type,values)
 
     });
   values.forEach((value) => {
-    var buffer=arrayToBuffer(value.buffer);
     if(value.description)
       describe(value.description,() => {
-        testValue(type,value.value,buffer);
+        testValue(type,value.value,value.buffer);
       });
     else
-      testValue(type,value.value,buffer);
+      testValue(type,value.value,value.buffer);
   });
   if(type!="void")
     it('reads 0 bytes and throw a PartialReadError', () => {
@@ -83,22 +54,20 @@ testData.forEach(tests => {
   describe(tests.kind,()=> {
     it("validates the json schema",()=>{
       var schema = require('./datatype_tests_schema.json');
-      var result = v.validate(tests.data, schema);
+      var result = v.validate(tests.originalData, schema);
       assert.strictEqual(result.errors.length,0,require('util').inspect(result.errors,{'depth':null}));
     });
 
     tests.data.forEach(test => {
       describe(test.type,() => {
-        if(test.subtypes)
-          test.subtypes.forEach((subtype,i) => {
-            var type=test.type + "_" + i;
-            proto.addType(type, subtype.type);
+        test.subtypes.forEach((subtype) => {
+          if(subtype.description)
             describe(subtype.description,() => {
-              testType(type,subtype.values);
-            })
-          });
-        else
-          testType(test.type,test.values);
+              testType(subtype.type,subtype.values);
+            });
+          else
+            testType(test.type,subtype.values);
+        });
       });
     });
   });
