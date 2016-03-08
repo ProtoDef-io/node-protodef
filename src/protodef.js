@@ -34,12 +34,12 @@ function extendType(functions, defaultTypeArgs) {
     return args;
   }
   return [function read(buffer, offset, typeArgs, context) {
-    return functions[0].call(this, buffer, offset, produceArgs(typeArgs), context);
+    return functions[0].call(this, buffer, offset, eval("produceArgs(typeArgs)"), context);
   }, function write(value, buffer, offset, typeArgs, context) {
-    return functions[1].call(this, value, buffer, offset, produceArgs(typeArgs), context);
+    return functions[1].call(this, value, buffer, offset, eval("produceArgs(typeArgs)"), context);
   }, function sizeOf(value, typeArgs, context) {
     if (typeof functions[2] === "function")
-      return functions[2].call(this, value, produceArgs(typeArgs), context);
+      return functions[2].call(this, value, eval("produceArgs(typeArgs)"), context);
     else
       return functions[2];
   }];
