@@ -42,7 +42,7 @@ function testType(type,values)
         proto.parsePacketBuffer(type,new Buffer(0));
       }
       catch (e) {
-        if(!e instanceof PartialReadError)
+        if(!e.partialReadError)
           throw e;
         return;
       }

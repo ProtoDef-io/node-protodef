@@ -1,7 +1,8 @@
 var { PartialReadError} = require('../utils');
 
 function readI64(buffer, offset) {
-  if(offset + 8 > buffer.length) return null;
+  if(offset + 8 > buffer.length)
+    throw new PartialReadError();
   return {
     value: [buffer.readInt32BE(offset), buffer.readInt32BE(offset + 4)],
     size: 8
