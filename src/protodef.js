@@ -45,6 +45,10 @@ function extendType(functions, defaultTypeArgs) {
   }];
 }
 
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 class ProtoDef
 {
   constructor() {
@@ -68,6 +72,11 @@ class ProtoDef
     }
     else
       this.types[name] = functions;
+
+    var nameUc=capitalizeFirstLetter(name);
+    this["read"+nameUc]=functions[0];
+    this["write"+nameUc]=functions[1];
+    this["sizeOf"+nameUc]=functions[2];
   }
 
   addTypes(types) {

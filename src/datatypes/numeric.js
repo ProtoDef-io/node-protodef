@@ -62,20 +62,15 @@ function writeLU64(value, buffer, offset) {
 
 function generateFunctions(bufferReader,bufferWriter,size)
 {
-  var reader=function(buffer, offset)
-  {
-    if(offset + size > buffer.length)
-      throw new PartialReadError();
-    var value = buffer[bufferReader](offset);
-    return {
-      value: value,
-      size: size
-    };
-  };
-  var writer=function(value, buffer, offset) {
-    buffer[bufferWriter](value, offset);
-    return offset + size;
-  };
+  var reader=eval("function f"+bufferReader+"(buffer,offset) {"+
+    " if(offset + "+size+" > buffer.length){"+
+    "throw new PartialReadError();}"+
+    "return {value:buffer."+bufferReader+"(offset,true),size:"+size+"};}" +
+    "f"+bufferReader+";");
+  var writer=eval("function f"+bufferWriter+"(value, buffer, offset) {"+
+      "buffer."+bufferWriter+"(value,offset);"+
+    "return offset+"+size+";}"+
+    "f"+bufferWriter+";");
   return [reader, writer, size];
 }
 
