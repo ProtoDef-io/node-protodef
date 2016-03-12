@@ -247,6 +247,7 @@ Example of value: "my string"
 ### mapper
 
 mappers maps values. It takes as argument the type of the input, and a mappings object with the values to map.
+Values can be hex numbers and will be considered equal to decimal numbers. For example `"0x0F"==15`.
 
 Example:
 
