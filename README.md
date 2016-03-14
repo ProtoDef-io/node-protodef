@@ -20,7 +20,7 @@ See [example](example.js)
 
 ## Documentation
 
-* [api.md](doc/datatypes.md) documents the exposed functions and classes
+* [api.md](doc/api.md) documents the exposed functions and classes
 * [datatypes.md](doc/datatypes.md) documents the default datatypes provided by Protodef.
 * [newDatatypes.md](doc/newDatatypes.md) explains how to create new datatypes for protodef
 * [history.md](doc/history.md) is the releases history
