@@ -6,13 +6,6 @@ module.exports = {
   'container': [readContainer, writeContainer, sizeOfContainer]
 };
 
-
-function evalCount(count, fields) {
-  if(fields[count["field"]] in count["map"])
-    return count["map"][fields[count["field"]]];
-  return count["default"];
-}
-
 function readArray(buffer, offset, {type,count,countType,countTypeArgs}, rootNode) {
   var results = {
     value: [],
@@ -21,8 +14,6 @@ function readArray(buffer, offset, {type,count,countType,countTypeArgs}, rootNod
   var c;
   if(typeof count === "number")
     c = count;
-  else if(typeof count === "object")
-    c = evalCount(count, rootNode);
   else if (typeof count !== "undefined")
     c = getField(count, rootNode);
   else if (typeof countType !== "undefined") {
