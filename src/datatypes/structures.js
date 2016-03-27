@@ -3,7 +3,7 @@ var { getField, tryDoc } = require("../utils");
 module.exports = {
   'array': [readArray, writeArray, sizeOfArray],
   'count': [readCount, writeCount, sizeOfCount],
-  'container': [readContainer, writeContainer, sizeOfContainer]
+  'container': [readContainer, writeContainer, sizeOfContainer, readContainerGenerator]
 };
 
 function readArray(buffer, offset, {type,count,countType,countTypeArgs}, rootNode) {
@@ -46,6 +46,34 @@ function sizeOfArray(value, {type,count,countType,countTypeArgs}, rootNode) {
     size=tryDoc(() => this.sizeOf(value.length, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
 
   return value.reduce((size,v,index) =>tryDoc(() => size+this.sizeOf(v, type, rootNode), index),size);
+}
+
+function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+function readContainerGenerator(typeArgs,proto){
+  const requireContext=typeArgs.filter(o => proto[`read${capitalizeFirstLetter(o.type)}`].length==3).length>0;
+  return eval(`((proto) =>
+      (buffer, offset${requireContext ? `,context`:``}) => {
+      var size=0;
+      var value2={};
+      ${requireContext ? `
+      var value={};
+      value[".."]=context;
+      ` :``}
+      var result;
+      ${typeArgs.reduce((old, o) =>  old + `
+      result = proto.read${capitalizeFirstLetter(o.type)}(buffer, offset + size${requireContext ? `,value`:``});
+      ${o.anon
+    ? `if(result.value !== undefined)
+      Object.keys(result.value).forEach(key => ${requireContext ? `value[key]=` : ``}value2[key] = result[key]);`
+    : `${requireContext ? `value['${o.name}'] =` : ``} value2['${o.name}'] = result.value;`
+    }
+      size += result.size;
+      `, "")}
+      return {value:value2,size:size};
+    });`)(proto);
 }
 
 

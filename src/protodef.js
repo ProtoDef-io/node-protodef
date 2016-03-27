@@ -74,9 +74,9 @@ class ProtoDef
       this.types[name] = functions;
 
     var nameUc=capitalizeFirstLetter(name);
-    this["read"+nameUc]=functions[0];
-    this["write"+nameUc]=functions[1];
-    this["sizeOf"+nameUc]=functions[2];
+    this["read"+nameUc]=this.types[name][0];
+    this["write"+nameUc]=this.types[name][1];
+    this["sizeOf"+nameUc]=this.types[name][2];
   }
 
   addTypes(types) {
