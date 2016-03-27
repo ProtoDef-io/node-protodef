@@ -19,12 +19,12 @@
     "node": ">=4"
   },
   "bugs": {
-    "url": "https://github.com/roblabla/ProtoDef/issues"
+    "url": "https://github.com/ProtoDef-io/node-protodef/issues"
   },
-  "homepage": "https://github.com/roblabla/ProtoDef",
+  "homepage": "https://github.com/ProtoDef-io/node-protodef",
   "repository": {
     "type": "git",
-    "url": "https://github.com/roblabla/ProtoDef.git"
+    "url": "https://github.com/ProtoDef-io/node-protodef.git"
   },
   "devDependencies": {
     "babel-plugin-transform-object-rest-spread": "^6.5.0",
