@@ -20,8 +20,10 @@ See [example](example.js)
 
 ## Documentation
 
+See the language independent [ProtoDef](https://github.com/rom1504/ProtoDef) specification.
+
 * [api.md](doc/api.md) documents the exposed functions and classes
-* [datatypes.md](doc/datatypes.md) documents the default datatypes provided by Protodef.
+* [datatypes.md](https://github.com/rom1504/ProtoDef/blob/master/doc/datatypes.md) documents the default datatypes provided by Protodef.
 * [newDatatypes.md](doc/newDatatypes.md) explains how to create new datatypes for protodef
 * [history.md](doc/history.md) is the releases history
 

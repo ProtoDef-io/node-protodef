@@ -53,7 +53,7 @@ function testType(type,values)
 testData.forEach(tests => {
   describe(tests.kind,()=> {
     it("validates the json schema",()=>{
-      var schema = require('./datatype_tests_schema.json');
+      var schema = require('../ProtoDef/test/datatype_tests_schema.json');
       var result = v.validate(tests.originalData, schema);
       assert.strictEqual(result.errors.length,0,require('util').inspect(result.errors,{'depth':null}));
     });

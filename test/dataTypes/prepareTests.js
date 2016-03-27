@@ -5,19 +5,19 @@ var proto = new ProtoDef();
 var testData=[
   {
     "kind":"conditional",
-    "data":require("./conditional.json")
+    "data":require("../ProtoDef/test/conditional.json")
   },
   {
     "kind":"numeric",
-    "data":require("./numeric.json")
+    "data":require("../ProtoDef/test/numeric.json")
   },
   {
     "kind":"structures",
-    "data":require("./structures.json")
+    "data":require("../ProtoDef/test/structures.json")
   },
   {
     "kind":"utils",
-    "data":require("./utils.json")
+    "data":require("../ProtoDef/test/utils.json")
   }
 ];
 
