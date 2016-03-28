@@ -15,6 +15,21 @@ function writeI64(value, buffer, offset) {
   return offset + 8;
 }
 
+function readLI64(buffer, offset) {
+  if(offset + 8 > buffer.length)
+    throw new PartialReadError();
+  return {
+    value: [buffer.readInt32LE(offset+4), buffer.readInt32LE(offset)],
+    size: 8
+  };
+}
+
+function writeLI64(value, buffer, offset) {
+  buffer.writeInt32LE(value[0], offset+4);
+  buffer.writeInt32LE(value[1], offset);
+  return offset + 8;
+}
+
 function generateFunctions(bufferReader,bufferWriter,size)
 {
   var reader=function(buffer, offset)
@@ -42,7 +57,13 @@ var nums= {
   'i32': ["readInt32BE", "writeInt32BE", 4],
   'u32': ["readUInt32BE", "writeUInt32BE", 4],
   'f32': ["readFloatBE", "writeFloatBE", 4],
-  'f64': ["readDoubleBE", "writeDoubleBE", 8]
+  'f64': ["readDoubleBE", "writeDoubleBE", 8],
+  'li16': ["readInt16LE", "writeInt16LE", 2],
+  'lu16': ["readUInt16LE", "writeUInt16LE", 2],
+  'li32': ["readInt32LE", "writeInt32LE", 4],
+  'lu32': ["readUInt32LE", "writeUInt32LE", 4],
+  'lf32': ["readFloatLE", "writeFloatLE", 4],
+  'lf64': ["readDoubleLE", "writeDoubleLE", 8]
 };
 
 var types=Object.keys(nums).reduce(function(types,num){
@@ -50,6 +71,7 @@ var types=Object.keys(nums).reduce(function(types,num){
   return types;
 },{});
 types["i64"]=[readI64, writeI64, 8];
+types["li64"]=[readLI64, writeLI64, 8];
 
 
 module.exports = types;
