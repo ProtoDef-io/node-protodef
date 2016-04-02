@@ -1,5 +1,14 @@
 # History
 
+## 1.2.0
+
+* all datatypes are tested
+* fix cstring
+* fix PartialReadError in i64
+* remove special count
+* use protodef spec
+* add little endian numerical types
+
 ## 1.1.2
 
 * allow hex values in mappings
