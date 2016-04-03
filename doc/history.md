@@ -1,5 +1,9 @@
 # History
 
+## 1.2.1
+
+* add li8, lu8 and u64, lu64 for consistency
+
 ## 1.2.0
 
 * all datatypes are tested
