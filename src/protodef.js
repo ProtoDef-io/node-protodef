@@ -23,7 +23,7 @@ function setField(path, val, into) {
   into[c.pop()] = val;
 }
 
-function extendType(functions, defaultTypeArgs) {
+function extendType(functions, defaultTypeArgs,proto) {
   var json=JSON.stringify(defaultTypeArgs);
   var argPos = reduce(defaultTypeArgs, findArgs, []);
   function produceArgs(typeArgs) {
@@ -33,7 +33,9 @@ function extendType(functions, defaultTypeArgs) {
     });
     return args;
   }
-  return [function read(buffer, offset, typeArgs, context) {
+
+
+  return [functions.length>=4 ? functions[3](defaultTypeArgs,proto) : function read(buffer, offset, typeArgs, context) {
     return functions[0].call(this, buffer, offset, produceArgs(typeArgs), context);
   }, function write(value, buffer, offset, typeArgs, context) {
     return functions[1].call(this, value, buffer, offset, produceArgs(typeArgs), context);
@@ -68,7 +70,7 @@ class ProtoDef
       return;
     if (isFieldInfo(functions)) {
       var {type,typeArgs} = getFieldInfo(functions);
-      this.types[name] = extendType(this.types[type], typeArgs);
+      this.types[name] = extendType(this.types[type], typeArgs,this);
     }
     else
       this.types[name] = functions;

@@ -49,12 +49,12 @@ function sizeOfArray(value, {type,count,countType,countTypeArgs}, rootNode) {
 }
 
 function capitalizeFirstLetter(string) {
-  return string.charAt(0).toUpperCase() + string.slice(1);
+  return string[0].toUpperCase() + string.slice(1);
 }
 
 function readContainerGenerator(typeArgs,proto){
-  const requireContext=typeArgs.filter(o => proto[`read${capitalizeFirstLetter(o.type)}`].length==3).length>0;
-  return eval(`((proto) =>
+  const requireContext=typeArgs.filter(o => {console.log("test",o.type);return proto[`read${capitalizeFirstLetter(o.type)}`].length==3}).length>0;
+  const code=`((proto) =>
       (buffer, offset${requireContext ? `,context`:``}) => {
       var size=0;
       var value2={};
@@ -73,7 +73,9 @@ function readContainerGenerator(typeArgs,proto){
       size += result.size;
       `, "")}
       return {value:value2,size:size};
-    });`)(proto);
+    });`;
+  console.log(code);
+  return eval(code)(proto);
 }
 
 
