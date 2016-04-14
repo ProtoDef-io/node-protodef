@@ -54,6 +54,7 @@ function capitalizeFirstLetter(string) {
 class ProtoDef
 {
   constructor() {
+    this.typeId=0;
     this.types={};
     this.addDefaultTypes();
   }

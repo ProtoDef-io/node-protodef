@@ -53,7 +53,21 @@ function capitalizeFirstLetter(string) {
 }
 
 function readContainerGenerator(typeArgs,proto){
-  const requireContext=typeArgs.filter(o => {console.log("test",o.type);return proto[`read${capitalizeFirstLetter(o.type)}`].length==3}).length>0;
+  typeArgs=typeArgs.map(o => {
+    if(typeof o.type !== "string")
+    {
+      const subTypeName="type"+proto.typeId;
+      proto.addType(subTypeName,o.type);
+      proto.typeId++;
+      return {
+        type:subTypeName,
+        name:o.name,
+        anon:o.anon
+      }
+    }
+    return o;
+  });
+  const requireContext=typeArgs.filter(o => proto[`read${capitalizeFirstLetter(o.type)}`].length==3).length>0;
   const code=`((proto) =>
       (buffer, offset${requireContext ? `,context`:``}) => {
       var size=0;
@@ -74,7 +88,7 @@ function readContainerGenerator(typeArgs,proto){
       `, "")}
       return {value:value2,size:size};
     });`;
-  console.log(code);
+  //console.log(code);
   return eval(code)(proto);
 }
 
