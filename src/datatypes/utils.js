@@ -5,13 +5,36 @@ var { getField, tryDoc, PartialReadError } = require("../utils");
 module.exports = {
   'varint': [readVarInt, writeVarInt, sizeOfVarInt],
   'bool': [readBool, writeBool, 1],
-  'pstring': [readPString, writePString, sizeOfPString],
-  'buffer': [readBuffer, writeBuffer, sizeOfBuffer],
+  'pstring': [readPString, writePString, sizeOfPString, readPStringGenerator],
+  'buffer': [readBuffer, writeBuffer, sizeOfBuffer, readBufferGenerator],
   'void': [readVoid, writeVoid, 0],
-  'bitfield': [readBitField, writeBitField, sizeOfBitField],
+  'bitfield': [readBitField, writeBitField, sizeOfBitField, readBitFieldGenerator],
   'cstring': [readCString, writeCString, sizeOfCString],
-  'mapper':[readMapper,writeMapper,sizeOfMapper]
+  'mapper':[readMapper,writeMapper,sizeOfMapper,readMapperGenerator]
 };
+
+function readMapperGenerator({type,mappings},proto)
+{
+  return `
+  (buffer,offset,context) => {
+    var r=proto.read${capitalizeFirstLetter(type)}(buffer, offset,context);
+    var mappedValue=null;
+    switch(r.value) {
+    ${Object.keys(mappings).reduce((old,key) => {
+      return old+`case ${key}:
+        mappedValue = "${mappings[key]}";
+        break;
+      `;
+    },"")}
+      default:
+        throw new Error(r.value+" is not in the mappings value");
+    }
+    return {
+      size:r.size,
+      value:mappedValue
+    };
+  }`;
+}
 
 function readMapper(buffer,offset,{type,mappings},rootNode)
 {
@@ -101,6 +124,27 @@ function writeVarInt(value, buffer, offset) {
   return offset + cursor + 1;
 }
 
+function capitalizeFirstLetter(string) {
+  return string[0].toUpperCase() + string.slice(1);
+}
+
+function readPStringGenerator({countType,countTypeArgs}, proto)
+{
+  return `
+    (buffer,offset,context) => {
+      var r=proto.read${capitalizeFirstLetter(countType)}(buffer, offset,context);
+      var cursor = offset + r.size;
+      var strEnd = cursor + r.value;
+      if(strEnd > buffer.length) throw new PartialReadError("Missing characters in string, found size is "+buffer.length+
+        " expected size was "+strEnd);
+
+      return {
+        value: buffer.toString('utf8', cursor, strEnd),
+        size: strEnd - offset
+      };
+   }
+  `;
+}
 
 function readPString(buffer, offset, {countType,countTypeArgs},rootNode) {
   var {size,value}=tryDoc(() => this.read(buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
@@ -141,6 +185,38 @@ function readBool(buffer, offset) {
 function writeBool(value, buffer, offset) {
   buffer.writeInt8(+value, offset);
   return offset + 1;
+}
+
+function readBufferGenerator({count,countType,countTypeArgs}, context)
+{
+  let countingCode;
+  if(typeof count === "number")
+    countingCode=`c=${count};`;
+  else if (typeof count !== "undefined")
+    countingCode=`c=getField("${count}", context);`;
+  else if (typeof countType !== "undefined") {
+    countingCode=`
+    let r1=proto.read${capitalizeFirstLetter(countType)}(buffer, offset,context);
+    results.size += r1.size;
+    offset += r1.size;
+    c = r1.value;
+    `
+  } else // TODO : broken schema, should probably error out.
+    countingCode=`c = 0;`;
+  return `
+    (buffer,offset,context) => {
+      const results = {
+        value: [],
+        size: 0
+      };
+      var c;
+      ${countingCode}
+
+      results.value=buffer.slice(offset, offset + c);
+      results.size+=c;
+      return results;
+    };
+  `;
 }
 
 
@@ -190,6 +266,45 @@ function readVoid() {
 
 function writeVoid(value, buffer, offset) {
   return offset;
+}
+
+function readBitFieldGenerator(typeArgs, proto)
+{
+  return `
+    (buffer,offset,context) => {
+
+    function generateBitMask(n) {
+        return (1 << n) - 1;
+    }
+    var beginOffset = offset;
+    var curVal = null;
+    var bits = 0;
+    var results = {value:{}};
+    var currentSize,val;
+    ${typeArgs.reduce(function(old, {size,signed,name}) {
+      return old+`
+      currentSize = ${size};
+      val = 0;
+      while (currentSize > 0) {
+        if (bits == 0) {
+          if(buffer.length<offset+1)
+            throw new PartialReadError();
+          curVal = buffer[offset++];
+          bits = 8;
+        }
+        var bitsToRead = Math.min(currentSize, bits);
+        val = (val << bitsToRead) | (curVal & generateBitMask(bits)) >> (bits - bitsToRead);
+        bits -= bitsToRead;
+        currentSize -= bitsToRead;
+      }
+      if (${signed} && val >= 1 << (${size - 1}))
+        val -= ${1 << size};
+      results.value.${name} = val;
+      `
+    }, "")}
+    results.size = offset - beginOffset;
+    return results;
+  }`;
 }
 
 function generateBitMask(n) {

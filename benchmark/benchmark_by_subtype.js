@@ -2,13 +2,13 @@ var testData=require("../test/dataTypes/prepareTests").testData;
 var proto=require("../test/dataTypes/prepareTests").proto;
 var Benchmark = require('benchmark');
 
-function testType(type,values)
+function testType(type,values,read)
 {
   it('reads',function() {
     var readSuite = new Benchmark.Suite;
     readSuite.add('read', function () {
         values.forEach((value) => {
-          proto.parsePacketBuffer(type, value.buffer);
+          read(value.buffer,0,{});
         });
       })
       .on('cycle', function (event) {
@@ -39,10 +39,10 @@ testData.forEach(tests => {
       describe(test.type,() => {
         test.subtypes.forEach((subtype) => {
           if(subtype.description) describe(subtype.description,() => {
-            testType(subtype.type,subtype.values);
+            testType(subtype.type,subtype.values,subtype.read);
           });
           else
-            testType(subtype.type,subtype.values);
+            testType(subtype.type,subtype.values,subtype.read);
         });
       });
     });

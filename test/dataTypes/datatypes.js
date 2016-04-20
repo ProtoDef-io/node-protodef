@@ -13,12 +13,12 @@ function testValue(type,value,buffer)
     expect(proto.createPacketBuffer(type,value)).to.deep.equal(buffer);
   });
   it('reads',function(){
-    var actualResult=proto.parsePacketBuffer(type,buffer);
+    var actualResult=proto.getRead(type)(buffer, 0,{});
     if(value===null)
-      assert.ok(actualResult.data == undefined);
+      assert.ok(actualResult.value == undefined);
     else
-      expect(actualResult.data).to.deep.equal(value);
-    expect(actualResult.metadata.size).to.deep.equal(buffer.length);
+      expect(actualResult.value).to.deep.equal(value);
+    expect(actualResult.size).to.deep.equal(buffer.length);
   });
 }
 

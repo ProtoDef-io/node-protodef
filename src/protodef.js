@@ -1,4 +1,4 @@
-var { getFieldInfo, tryCatch } = require('./utils');
+var { getField, getFieldInfo, tryCatch, PartialReadError } = require('./utils');
 var reduce = require('lodash.reduce');
 
 function isFieldInfo(type) {
@@ -23,6 +23,15 @@ function setField(path, val, into) {
   into[c.pop()] = val;
 }
 
+function readCodeToFunction(genFunction,args,proto) {
+  const code=genFunction(args,proto);
+  // slow
+  //return require("vm").runInContext(code,require("vm").createContext({console:console,proto:proto,getField:getField}));
+  //console.log(code);
+  const completeCode=`proto => ${code}`;
+  return eval(completeCode)(proto);
+}
+
 function extendType(functions, defaultTypeArgs,proto) {
   var json=JSON.stringify(defaultTypeArgs);
   var argPos = reduce(defaultTypeArgs, findArgs, []);
@@ -35,7 +44,7 @@ function extendType(functions, defaultTypeArgs,proto) {
   }
 
 
-  return [functions.length>=4 ? functions[3](defaultTypeArgs,proto) : function read(buffer, offset, typeArgs, context) {
+  return [functions.length>=4 ? readCodeToFunction(functions[3],defaultTypeArgs,proto) : function read(buffer, offset, typeArgs, context) {
     return functions[0].call(this, buffer, offset, produceArgs(typeArgs), context);
   }, function write(value, buffer, offset, typeArgs, context) {
     return functions[1].call(this, value, buffer, offset, produceArgs(typeArgs), context);
@@ -67,6 +76,7 @@ class ProtoDef
   }
 
   addType(name, functions) {
+    //console.log("adding "+name);
     if (functions === "native")
       return;
     if (isFieldInfo(functions)) {
@@ -80,6 +90,11 @@ class ProtoDef
     this["read"+nameUc]=this.types[name][0];
     this["write"+nameUc]=this.types[name][1];
     this["sizeOf"+nameUc]=this.types[name][2];
+  }
+
+  getRead(type)
+  {
+    return this["read"+capitalizeFirstLetter(type)].bind(this);
   }
 
   addTypes(types) {

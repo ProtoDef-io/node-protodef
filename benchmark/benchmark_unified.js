@@ -10,7 +10,7 @@ it('read/write',function() {
         tests.data.forEach(test => {
           test.subtypes.forEach(subType => {
             subType.values.forEach((value) => {
-              proto.parsePacketBuffer(subType.type, value.buffer);
+              subType.read(value.buffer,0,{});
               proto.createPacketBuffer(subType.type, value.value);
             });
           })

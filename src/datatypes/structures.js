@@ -1,10 +1,44 @@
 var { getField, tryDoc } = require("../utils");
 
 module.exports = {
-  'array': [readArray, writeArray, sizeOfArray],
-  'count': [readCount, writeCount, sizeOfCount],
+  'array': [readArray, writeArray, sizeOfArray, readArrayGenerator],
+  'count': [readCount, writeCount, sizeOfCount, readCountGenerator],
   'container': [readContainer, writeContainer, sizeOfContainer, readContainerGenerator]
 };
+
+function readArrayGenerator({type,count,countType,countTypeArgs}, proto)
+{
+  let countingCode;
+  if(typeof count === "number")
+    countingCode=`c=${count};`;
+  else if (typeof count !== "undefined")
+    countingCode=`c=getField("${count}", context);`;
+  else if (typeof countType !== "undefined") {
+    countingCode=`
+    let r1=proto.read${capitalizeFirstLetter(countType)}(buffer, offset,context);
+    results.size += r1.size;
+    offset += r1.size;
+    c = r1.value;
+    `
+  } else // TODO : broken schema, should probably error out.
+    countingCode=`c = 0;`;
+  return `(buffer,offset,context) => {
+    const results = {
+      value: [],
+      size: 0
+    };
+
+    var c;
+    ${countingCode}
+    for(var i = 0; i < c; i++) {
+      let r=proto.read${capitalizeFirstLetter(type)}(buffer, offset,context);
+      results.size += r.size;
+      offset += r.size;
+      results.value.push(r.value);
+    }
+    return results;
+  }`;
+}
 
 function readArray(buffer, offset, {type,count,countType,countTypeArgs}, rootNode) {
   var results = {
@@ -68,8 +102,7 @@ function readContainerGenerator(typeArgs,proto){
     return o;
   });
   const requireContext=typeArgs.filter(o => proto[`read${capitalizeFirstLetter(o.type)}`].length==3).length>0;
-  const code=`((proto) =>
-      (buffer, offset${requireContext ? `,context`:``}) => {
+  return `(buffer, offset${requireContext ? `,context`:``}) => {
       var size=0;
       var value2={};
       ${requireContext ? `
@@ -87,9 +120,7 @@ function readContainerGenerator(typeArgs,proto){
       size += result.size;
       `, "")}
       return {value:value2,size:size};
-    });`;
-  //console.log(code);
-  return eval(code)(proto);
+    }`;
 }
 
 
@@ -129,6 +160,11 @@ function sizeOfContainer(value, typeArgs, context) {
     size + tryDoc(() => this.sizeOf(anon ? value : value[name], type, value), name ? name : "unknown"),0);
   delete value[".."];
   return size;
+}
+
+function readCountGenerator({type})
+{
+  return `(buffer,offset,context) => proto.read${capitalizeFirstLetter(type)}(buffer, offset,context);`
 }
 
 function readCount(buffer, offset, {type}, rootNode) {

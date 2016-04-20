@@ -47,11 +47,12 @@ testData.forEach(tests => {
 
         subtype.values = transformValues(test.type, subtype.values);
         subtype.type = type;
+        subtype.read=proto.getRead(type);
         subTypes.push(subtype);
       });
     else {
       test.values = transformValues(test.type, test.values);
-      subTypes.push({type: test.type, values: test.values});
+      subTypes.push({type: test.type, values: test.values,read:proto.getRead(test.type)});
     }
     test.subtypes=subTypes;
   });

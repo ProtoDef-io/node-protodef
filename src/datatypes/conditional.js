@@ -1,9 +1,31 @@
 var { getField, getFieldInfo, tryDoc, PartialReadError} = require('../utils');
 
 module.exports = {
-  'switch': [readSwitch, writeSwitch, sizeOfSwitch],
-  'option': [readOption, writeOption, sizeOfOption]
+  'switch': [readSwitch, writeSwitch, sizeOfSwitch, readSwitchGenerator],
+  'option': [readOption, writeOption, sizeOfOption, readOptionGenerator]
 };
+
+function capitalizeFirstLetter(string) {
+  return string[0].toUpperCase() + string.slice(1);
+}
+
+function readSwitchGenerator({compareTo,fields,compareToValue,...rest},proto){
+  return `
+      (buffer, offset, context) => {
+      var compareTo = ${compareToValue !==undefined ? `"${compareToValue}"` : `getField("${compareTo}", context)`};
+      switch(compareTo) {
+      ${Object.keys(fields).reduce((old,key) =>
+            `${old} case ${key}:
+                return proto.read${capitalizeFirstLetter(fields[key])}(buffer, offset,context);
+              break;
+            `,"")}
+          default:
+            ${rest.default ?
+    `return proto.read${capitalizeFirstLetter(rest.default)}(buffer, offset,context);` :
+    `throw new Error(compareTo + " has no associated fieldInfo in switch");`}
+      }
+     }`;
+}
 
 function readSwitch(buffer, offset, {compareTo,fields,compareToValue,...rest}, rootNode) {
   compareTo = compareToValue!==undefined ? compareToValue : getField(compareTo, rootNode);
@@ -34,6 +56,21 @@ function sizeOfSwitch(value, {compareTo,fields,compareToValue,...rest}, rootNode
   var caseDefault=typeof fields[compareTo] === 'undefined';
   var fieldInfo = getFieldInfo(caseDefault ? rest.default : fields[compareTo]);
   return tryDoc(() => this.sizeOf(value, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
+}
+
+function readOptionGenerator(typeArgs) {
+  return `(buffer,offset,context) => {
+  if(buffer.length<offset+1)
+    throw new PartialReadError();
+  var val = buffer.readUInt8(offset++);
+  if (val !== 0) {
+    var retval = proto.read${capitalizeFirstLetter(typeArgs)}(buffer, offset,context);
+    retval.size++;
+    return retval;
+  }
+  else
+    return {size: 1};
+   }`;
 }
 
 function readOption(buffer, offset, typeArgs, context) {

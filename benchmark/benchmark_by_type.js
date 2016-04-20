@@ -14,7 +14,7 @@ testData.forEach(tests => {
           readSuite.add('read', function () {
               test.subtypes.forEach(subType => {
                 subType.values.forEach((value) => {
-                  proto.parsePacketBuffer(subType.type, value.buffer);
+                  subType.read(value.buffer,0,{});
                 });
               })
           })
