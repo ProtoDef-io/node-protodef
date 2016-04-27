@@ -23,6 +23,38 @@ function getFieldInfo(fieldInfo) {
     throw new Error("Not a fieldinfo");
 }
 
+function getCount(buffer, offset, { count, countType, countTypeArgs }, rootNode) {
+  var c = 0;
+  var size = 0;
+  if(typeof count === "number")
+    c = count;
+  else if (typeof count !== "undefined") {
+    c = getField(count, rootNode);
+  } else if (typeof countType !== "undefined") {
+    ({size,value: c}=tryDoc(() => this.read(buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count"));
+  } else // TODO : broken schema, should probably error out.
+    c = 0;
+  return { count: c, size };
+}
+
+function sendCount(len, buffer, offset, { count, countType, countTypeArgs }, rootNode) {
+  if (typeof count !== "undefined" && len !== count) {
+    // TODO: Throw
+  } else if (typeof countType !== "undefined") {
+    offset += this.write(len, buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode);
+  } else {
+    // TODO: Throw
+  }
+  return offset;
+}
+
+function calcCount(len, { count, countType, countTypeArgs }, rootNode) {
+  if (typeof count === "undefined" && typeof countType !== "undefined")
+    return tryDoc(() => this.sizeOf(len, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
+  else
+    return 0;
+}
+
 function addErrorField(e, field) {
   e.field = e.field ? field + "." + e.field : field;
   throw e;
@@ -56,6 +88,9 @@ module.exports = {
   getField: getField,
   getFieldInfo: getFieldInfo,
   addErrorField: addErrorField,
+  getCount: getCount,
+  sendCount: sendCount,
+  calcCount: calcCount,
   tryCatch: tryCatch,
   tryDoc: tryDoc,
   PartialReadError:PartialReadError

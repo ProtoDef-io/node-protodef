@@ -1,4 +1,4 @@
-var { getField, tryDoc } = require("../utils");
+var { getField, getCount, sendCount, calcCount, tryDoc } = require("../utils");
 
 module.exports = {
   'array': [readArray, writeArray, sizeOfArray],
@@ -6,25 +6,17 @@ module.exports = {
   'container': [readContainer, writeContainer, sizeOfContainer]
 };
 
-function readArray(buffer, offset, {type,count,countType,countTypeArgs}, rootNode) {
+function readArray(buffer, offset, typeArgs, rootNode) {
   var results = {
     value: [],
     size: 0
   };
-  var c;
-  if(typeof count === "number")
-    c = count;
-  else if (typeof count !== "undefined")
-    c = getField(count, rootNode);
-  else if (typeof countType !== "undefined") {
-    var {size,value}=tryDoc(() => this.read(buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
-    results.size += size;
-    offset += size;
-    c = value;
-  } else // TODO : broken schema, should probably error out.
-    c = 0;
-  for(var i = 0; i < c; i++) {
-    ({size,value}=tryDoc(() => this.read(buffer, offset, type, rootNode), i));
+  var value;
+  var { count, size } = getCount.call(this, buffer, offset, typeArgs, rootNode);
+  offset += size;
+  results.size += size;
+  for(var i = 0; i < count; i++) {
+    ({size,value}=tryDoc(() => this.read(buffer, offset, typeArgs.type, rootNode), i));
     results.size += size;
     offset += size;
     results.value.push(value);
@@ -32,20 +24,15 @@ function readArray(buffer, offset, {type,count,countType,countTypeArgs}, rootNod
   return results;
 }
 
-function writeArray(value, buffer, offset, {type,count,countType,countTypeArgs}, rootNode) {
-  if (typeof count === "undefined" && typeof countType !== "undefined")
-    offset= tryDoc(() => this.write(value.length, buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
-  else if (typeof count === "undefined") { // Broken schema, should probably error out
-  }
-  return value.reduce((offset,v,index) =>tryDoc(() => this.write(v, buffer, offset, type, rootNode),index),offset);
+function writeArray(value, buffer, offset, typeArgs, rootNode) {
+  offset = sendCount.call(this, value.length, buffer, offset, typeArgs, rootNode);
+  return value.reduce((offset,v,index) =>tryDoc(() => this.write(v, buffer, offset, typeArgs.type, rootNode),index),offset);
 }
 
-function sizeOfArray(value, {type,count,countType,countTypeArgs}, rootNode) {
-  var size = 0;
-  if (typeof count === "undefined" &&  typeof countType !== "undefined")
-    size=tryDoc(() => this.sizeOf(value.length, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
-
-  return value.reduce((size,v,index) =>tryDoc(() => size+this.sizeOf(v, type, rootNode), index),size);
+function sizeOfArray(value, typeArgs, rootNode) {
+  var size = calcCount.call(this, value.length, typeArgs, rootNode);
+  size = value.reduce((size,v,index) =>tryDoc(() => size+this.sizeOf(v, typeArgs.type, rootNode), index),size);
+  return size;
 }
 
 

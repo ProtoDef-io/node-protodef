@@ -1,6 +1,6 @@
 var assert = require('assert');
 
-var { getField, tryDoc, PartialReadError } = require("../utils");
+var { getField, getCount, sendCount, calcCount, tryDoc, PartialReadError } = require("../utils");
 
 module.exports = {
   'varint': [readVarInt, writeVarInt, sizeOfVarInt],
@@ -102,10 +102,10 @@ function writeVarInt(value, buffer, offset) {
 }
 
 
-function readPString(buffer, offset, {countType,countTypeArgs},rootNode) {
-  var {size,value}=tryDoc(() => this.read(buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
+function readPString(buffer, offset, typeArgs,rootNode) {
+  var { size, count } = getCount.call(this, buffer, offset, typeArgs, rootNode);
   var cursor = offset + size;
-  var strEnd = cursor + value;
+  var strEnd = cursor + count;
   if(strEnd > buffer.length) throw new PartialReadError("Missing characters in string, found size is "+buffer.length+
     " expected size was "+strEnd);
 
@@ -115,17 +115,17 @@ function readPString(buffer, offset, {countType,countTypeArgs},rootNode) {
   };
 }
 
-function writePString(value, buffer, offset, {countType,countTypeArgs},rootNode) {
+function writePString(value, buffer, offset, typeArgs,rootNode) {
   var length = Buffer.byteLength(value, 'utf8');
-  offset=tryDoc(() => this.write(length, buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
+  offset = sendCount.call(this, length, buffer, offset, typeArgs, rootNode);
   buffer.write(value, offset, length, 'utf8');
   return offset + length;
 }
 
 
-function sizeOfPString(value, {countType,countTypeArgs},rootNode) {
+function sizeOfPString(value, typeArgs,rootNode) {
   var length = Buffer.byteLength(value, 'utf8');
-  var size=tryDoc(() => this.sizeOf(length, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
+  var size = calcCount.call(this, length, typeArgs, rootNode);
   return size + length;
 }
 
@@ -144,40 +144,23 @@ function writeBool(value, buffer, offset) {
 }
 
 
-function readBuffer(buffer, offset, {count,countType,countTypeArgs}, rootNode) {
-  var totalSize = 0;
-  var totalCount;
-  if(typeof count === "number")
-    totalCount = count;
-  else if (typeof count !== "undefined")
-    totalCount = getField(count, rootNode);
-  else if (typeof countType !== "undefined") {
-    var {value,size} = this.read(buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode);
-    totalSize += size;
-    offset += size;
-    totalCount = value;
-  }
+function readBuffer(buffer, offset, typeArgs, rootNode) {
+  var { size, count } = getCount.call(this, buffer, offset, typeArgs, rootNode);
+  offset += size;
   return {
-    value: buffer.slice(offset, offset + totalCount),
-    size: totalSize + totalCount
+    value: buffer.slice(offset, offset + count),
+    size: size + count
   };
 }
 
-function writeBuffer(value, buffer, offset, {count,countType,countTypeArgs}, rootNode) {
-  if (typeof count === "undefined" && typeof countType !== "undefined") {
-    offset = this.write(value.length, buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode);
-  } else if (typeof count === "undefined") { // Broken schema, should probably error out
-  }
+function writeBuffer(value, buffer, offset, typeArgs, rootNode) {
+  offset = sendCount.call(this, value.length, buffer, offset, typeArgs, rootNode);
   value.copy(buffer, offset);
   return offset + value.length;
 }
 
-function sizeOfBuffer(value, {count,countType,countTypeArgs}, rootNode) {
-  var size = 0;
-  if (typeof count === "undefined" &&
-      typeof countType !== "undefined") {
-    size = this.sizeOf(value.length, { type: countType, typeArgs: countTypeArgs }, rootNode);
-  }
+function sizeOfBuffer(value, typeArgs, rootNode) {
+  var size = calcCount.call(this, value.length, typeArgs, rootNode);
   return size + value.length;
 }
 
