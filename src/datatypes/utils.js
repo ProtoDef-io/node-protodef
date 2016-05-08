@@ -147,6 +147,7 @@ function writeBool(value, buffer, offset) {
 function readBuffer(buffer, offset, typeArgs, rootNode) {
   var { size, count } = getCount.call(this, buffer, offset, typeArgs, rootNode);
   offset += size;
+  if(offset+count > buffer.length) throw new PartialReadError();
   return {
     value: buffer.slice(offset, offset + count),
     size: size + count
