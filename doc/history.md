@@ -1,5 +1,9 @@
 # History
 
+## 1.2.2
+
+* stop swallowing errors in parser and serializer
+
 ## 1.2.1
 
 * add li8, lu8 and u64, lu64 for consistency
