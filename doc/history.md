@@ -1,5 +1,9 @@
 # History
 
+## 1.2.3
+
+* fix sendCount : write return the offset, not the size, add a test for this
+
 ## 1.2.2
 
 * stop swallowing errors in parser and serializer
