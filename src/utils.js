@@ -41,7 +41,7 @@ function sendCount(len, buffer, offset, { count, countType, countTypeArgs }, roo
   if (typeof count !== "undefined" && len !== count) {
     // TODO: Throw
   } else if (typeof countType !== "undefined") {
-    offset += this.write(len, buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode);
+    offset = this.write(len, buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode);
   } else {
     // TODO: Throw
   }
