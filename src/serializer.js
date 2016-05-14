@@ -14,13 +14,14 @@ class Serializer extends Transform {
   }
 
   _transform(chunk, enc, cb) {
+    let buf;
     try {
-      var buf = this.createPacketBuffer(chunk);
-      this.push(buf);
-      return cb();
+      buf = this.createPacketBuffer(chunk);
     } catch (e) {
       return cb(e);
     }
+    this.push(buf);
+    return cb();
   }
 }
 
@@ -39,12 +40,11 @@ class Parser extends Transform {
   _transform(chunk, enc, cb) {
     this.queue = Buffer.concat([this.queue, chunk]);
     while(true) {
-      var packet;
+      let packet;
       try {
         packet = this.parsePacketBuffer(this.queue);
-        this.push(packet);
-        this.queue=this.queue.slice(packet.metadata.size);
-      } catch (e) {
+      }
+      catch (e) {
         if (e.partialReadError)
           return cb();
         else {
@@ -53,6 +53,9 @@ class Parser extends Transform {
           return cb(e);
         }
       }
+
+      this.push(packet);
+      this.queue=this.queue.slice(packet.metadata.size);
     }
   }
 }
