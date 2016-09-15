@@ -1,5 +1,7 @@
 var { getFieldInfo, tryCatch } = require('./utils');
 var reduce = require('lodash.reduce');
+var Ajv = require('ajv');
+var assert = require('assert');
 
 function isFieldInfo(type) {
   return typeof type === "string"
@@ -49,6 +51,9 @@ class ProtoDef
 {
   constructor() {
     this.types={};
+    this.ajv = new Ajv({verbose:true});
+    this.ajv.addSchema(require("../ProtoDef/schemas/definitions.json"),"definitions");
+    this.subSchemas = [];
     this.addDefaultTypes();
   }
 
@@ -63,11 +68,28 @@ class ProtoDef
     if (functions === "native")
       return;
     if (isFieldInfo(functions)) {
-      var {type,typeArgs} = getFieldInfo(functions);
+      let valid = this.ajv.validate("dataType",functions);
+      assert.ok(valid, JSON.stringify(this.ajv.errors,null,2));
+
+      let {type,typeArgs} = getFieldInfo(functions);
       this.types[name] = extendType(this.types[type], typeArgs);
     }
-    else
+    else {
+      if(functions[3]) {
+        this.subSchemas.push(name);
+        this.ajv.addSchema(functions[3], name);
+
+        this.ajv.removeSchema("dataType");
+        this.ajv.addSchema({
+          "$schema": "http://json-schema.org/draft-04/schema#",
+          "title": "dataType",
+          "oneOf": [{"$ref": "definitions#/definitions/simpleFieldType"}]
+            .concat(this.subSchemas.map(name => ({"$ref": name})))
+        },"dataType");
+      }
+
       this.types[name] = functions;
+    }
   }
 
   addTypes(types) {

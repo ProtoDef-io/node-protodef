@@ -12,6 +12,7 @@
   "tonicExampleFilename": "example.js",
   "license": "MIT",
   "dependencies": {
+    "ajv": "^4.7.0",
     "lodash.reduce": "^4.2.0",
     "readable-stream": "^2.0.5"
   },

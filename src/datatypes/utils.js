@@ -5,12 +5,12 @@ var { getField, getCount, sendCount, calcCount, tryDoc, PartialReadError } = req
 module.exports = {
   'varint': [readVarInt, writeVarInt, sizeOfVarInt],
   'bool': [readBool, writeBool, 1],
-  'pstring': [readPString, writePString, sizeOfPString],
-  'buffer': [readBuffer, writeBuffer, sizeOfBuffer],
+  'pstring': [readPString, writePString, sizeOfPString, require('../../ProtoDef/schemas/pstring')],
+  'buffer': [readBuffer, writeBuffer, sizeOfBuffer, require('../../ProtoDef/schemas/buffer')],
   'void': [readVoid, writeVoid, 0],
-  'bitfield': [readBitField, writeBitField, sizeOfBitField],
+  'bitfield': [readBitField, writeBitField, sizeOfBitField, require('../../ProtoDef/schemas/bitfield')],
   'cstring': [readCString, writeCString, sizeOfCString],
-  'mapper':[readMapper,writeMapper,sizeOfMapper]
+  'mapper':[readMapper,writeMapper,sizeOfMapper, require('../../ProtoDef/schemas/mapper')]
 };
 
 function readMapper(buffer,offset,{type,mappings},rootNode)
