@@ -2,6 +2,7 @@ var { getFieldInfo, tryCatch } = require('./utils');
 var reduce = require('lodash.reduce');
 var Ajv = require('ajv');
 var assert = require('assert');
+var get=require("lodash.get");
 
 function isFieldInfo(type) {
   return typeof type === "string"
@@ -53,6 +54,7 @@ class ProtoDef
     this.types={};
     this.ajv = new Ajv({verbose:true});
     this.ajv.addSchema(require("../ProtoDef/schemas/definitions.json"),"definitions");
+    this.ajv.addSchema(require("../ProtoDef/schemas/protocol_schema.json"),"protocol");
     this.subSchemas = [];
     this.addDefaultTypes();
   }
@@ -62,6 +64,23 @@ class ProtoDef
     this.addTypes(require("./datatypes/utils"));
     this.addTypes(require("./datatypes/structures"));
     this.addTypes(require("./datatypes/conditional"));
+  }
+  
+  addProtocol(protocolData, path) {
+    const self=this;
+    function recursiveAddTypes(protocolData,path)
+    {
+      if(protocolData===undefined)
+        return;
+      if(protocolData.types)
+        self.addTypes(protocolData.types);
+      recursiveAddTypes(get(protocolData,path.shift()),path);
+    }
+
+    let valid = this.ajv.validate("protocol",protocolData);
+    assert.ok(valid, JSON.stringify(this.ajv.errors,null,2));
+
+    recursiveAddTypes(protocolData,path);
   }
 
   addType(name, functions) {
