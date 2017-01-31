@@ -2,7 +2,10 @@
 
 You can create new datatypes for Protodef.
 
-Three functions need to be created to define a datatype
+Three functions need to be created to define a datatype.
+
+An optional `schema` property can be added to validate whether the type is used properly in new types.
+It must be defined as a json schema. See the [ProtoDef](https://github.com/ProtoDef-io/ProtoDef) repo for schema examples of existing types.
 
 ## read
 
