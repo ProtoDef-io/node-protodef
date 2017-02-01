@@ -12,9 +12,9 @@
   "tonicExampleFilename": "example.js",
   "license": "MIT",
   "dependencies": {
-    "ajv": "^4.7.0",
     "lodash.get": "^4.4.2",
     "lodash.reduce": "^4.2.0",
+    "protodef-validator": "^1.0.2",
     "readable-stream": "^2.0.5"
   },
   "engines": {
