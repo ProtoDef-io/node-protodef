@@ -1,8 +1,8 @@
 var { getField, getFieldInfo, tryDoc, PartialReadError} = require('../utils');
 
 module.exports = {
-  'switch': [readSwitch, writeSwitch, sizeOfSwitch],
-  'option': [readOption, writeOption, sizeOfOption]
+  'switch': [readSwitch, writeSwitch, sizeOfSwitch,require('../../ProtoDef/schemas/switch')],
+  'option': [readOption, writeOption, sizeOfOption,require('../../ProtoDef/schemas/option')]
 };
 
 function readSwitch(buffer, offset, {compareTo,fields,compareToValue,...rest}, rootNode) {

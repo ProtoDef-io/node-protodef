@@ -12,11 +12,13 @@
   "tonicExampleFilename": "example.js",
   "license": "MIT",
   "dependencies": {
+    "lodash.get": "^4.4.2",
     "lodash.reduce": "^4.2.0",
+    "protodef-validator": "^1.0.2",
     "readable-stream": "^2.0.5"
   },
   "engines": {
-    "node": ">=4"
+    "node": ">=6"
   },
   "bugs": {
     "url": "https://github.com/ProtoDef-io/node-protodef/issues"

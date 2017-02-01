@@ -1,5 +1,7 @@
-var { getFieldInfo, tryCatch } = require('./utils');
-var reduce = require('lodash.reduce');
+const { getFieldInfo, tryCatch } = require('./utils');
+const reduce = require('lodash.reduce');
+const get=require("lodash.get");
+const Validator=require('protodef-validator');
 
 function isFieldInfo(type) {
   return typeof type === "string"
@@ -16,7 +18,7 @@ function findArgs(acc, v, k) {
 }
 
 function setField(path, val, into) {
-  var c = path.split('.').reverse();
+  const c = path.split('.').reverse();
   while (c.length > 1) {
     into = into[c.pop()];
   }
@@ -24,10 +26,10 @@ function setField(path, val, into) {
 }
 
 function extendType(functions, defaultTypeArgs) {
-  var json=JSON.stringify(defaultTypeArgs);
-  var argPos = reduce(defaultTypeArgs, findArgs, []);
+  const json=JSON.stringify(defaultTypeArgs);
+  const argPos = reduce(defaultTypeArgs, findArgs, []);
   function produceArgs(typeArgs) {
-    var args = JSON.parse(json);
+    const args = JSON.parse(json);
     argPos.forEach((v) => {
       setField(v.path, typeArgs[v.val], args);
     });
@@ -49,6 +51,7 @@ class ProtoDef
 {
   constructor() {
     this.types={};
+    this.validator=new Validator();
     this.addDefaultTypes();
   }
 
@@ -58,16 +61,39 @@ class ProtoDef
     this.addTypes(require("./datatypes/structures"));
     this.addTypes(require("./datatypes/conditional"));
   }
+  
+  addProtocol(protocolData, path) {
+    const self=this;
+    function recursiveAddTypes(protocolData,path)
+    {
+      if(protocolData===undefined)
+        return;
+      if(protocolData.types)
+        self.addTypes(protocolData.types);
+      recursiveAddTypes(get(protocolData,path.shift()),path);
+    }
+
+    this.validator.validateProtocol(protocolData);
+
+    recursiveAddTypes(protocolData,path);
+  }
 
   addType(name, functions) {
     if (functions === "native")
       return;
     if (isFieldInfo(functions)) {
-      var {type,typeArgs} = getFieldInfo(functions);
+      this.validator.validateType(functions);
+
+      let {type,typeArgs} = getFieldInfo(functions);
       this.types[name] = extendType(this.types[type], typeArgs);
     }
-    else
+    else {
+      if(functions[3]) {
+        this.validator.addType(name,functions[3]);
+      }
+
       this.types[name] = functions;
+    }
   }
 
   addTypes(types) {
@@ -76,7 +102,7 @@ class ProtoDef
 
   read(buffer, cursor, _fieldInfo, rootNodes) {
     let {type,typeArgs} = getFieldInfo(_fieldInfo);
-    var typeFunctions = this.types[type];
+    const typeFunctions = this.types[type];
     if(!typeFunctions)
       throw new Error("missing data type: " + type);
     return typeFunctions[0].call(this, buffer, cursor, typeArgs, rootNodes);
@@ -84,7 +110,7 @@ class ProtoDef
 
   write(value, buffer, offset, _fieldInfo, rootNode) {
     let {type,typeArgs} = getFieldInfo(_fieldInfo);
-    var typeFunctions = this.types[type];
+    const typeFunctions = this.types[type];
     if(!typeFunctions)
       throw new Error("missing data type: " + type);
     return typeFunctions[1].call(this, value, buffer, offset, typeArgs, rootNode);
@@ -92,7 +118,7 @@ class ProtoDef
 
   sizeOf(value, _fieldInfo, rootNode) {
     let {type,typeArgs} = getFieldInfo(_fieldInfo);
-    var typeFunctions = this.types[type];
+    const typeFunctions = this.types[type];
     if(!typeFunctions) {
       throw new Error("missing data type: " + type);
     }
@@ -104,12 +130,12 @@ class ProtoDef
   }
 
   createPacketBuffer(type,packet) {
-    var length=tryCatch(()=> this.sizeOf(packet, type, {}),
+    const length=tryCatch(()=> this.sizeOf(packet, type, {}),
       (e)=> {
         e.message = `SizeOf error for ${e.field} : ${e.message}`;
         throw e;
       });
-    var buffer = new Buffer(length);
+    const buffer = new Buffer(length);
     tryCatch(()=> this.write(packet, buffer, 0, type, {}),
       (e)=> {
         e.message = `Write error for ${e.field} : ${e.message}`;
@@ -119,7 +145,7 @@ class ProtoDef
   }
 
   parsePacketBuffer(type,buffer) {
-    var {value,size}=tryCatch(()=> this.read(buffer, 0, type, {}),
+    const {value,size}=tryCatch(()=> this.read(buffer, 0, type, {}),
       (e) => {
         e.message=`Read error for ${e.field} : ${e.message}`;
         throw e;

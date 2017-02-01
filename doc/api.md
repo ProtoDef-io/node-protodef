@@ -7,7 +7,23 @@
 Add the type `name` with the data `functions` which can be either:
 * "native" : that type is already implemented by ProtoDef
 * a js object defining a type based on other already defined types
-* `[read,write,sizeOf]` functions
+* `[read,write,sizeOf[,schema]]` functions
+
+See [newDataTypes.md](newDataTypes.md) for more details.
+
+### ProtoDef.addTypes(types)
+
+Add `types` which is an object with keys the name of the types and values the type definitions.
+
+### ProtoDef.addProtocol(protocol,path)
+
+Add types in `protocol` recursively. The protocol object is an object with keys `types` and namespace keys.
+* The value of the `types` key is an object of type name to type definition.
+* The value of the namespace key is a protocol object.
+
+The `path` is an array of namespace keys which select a path of namespaces to be added to the protodef object.
+
+See full_protocol.js for an example of usage.
 
 ### ProtoDef.read(buffer, cursor, _fieldInfo, rootNodes)
 
