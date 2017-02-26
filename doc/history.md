@@ -1,5 +1,9 @@
 # History
 
+## 1.3.1
+
+* fix countType : now behave as an ordinary type, remove undocumented countTypeArgs
+
 ## 1.3.0
 
 * validate types against type schemas using the protodef validator
