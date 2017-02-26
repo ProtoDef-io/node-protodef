@@ -89,7 +89,7 @@ class ProtoDef
       this.validator.addType(name);
 
       let {type,typeArgs} = getFieldInfo(functions);
-      this.types[name] = extendType(this.types[type], typeArgs);
+      this.types[name] = typeArgs ? extendType(this.types[type], typeArgs) : this.types[type];
     }
     else {
       if(functions[3]) {
