@@ -79,10 +79,13 @@ class ProtoDef
   }
 
   addType(name, functions) {
-    if (functions === "native")
+    if (functions === "native") {
+      this.validator.addType(name);
       return;
+    }
     if (isFieldInfo(functions)) {
       this.validator.validateType(functions);
+      this.validator.addType(name);
 
       let {type,typeArgs} = getFieldInfo(functions);
       this.types[name] = extendType(this.types[type], typeArgs);
