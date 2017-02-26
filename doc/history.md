@@ -1,5 +1,9 @@
 # History
 
+## 1.4.0
+
+* implement aliases
+
 ## 1.3.1
 
 * fix countType : now behave as an ordinary type, remove undocumented countTypeArgs
