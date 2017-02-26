@@ -2,12 +2,13 @@
 
 ## ProtoDef()
 
-### ProtoDef.addType(name,functions)
+### ProtoDef.addType(name,functions,validate=true)
 
 Add the type `name` with the data `functions` which can be either:
 * "native" : that type is already implemented by ProtoDef
 * a js object defining a type based on other already defined types
 * `[read,write,sizeOf[,schema]]` functions
+* a validate boolean : to check the validity of the type against its schema or not
 
 See [newDataTypes.md](newDataTypes.md) for more details.
 

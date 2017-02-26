@@ -78,13 +78,14 @@ class ProtoDef
     recursiveAddTypes(protocolData,path);
   }
 
-  addType(name, functions) {
+  addType(name, functions, validate=true) {
     if (functions === "native") {
       this.validator.addType(name);
       return;
     }
     if (isFieldInfo(functions)) {
-      this.validator.validateType(functions);
+      if(validate)
+        this.validator.validateType(functions);
       this.validator.addType(name);
 
       let {type,typeArgs} = getFieldInfo(functions);
@@ -100,7 +101,8 @@ class ProtoDef
   }
 
   addTypes(types) {
-    Object.keys(types).forEach((name) => this.addType(name, types[name]));
+    Object.keys(types).forEach((name) => this.addType(name, types[name],false));
+    Object.keys(types).forEach((name) => {if (isFieldInfo(types[name])) {this.validator.validateType(types[name])}});
   }
 
   read(buffer, cursor, _fieldInfo, rootNodes) {
