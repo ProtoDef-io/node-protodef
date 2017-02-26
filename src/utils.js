@@ -23,7 +23,7 @@ function getFieldInfo(fieldInfo) {
     throw new Error("Not a fieldinfo");
 }
 
-function getCount(buffer, offset, { count, countType, countTypeArgs }, rootNode) {
+function getCount(buffer, offset, { count, countType }, rootNode) {
   var c = 0;
   var size = 0;
   if(typeof count === "number")
@@ -31,26 +31,26 @@ function getCount(buffer, offset, { count, countType, countTypeArgs }, rootNode)
   else if (typeof count !== "undefined") {
     c = getField(count, rootNode);
   } else if (typeof countType !== "undefined") {
-    ({size,value: c}=tryDoc(() => this.read(buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count"));
+    ({size,value: c}=tryDoc(() => this.read(buffer, offset, getFieldInfo(countType), rootNode),"$count"));
   } else // TODO : broken schema, should probably error out.
     c = 0;
   return { count: c, size };
 }
 
-function sendCount(len, buffer, offset, { count, countType, countTypeArgs }, rootNode) {
+function sendCount(len, buffer, offset, { count, countType }, rootNode) {
   if (typeof count !== "undefined" && len !== count) {
     // TODO: Throw
   } else if (typeof countType !== "undefined") {
-    offset = this.write(len, buffer, offset, { type: countType, typeArgs: countTypeArgs }, rootNode);
+    offset = this.write(len, buffer, offset, getFieldInfo(countType), rootNode);
   } else {
     // TODO: Throw
   }
   return offset;
 }
 
-function calcCount(len, { count, countType, countTypeArgs }, rootNode) {
+function calcCount(len, { count, countType }, rootNode) {
   if (typeof count === "undefined" && typeof countType !== "undefined")
-    return tryDoc(() => this.sizeOf(len, { type: countType, typeArgs: countTypeArgs }, rootNode),"$count");
+    return tryDoc(() => this.sizeOf(len, getFieldInfo(countType), rootNode),"$count");
   else
     return 0;
 }
