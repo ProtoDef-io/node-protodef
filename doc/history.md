@@ -1,5 +1,9 @@
 # History
 
+## 1.3.0
+
+* validate types against type schemas using the protodef validator
+
 ## 1.2.3
 
 * fix sendCount : write return the offset, not the size, add a test for this
