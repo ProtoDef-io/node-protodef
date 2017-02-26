@@ -95,6 +95,8 @@ class ProtoDef
       if(functions[3]) {
         this.validator.addType(name,functions[3]);
       }
+      else
+        this.validator.addType(name);
 
       this.types[name] = functions;
     }
