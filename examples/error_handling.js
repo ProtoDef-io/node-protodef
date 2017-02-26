@@ -1,13 +1,13 @@
-var ProtoDef = require("protodef").ProtoDef;
-var Serializer = require("protodef").Serializer;
-var Parser = require("protodef").Parser;
+const ProtoDef = require("protodef").ProtoDef;
+const Serializer = require("protodef").Serializer;
+const Parser = require("protodef").Parser;
 
-var example_protocol=require("./example_protocol.json");
+const example_protocol=require("./example_protocol.json");
 
-var proto = new ProtoDef();
+const proto = new ProtoDef();
 proto.addTypes(example_protocol);
-var parser = new Parser(proto, "packet");
-var serializer = new Serializer(proto, "packet");
+const parser = new Parser(proto, "packet");
+const serializer = new Serializer(proto, "packet");
 
 serializer.write({
   name: "entity_look",

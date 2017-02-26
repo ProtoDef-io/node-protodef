@@ -1,4 +1,4 @@
-var { getField, getFieldInfo, tryDoc, PartialReadError} = require('../utils');
+const { getField, getFieldInfo, tryDoc, PartialReadError} = require('../utils');
 
 module.exports = {
   'switch': [readSwitch, writeSwitch, sizeOfSwitch,require('../../ProtoDef/schemas/switch')],
@@ -10,9 +10,9 @@ function readSwitch(buffer, offset, {compareTo,fields,compareToValue,...rest}, r
   if (typeof fields[compareTo] === 'undefined' && typeof rest.default === "undefined")
     throw new Error(compareTo + " has no associated fieldInfo in switch");
 
-  var caseDefault=typeof fields[compareTo] === 'undefined';
-  var resultingType = caseDefault ? rest.default : fields[compareTo];
-  var fieldInfo = getFieldInfo(resultingType);
+  const caseDefault=typeof fields[compareTo] === 'undefined';
+  const resultingType = caseDefault ? rest.default : fields[compareTo];
+  const fieldInfo = getFieldInfo(resultingType);
   return tryDoc(() => this.read(buffer, offset, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
 }
 
@@ -21,8 +21,8 @@ function writeSwitch(value, buffer, offset, {compareTo,fields,compareToValue,...
   if (typeof fields[compareTo] === 'undefined' && typeof rest.default === "undefined")
     throw new Error(compareTo + " has no associated fieldInfo in switch");
 
-  var caseDefault=typeof fields[compareTo] === 'undefined';
-  var fieldInfo = getFieldInfo(caseDefault ? rest.default : fields[compareTo]);
+  const caseDefault=typeof fields[compareTo] === 'undefined';
+  const fieldInfo = getFieldInfo(caseDefault ? rest.default : fields[compareTo]);
   return tryDoc(() => this.write(value, buffer, offset, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
 }
 
@@ -31,17 +31,17 @@ function sizeOfSwitch(value, {compareTo,fields,compareToValue,...rest}, rootNode
   if (typeof fields[compareTo] === 'undefined' && typeof rest.default === "undefined")
     throw new Error(compareTo + " has no associated fieldInfo in switch");
 
-  var caseDefault=typeof fields[compareTo] === 'undefined';
-  var fieldInfo = getFieldInfo(caseDefault ? rest.default : fields[compareTo]);
+  const caseDefault=typeof fields[compareTo] === 'undefined';
+  const fieldInfo = getFieldInfo(caseDefault ? rest.default : fields[compareTo]);
   return tryDoc(() => this.sizeOf(value, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
 }
 
 function readOption(buffer, offset, typeArgs, context) {
   if(buffer.length<offset+1)
     throw new PartialReadError();
-  var val = buffer.readUInt8(offset++);
+  const val = buffer.readUInt8(offset++);
   if (val !== 0) {
-    var retval = this.read(buffer, offset, typeArgs, context);
+    const retval = this.read(buffer, offset, typeArgs, context);
     retval.size++;
     return retval;
   }

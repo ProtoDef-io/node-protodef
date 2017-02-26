@@ -1,5 +1,5 @@
-var ProtoDef = require("./protodef");
-var proto = new ProtoDef();
+const ProtoDef = require("./protodef");
+const proto = new ProtoDef();
 
 module.exports = {
   ProtoDef:ProtoDef,

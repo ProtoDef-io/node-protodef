@@ -1,11 +1,11 @@
-var expect = require('chai').expect;
-var PartialReadError=require("../../").utils.PartialReadError;
-var Validator = require('jsonschema').Validator;
-var v = new Validator();
-var assert = require('assert');
+const expect = require('chai').expect;
+const PartialReadError=require("../../").utils.PartialReadError;
+const Validator = require('jsonschema').Validator;
+const v = new Validator();
+const assert = require('assert');
 
-var testData=require("./prepareTests").testData;
-var proto=require("./prepareTests").proto;
+const testData=require("./prepareTests").testData;
+const proto=require("./prepareTests").proto;
 
 function testValue(type,value,buffer)
 {
@@ -13,7 +13,7 @@ function testValue(type,value,buffer)
     expect(proto.createPacketBuffer(type,value)).to.deep.equal(buffer);
   });
   it('reads',function(){
-    var actualResult=proto.parsePacketBuffer(type,buffer);
+    const actualResult=proto.parsePacketBuffer(type,buffer);
     if(value===null)
       assert.ok(actualResult.data == undefined);
     else
@@ -53,9 +53,9 @@ function testType(type,values)
 testData.forEach(tests => {
   describe(tests.kind,()=> {
     it("validates the json schema",()=>{
-      var schema = require('../../ProtoDef/test/datatype_tests_schema.json');
+      const schema = require('../../ProtoDef/test/datatype_tests_schema.json');
       v.addSchema(require('../../ProtoDef/schemas/datatype'),'dataType');
-      var result = v.validate(tests.originalData, schema);
+      const result = v.validate(tests.originalData, schema);
       assert.strictEqual(result.errors.length,0,require('util').inspect(result.errors,{'depth':null}));
     });
 

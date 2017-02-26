@@ -1,5 +1,4 @@
-var Transform = require("readable-stream").Transform;
-var { PartialReadError} = require('./utils');
+const Transform = require("readable-stream").Transform;
 
 class Serializer extends Transform {
   constructor(proto,mainType) {

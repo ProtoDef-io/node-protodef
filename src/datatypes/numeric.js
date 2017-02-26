@@ -1,4 +1,4 @@
-var { PartialReadError} = require('../utils');
+const { PartialReadError} = require('../utils');
 
 function readI64(buffer, offset) {
   if(offset + 8 > buffer.length)
@@ -62,24 +62,24 @@ function writeLU64(value, buffer, offset) {
 
 function generateFunctions(bufferReader,bufferWriter,size)
 {
-  var reader=function(buffer, offset)
+  const reader=function(buffer, offset)
   {
     if(offset + size > buffer.length)
       throw new PartialReadError();
-    var value = buffer[bufferReader](offset);
+    const value = buffer[bufferReader](offset);
     return {
       value: value,
       size: size
     };
   };
-  var writer=function(value, buffer, offset) {
+  const writer=function(value, buffer, offset) {
     buffer[bufferWriter](value, offset);
     return offset + size;
   };
   return [reader, writer, size];
 }
 
-var nums= {
+const nums= {
   'i8': ["readInt8", "writeInt8", 1],
   'u8': ["readUInt8", "writeUInt8", 1],
   'i16': ["readInt16BE", "writeInt16BE", 2],
@@ -98,7 +98,7 @@ var nums= {
   'lf64': ["readDoubleLE", "writeDoubleLE", 8]
 };
 
-var types=Object.keys(nums).reduce(function(types,num){
+const types=Object.keys(nums).reduce(function(types,num){
   types[num]=generateFunctions(nums[num][0], nums[num][1], nums[num][2]);
   return types;
 },{});

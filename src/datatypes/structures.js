@@ -1,4 +1,4 @@
-var { getField, getCount, sendCount, calcCount, tryDoc } = require("../utils");
+const { getField, getCount, sendCount, calcCount, tryDoc } = require("../utils");
 
 module.exports = {
   'array': [readArray, writeArray, sizeOfArray, require('../../ProtoDef/schemas/array')],
@@ -7,15 +7,15 @@ module.exports = {
 };
 
 function readArray(buffer, offset, typeArgs, rootNode) {
-  var results = {
+  const results = {
     value: [],
     size: 0
   };
-  var value;
-  var { count, size } = getCount.call(this, buffer, offset, typeArgs, rootNode);
+  let value;
+  const { count, size } = getCount.call(this, buffer, offset, typeArgs, rootNode);
   offset += size;
   results.size += size;
-  for(var i = 0; i < count; i++) {
+  for(let i = 0; i < count; i++) {
     ({size,value}=tryDoc(() => this.read(buffer, offset, typeArgs.type, rootNode), i));
     results.size += size;
     offset += size;
@@ -30,20 +30,20 @@ function writeArray(value, buffer, offset, typeArgs, rootNode) {
 }
 
 function sizeOfArray(value, typeArgs, rootNode) {
-  var size = calcCount.call(this, value.length, typeArgs, rootNode);
+  let size = calcCount.call(this, value.length, typeArgs, rootNode);
   size = value.reduce((size,v,index) =>tryDoc(() => size+this.sizeOf(v, typeArgs.type, rootNode), index),size);
   return size;
 }
 
 
 function readContainer(buffer, offset, typeArgs, context) {
-  var results = {
+  const results = {
     value: { "..": context },
     size: 0
   };
   typeArgs.forEach(({type,name,anon}) => {
     tryDoc(() => {
-      var readResults = this.read(buffer, offset, type, results.value);
+      const readResults = this.read(buffer, offset, type, results.value);
       results.size += readResults.size;
       offset += readResults.size;
       if (anon) {
@@ -68,7 +68,7 @@ function writeContainer(value, buffer, offset, typeArgs, context) {
 
 function sizeOfContainer(value, typeArgs, context) {
   value[".."] = context;
-  var size = typeArgs.reduce((size,{type,name,anon}) =>
+  const size = typeArgs.reduce((size,{type,name,anon}) =>
     size + tryDoc(() => this.sizeOf(anon ? value : value[name], type, value), name ? name : "unknown"),0);
   delete value[".."];
   return size;

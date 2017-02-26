@@ -1,8 +1,8 @@
-var ProtoDef = require("protodef").ProtoDef;
+const ProtoDef = require("protodef").ProtoDef;
 
-var proto = new ProtoDef();
+const proto = new ProtoDef();
 
-var testData=[
+const testData=[
   {
     "kind":"conditional",
     "data":require("../../ProtoDef/test/conditional.json")
@@ -39,10 +39,10 @@ function transformValues(type,values)
 testData.forEach(tests => {
   tests.originalData=JSON.parse(JSON.stringify(tests.data));
   tests.data.forEach(test => {
-    var subTypes = [];
+    const subTypes = [];
     if (test.subtypes)
       test.subtypes.forEach((subtype, i) => {
-        var type = test.type + "_" + i;
+        const type = test.type + "_" + i;
         proto.addType(type, subtype.type);
 
         subtype.values = transformValues(test.type, subtype.values);

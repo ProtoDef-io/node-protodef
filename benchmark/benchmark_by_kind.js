@@ -1,13 +1,13 @@
-var testData=require("../test/dataTypes/prepareTests").testData;
-var proto=require("../test/dataTypes/prepareTests").proto;
-var Benchmark = require('benchmark');
+const testData=require("../test/dataTypes/prepareTests").testData;
+const proto=require("../test/dataTypes/prepareTests").proto;
+const Benchmark = require('benchmark');
 
 testData.forEach(tests => {
   describe(tests.kind,function(){
     this.timeout(1000*60*10);
 
     it('reads',function() {
-      var readSuite = new Benchmark.Suite;
+      const readSuite = new Benchmark.Suite;
       readSuite.add('read', function () {
           tests.data.forEach(test => {
             test.subtypes.forEach(subType => {
@@ -25,7 +25,7 @@ testData.forEach(tests => {
     });
 
     it('writes',function() {
-      var writeSuite = new Benchmark.Suite;
+      const writeSuite = new Benchmark.Suite;
       writeSuite.add('write', function () {
         tests.data.forEach(test => {
           test.subtypes.forEach(subType => {

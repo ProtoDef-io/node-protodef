@@ -1,6 +1,6 @@
-var assert = require('assert');
+const assert = require('assert');
 
-var { getField, getCount, sendCount, calcCount, tryDoc, PartialReadError } = require("../utils");
+const { getCount, sendCount, calcCount, tryDoc, PartialReadError } = require("../utils");
 
 module.exports = {
   'varint': [readVarInt, writeVarInt, sizeOfVarInt],
@@ -15,10 +15,10 @@ module.exports = {
 
 function readMapper(buffer,offset,{type,mappings},rootNode)
 {
-  var {size,value}=this.read(buffer, offset, type, rootNode);
-  var mappedValue=null;
-  var keys=Object.keys(mappings);
-  for(var i=0;i<keys.length;i++) {
+  const {size,value}=this.read(buffer, offset, type, rootNode);
+  let mappedValue=null;
+  const keys=Object.keys(mappings);
+  for(let i=0;i<keys.length;i++) {
     if(keys[i]==value) {
       mappedValue = mappings[keys[i]];
       break;
@@ -33,9 +33,9 @@ function readMapper(buffer,offset,{type,mappings},rootNode)
 
 function writeMapper(value,buffer,offset,{type,mappings},rootNode)
 {
-  var keys=Object.keys(mappings);
-  var mappedValue=null;
-  for(var i=0;i<keys.length;i++) {
+  const keys=Object.keys(mappings);
+  let mappedValue=null;
+  for(let i=0;i<keys.length;i++) {
     if(mappings[keys[i]]==value) {
       mappedValue = keys[i];
       break;
@@ -47,9 +47,9 @@ function writeMapper(value,buffer,offset,{type,mappings},rootNode)
 
 function sizeOfMapper(value,{type,mappings},rootNode)
 {
-  var keys=Object.keys(mappings);
-  var mappedValue=null;
-  for(var i=0;i<keys.length;i++) {
+  const keys=Object.keys(mappings);
+  let mappedValue=null;
+  for(let i=0;i<keys.length;i++) {
     if(mappings[keys[i]]==value) {
       mappedValue = keys[i];
       break;
@@ -60,14 +60,14 @@ function sizeOfMapper(value,{type,mappings},rootNode)
 }
 
 function readVarInt(buffer, offset) {
-  var result = 0;
-  var shift = 0;
-  var cursor = offset;
+  let result = 0;
+  let shift = 0;
+  let cursor = offset;
 
   while(true) {
     if(cursor + 1 > buffer.length)
       throw new PartialReadError();
-    var b = buffer.readUInt8(cursor);
+    const b = buffer.readUInt8(cursor);
     result |= ((b & 0x7f) << shift); // Add the bits to our number, except MSB
     cursor++;
     if(!(b & 0x80)) { // If the MSB is not set, we return the number
@@ -82,7 +82,7 @@ function readVarInt(buffer, offset) {
 }
 
 function sizeOfVarInt(value) {
-  var cursor = 0;
+  let cursor = 0;
   while(value & ~0x7F) {
     value >>>= 7;
     cursor++;
@@ -91,7 +91,7 @@ function sizeOfVarInt(value) {
 }
 
 function writeVarInt(value, buffer, offset) {
-  var cursor = 0;
+  let cursor = 0;
   while(value & ~0x7F) {
     buffer.writeUInt8((value & 0xFF) | 0x80, offset + cursor);
     cursor++;
@@ -103,9 +103,9 @@ function writeVarInt(value, buffer, offset) {
 
 
 function readPString(buffer, offset, typeArgs,rootNode) {
-  var { size, count } = getCount.call(this, buffer, offset, typeArgs, rootNode);
-  var cursor = offset + size;
-  var strEnd = cursor + count;
+  const { size, count } = getCount.call(this, buffer, offset, typeArgs, rootNode);
+  const cursor = offset + size;
+  const strEnd = cursor + count;
   if(strEnd > buffer.length) throw new PartialReadError("Missing characters in string, found size is "+buffer.length+
     " expected size was "+strEnd);
 
@@ -116,7 +116,7 @@ function readPString(buffer, offset, typeArgs,rootNode) {
 }
 
 function writePString(value, buffer, offset, typeArgs,rootNode) {
-  var length = Buffer.byteLength(value, 'utf8');
+  const length = Buffer.byteLength(value, 'utf8');
   offset = sendCount.call(this, length, buffer, offset, typeArgs, rootNode);
   buffer.write(value, offset, length, 'utf8');
   return offset + length;
@@ -124,14 +124,14 @@ function writePString(value, buffer, offset, typeArgs,rootNode) {
 
 
 function sizeOfPString(value, typeArgs,rootNode) {
-  var length = Buffer.byteLength(value, 'utf8');
-  var size = calcCount.call(this, length, typeArgs, rootNode);
+  const length = Buffer.byteLength(value, 'utf8');
+  const size = calcCount.call(this, length, typeArgs, rootNode);
   return size + length;
 }
 
 function readBool(buffer, offset) {
   if(offset + 1 > buffer.length) throw new PartialReadError();
-  var value = buffer.readInt8(offset);
+  const value = buffer.readInt8(offset);
   return {
     value: !!value,
     size: 1
@@ -145,7 +145,7 @@ function writeBool(value, buffer, offset) {
 
 
 function readBuffer(buffer, offset, typeArgs, rootNode) {
-  var { size, count } = getCount.call(this, buffer, offset, typeArgs, rootNode);
+  const { size, count } = getCount.call(this, buffer, offset, typeArgs, rootNode);
   offset += size;
   if(offset+count > buffer.length) throw new PartialReadError();
   return {
@@ -161,7 +161,7 @@ function writeBuffer(value, buffer, offset, typeArgs, rootNode) {
 }
 
 function sizeOfBuffer(value, typeArgs, rootNode) {
-  var size = calcCount.call(this, value.length, typeArgs, rootNode);
+  const size = calcCount.call(this, value.length, typeArgs, rootNode);
   return size + value.length;
 }
 
@@ -181,13 +181,13 @@ function generateBitMask(n) {
 }
 
 function readBitField(buffer, offset, typeArgs) {
-  var beginOffset = offset;
-  var curVal = null;
-  var bits = 0;
-  var results = {};
+  const beginOffset = offset;
+  let curVal = null;
+  let bits = 0;
+  const results = {};
   results.value = typeArgs.reduce(function(acc, {size,signed,name}) {
-    var currentSize = size;
-    var val = 0;
+    let currentSize = size;
+    let val = 0;
     while (currentSize > 0) {
       if (bits == 0) {
         if(buffer.length<offset+1)
@@ -195,7 +195,7 @@ function readBitField(buffer, offset, typeArgs) {
         curVal = buffer[offset++];
         bits = 8;
       }
-      var bitsToRead = Math.min(currentSize, bits);
+      const bitsToRead = Math.min(currentSize, bits);
       val = (val << bitsToRead) | (curVal & generateBitMask(bits)) >> (bits - bitsToRead);
       bits -= bitsToRead;
       currentSize -= bitsToRead;
@@ -209,17 +209,17 @@ function readBitField(buffer, offset, typeArgs) {
   return results;
 }
 function writeBitField(value, buffer, offset, typeArgs) {
-  var toWrite = 0;
-  var bits = 0;
+  let toWrite = 0;
+  let bits = 0;
   typeArgs.forEach(function({size,signed,name}) {
-    var val = value[name];
+    const val = value[name];
     if ((!signed && val < 0) || (signed && val < -(1 << (size - 1))))
       throw new Error(value + " < " + signed ? (-(1 << (size - 1))) : 0);
     else if ((!signed && val >= 1 << size)
         || (signed && val >= (1 << (size - 1)) - 1))
       throw new Error(value + " >= " + signed ? (1 << size) : ((1 << (size - 1)) - 1));
     while (size > 0) {
-      var writeBits = Math.min(8 - bits, size);
+      const writeBits = Math.min(8 - bits, size);
       toWrite = toWrite << writeBits |
         ((val >> (size - writeBits)) & generateBitMask(writeBits));
       size -= writeBits;
@@ -243,7 +243,7 @@ function sizeOfBitField(value, typeArgs) {
 }
 
 function readCString(buffer, offset) {
-  var size=0;
+  let size=0;
   while (offset+size < buffer.length && buffer[offset+size] != 0x00)
     size++;
   if (buffer.length<offset+size+1)
@@ -256,7 +256,7 @@ function readCString(buffer, offset) {
 }
 
 function writeCString(value, buffer, offset) {
-  var length = Buffer.byteLength(value, 'utf8');
+  const length = Buffer.byteLength(value, 'utf8');
   buffer.write(value, offset,length,'utf8');
   offset += length;
   buffer.writeInt8(0x00, offset);
@@ -264,6 +264,6 @@ function writeCString(value, buffer, offset) {
 }
 
 function sizeOfCString(value) {
-  var length = Buffer.byteLength(value, 'utf8');
+  const length = Buffer.byteLength(value, 'utf8');
   return length + 1;
 }

@@ -1,11 +1,11 @@
-var testData=require("../test/dataTypes/prepareTests").testData;
-var proto=require("../test/dataTypes/prepareTests").proto;
-var Benchmark = require('benchmark');
+const testData=require("../test/dataTypes/prepareTests").testData;
+const proto=require("../test/dataTypes/prepareTests").proto;
+const Benchmark = require('benchmark');
 
 function testValue(type,value,buffer)
 {
   it('writes',function(){
-    var suite = new Benchmark.Suite;
+    const suite = new Benchmark.Suite;
     suite.add('writes', function() {
         proto.createPacketBuffer(type,value);
       })
@@ -15,7 +15,7 @@ function testValue(type,value,buffer)
       .run({ 'async': false });
   });
   it('reads',function(){
-    var suite = new Benchmark.Suite;
+    const suite = new Benchmark.Suite;
     suite.add('read', function() {
         proto.parsePacketBuffer(type,buffer)
       })

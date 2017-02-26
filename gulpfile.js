@@ -1,13 +1,13 @@
-var gulp = require('gulp');
+const gulp = require('gulp');
 
-var plumber = require('gulp-plumber');
-var babel = require('gulp-babel');
-var options = {
+const plumber = require('gulp-plumber');
+const babel = require('gulp-babel');
+const options = {
   presets: ['es2015'],
   "plugins": ["transform-object-rest-spread"]
 };
 
-var sourcemaps = require('gulp-sourcemaps');
+const sourcemaps = require('gulp-sourcemaps');
 
 gulp.task('compile', function() {
   return gulp

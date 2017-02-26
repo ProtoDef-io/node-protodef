@@ -1,9 +1,9 @@
-var ProtoDef = require("protodef").ProtoDef;
-var Serializer = require("protodef").Serializer;
-var Parser = require("protodef").Parser;
+const ProtoDef = require("protodef").ProtoDef;
+const Serializer = require("protodef").Serializer;
+const Parser = require("protodef").Parser;
 
 // the protocol can be in a separate json file
-var example_protocol={
+const example_protocol={
   "container": "native",
   "varint": "native",
   "byte": "native",
@@ -61,10 +61,10 @@ var example_protocol={
   ]
 };
 
-var proto = new ProtoDef();
+const proto = new ProtoDef();
 proto.addTypes(example_protocol);
-var parser = new Parser(proto, "packet");
-var serializer = new Serializer(proto, "packet");
+const parser = new Parser(proto, "packet");
+const serializer = new Serializer(proto, "packet");
 
 serializer.write({
   name: "entity_look",

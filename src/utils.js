@@ -1,7 +1,6 @@
-
 function getField(countField, context) {
-  var countFieldArr = countField.split("/");
-  var i = 0;
+  const countFieldArr = countField.split("/");
+  let i = 0;
   if (countFieldArr[i] === "") {
     while (context.hasOwnProperty(".."))
       context = context[".."];
@@ -24,8 +23,8 @@ function getFieldInfo(fieldInfo) {
 }
 
 function getCount(buffer, offset, { count, countType }, rootNode) {
-  var c = 0;
-  var size = 0;
+  let c = 0;
+  let size = 0;
   if(typeof count === "number")
     c = count;
   else if (typeof count !== "undefined") {

@@ -1,10 +1,10 @@
-var testData=require("../test/dataTypes/prepareTests").testData;
-var proto=require("../test/dataTypes/prepareTests").proto;
-var Benchmark = require('benchmark');
+const testData=require("../test/dataTypes/prepareTests").testData;
+const proto=require("../test/dataTypes/prepareTests").proto;
+const Benchmark = require('benchmark');
 
 it('read/write',function() {
   this.timeout(1000*60*10);
-  var suite = new Benchmark.Suite;
+  const suite = new Benchmark.Suite;
   suite.add('read/write', function () {
       testData.forEach(tests => {
         tests.data.forEach(test => {
