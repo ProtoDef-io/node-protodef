@@ -12,7 +12,7 @@ function readArray(buffer, offset, typeArgs, rootNode) {
     size: 0
   };
   let value;
-  const { count, size } = getCount.call(this, buffer, offset, typeArgs, rootNode);
+  let { count, size } = getCount.call(this, buffer, offset, typeArgs, rootNode);
   offset += size;
   results.size += size;
   for(let i = 0; i < count; i++) {

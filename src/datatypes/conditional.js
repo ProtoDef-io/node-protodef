@@ -5,34 +5,34 @@ module.exports = {
   'option': [readOption, writeOption, sizeOfOption,require('../../ProtoDef/schemas/option')]
 };
 
-function readSwitch(buffer, offset, {compareTo,fields,compareToValue,...rest}, rootNode) {
+function readSwitch(buffer, offset, {compareTo,fields,compareToValue,"default":defVal}, rootNode) {
   compareTo = compareToValue!==undefined ? compareToValue : getField(compareTo, rootNode);
-  if (typeof fields[compareTo] === 'undefined' && typeof rest.default === "undefined")
+  if (typeof fields[compareTo] === 'undefined' && typeof defVal === "undefined")
     throw new Error(compareTo + " has no associated fieldInfo in switch");
 
   const caseDefault=typeof fields[compareTo] === 'undefined';
-  const resultingType = caseDefault ? rest.default : fields[compareTo];
+  const resultingType = caseDefault ? defVal : fields[compareTo];
   const fieldInfo = getFieldInfo(resultingType);
   return tryDoc(() => this.read(buffer, offset, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
 }
 
-function writeSwitch(value, buffer, offset, {compareTo,fields,compareToValue,...rest}, rootNode) {
+function writeSwitch(value, buffer, offset, {compareTo,fields,compareToValue,"default":defVal}, rootNode) {
   compareTo = compareToValue!==undefined ? compareToValue : getField(compareTo, rootNode);
-  if (typeof fields[compareTo] === 'undefined' && typeof rest.default === "undefined")
+  if (typeof fields[compareTo] === 'undefined' && typeof defVal === "undefined")
     throw new Error(compareTo + " has no associated fieldInfo in switch");
 
   const caseDefault=typeof fields[compareTo] === 'undefined';
-  const fieldInfo = getFieldInfo(caseDefault ? rest.default : fields[compareTo]);
+  const fieldInfo = getFieldInfo(caseDefault ? defVal : fields[compareTo]);
   return tryDoc(() => this.write(value, buffer, offset, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
 }
 
-function sizeOfSwitch(value, {compareTo,fields,compareToValue,...rest}, rootNode) {
+function sizeOfSwitch(value, {compareTo,fields,compareToValue,"default":defVal}, rootNode) {
   compareTo = compareToValue!==undefined ? compareToValue : getField(compareTo, rootNode);
-  if (typeof fields[compareTo] === 'undefined' && typeof rest.default === "undefined")
+  if (typeof fields[compareTo] === 'undefined' && typeof defVal === "undefined")
     throw new Error(compareTo + " has no associated fieldInfo in switch");
 
   const caseDefault=typeof fields[compareTo] === 'undefined';
-  const fieldInfo = getFieldInfo(caseDefault ? rest.default : fields[compareTo]);
+  const fieldInfo = getFieldInfo(caseDefault ? defVal : fields[compareTo]);
   return tryDoc(() => this.sizeOf(value, fieldInfo, rootNode),caseDefault ? "default" : compareTo);
 }
 

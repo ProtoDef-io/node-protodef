@@ -5,8 +5,8 @@
   "main": "index.js",
   "author": "roblabla <robinlambertz.dev@gmail.com>",
   "scripts": {
-    "prepublish": "gulp && require-self",
-    "test": "mocha --recursive --require source-map-support/register --reporter spec",
+    "prepublish": "require-self",
+    "test": "mocha --recursive --reporter spec",
     "benchmark": "mocha benchmark/benchmark_unified.js"
   },
   "tonicExampleFilename": "example.js",
@@ -29,17 +29,10 @@
     "url": "https://github.com/ProtoDef-io/node-protodef.git"
   },
   "devDependencies": {
-    "babel-plugin-transform-object-rest-spread": "^6.5.0",
-    "babel-preset-es2015": "^6.5.0",
     "benchmark": "^2.1.0",
     "chai": "^3.5.0",
-    "gulp": "^3.9.1",
-    "gulp-babel": "^6.1.2",
-    "gulp-plumber": "^1.0.1",
-    "gulp-sourcemaps": "^1.6.0",
     "jsonschema": "^1.1.0",
     "mocha": "^2.4.5",
-    "require-self": "^0.1.0",
-    "source-map-support": "^0.3.2"
+    "require-self": "^0.1.0"
   }
 }
