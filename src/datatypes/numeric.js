@@ -60,7 +60,7 @@ function writeLU64(value, buffer, offset) {
   return offset + 8;
 }
 
-function generateFunctions(bufferReader,bufferWriter,size)
+function generateFunctions(bufferReader,bufferWriter,size,schema)
 {
   const reader=function(buffer, offset)
   {
@@ -76,7 +76,7 @@ function generateFunctions(bufferReader,bufferWriter,size)
     buffer[bufferWriter](value, offset);
     return offset + size;
   };
-  return [reader, writer, size];
+  return [reader, writer, size, schema];
 }
 
 const nums= {
