@@ -3,14 +3,14 @@ const assert = require('assert');
 const { getCount, sendCount, calcCount, tryDoc, PartialReadError } = require("../utils");
 
 module.exports = {
-  'varint': [readVarInt, writeVarInt, sizeOfVarInt],
-  'bool': [readBool, writeBool, 1],
-  'pstring': [readPString, writePString, sizeOfPString, require('../../ProtoDef/schemas/pstring')],
-  'buffer': [readBuffer, writeBuffer, sizeOfBuffer, require('../../ProtoDef/schemas/buffer')],
-  'void': [readVoid, writeVoid, 0],
-  'bitfield': [readBitField, writeBitField, sizeOfBitField, require('../../ProtoDef/schemas/bitfield')],
-  'cstring': [readCString, writeCString, sizeOfCString],
-  'mapper':[readMapper,writeMapper,sizeOfMapper, require('../../ProtoDef/schemas/mapper')]
+  'varint': [readVarInt, writeVarInt, sizeOfVarInt, require('../../ProtoDef/schemas/utils')['varint']],
+  'bool': [readBool, writeBool, 1, require('../../ProtoDef/schemas/utils')['bool']],
+  'pstring': [readPString, writePString, sizeOfPString, require('../../ProtoDef/schemas/utils')['pstring']],
+  'buffer': [readBuffer, writeBuffer, sizeOfBuffer, require('../../ProtoDef/schemas/utils')['buffer']],
+  'void': [readVoid, writeVoid, 0, require('../../ProtoDef/schemas/utils')['void']],
+  'bitfield': [readBitField, writeBitField, sizeOfBitField, require('../../ProtoDef/schemas/utils')['bitfield']],
+  'cstring': [readCString, writeCString, sizeOfCString, require('../../ProtoDef/schemas/utils')['cstring']],
+  'mapper':[readMapper,writeMapper,sizeOfMapper, require('../../ProtoDef/schemas/utils')['mapper']]
 };
 
 function readMapper(buffer,offset,{type,mappings},rootNode)
