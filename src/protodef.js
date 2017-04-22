@@ -49,9 +49,9 @@ function extendType(functions, defaultTypeArgs) {
 
 class ProtoDef
 {
-  constructor() {
+  constructor(validation=true) {
     this.types={};
-    this.validator=new Validator();
+    this.validator=validation ? new Validator() : null;
     this.addDefaultTypes();
   }
 
@@ -73,7 +73,8 @@ class ProtoDef
       recursiveAddTypes(get(protocolData,path.shift()),path);
     }
 
-    this.validator.validateProtocol(protocolData);
+    if(this.validator)
+      this.validator.validateProtocol(protocolData);
 
     recursiveAddTypes(protocolData,path);
   }
@@ -84,19 +85,23 @@ class ProtoDef
       return;
     }
     if (isFieldInfo(functions)) {
-      if(validate)
-        this.validator.validateType(functions);
-      this.validator.addType(name);
+      if(this.validator) {
+        if (validate)
+          this.validator.validateType(functions);
+        this.validator.addType(name);
+      }
 
       let {type,typeArgs} = getFieldInfo(functions);
       this.types[name] = typeArgs ? extendType(this.types[type], typeArgs) : this.types[type];
     }
     else {
-      if(functions[3]) {
-        this.validator.addType(name,functions[3]);
+      if(this.validator) {
+        if (functions[3]) {
+          this.validator.addType(name, functions[3]);
+        }
+        else
+          this.validator.addType(name);
       }
-      else
-        this.validator.addType(name);
 
       this.types[name] = functions;
     }
@@ -104,7 +109,13 @@ class ProtoDef
 
   addTypes(types) {
     Object.keys(types).forEach((name) => this.addType(name, types[name],false));
-    Object.keys(types).forEach((name) => {if (isFieldInfo(types[name])) {this.validator.validateType(types[name])}});
+    if(this.validator) {
+      Object.keys(types).forEach((name) => {
+        if (isFieldInfo(types[name])) {
+          this.validator.validateType(types[name])
+        }
+      });
+    }
   }
 
   read(buffer, cursor, _fieldInfo, rootNodes) {

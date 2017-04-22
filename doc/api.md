@@ -1,6 +1,6 @@
 # API
 
-## ProtoDef()
+## ProtoDef(validation=true)
 
 ### ProtoDef.addType(name,functions,validate=true)
 
