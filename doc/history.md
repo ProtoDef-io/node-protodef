@@ -1,5 +1,9 @@
 # History
 
+## 1.5.0
+
+* validation is now optional (opt-out)
+
 ## 1.4.0
 
 * implement aliases
