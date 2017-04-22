@@ -81,7 +81,8 @@ class ProtoDef
 
   addType(name, functions, validate=true) {
     if (functions === "native") {
-      this.validator.addType(name);
+      if(this.validator)
+        this.validator.addType(name);
       return;
     }
     if (isFieldInfo(functions)) {
