@@ -1,5 +1,9 @@
 # History
 
+## 1.5.1
+
+* fix optional validation
+
 ## 1.5.0
 
 * validation is now optional (opt-out)
