@@ -1,5 +1,9 @@
 # History
 
+## 1.6.1
+
+* fix FullPacketParser hiding errors
+
 ## 1.6.0
 
 * add full packet parser
