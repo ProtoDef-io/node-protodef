@@ -75,7 +75,8 @@ class FullPacketParser extends Transform {
     try {
       const packet = this.parsePacketBuffer(chunk);
       if(packet.metadata.size!==chunk.length)
-        throw new Error("Chunk size is "+chunk.length+" but only "+packet.metadata.size+" was read "+chunk.buffer.toString("hex"));
+        throw new Error("Chunk size is "+chunk.length+" but only "+packet.metadata.size+" was read ; partial packet : "+
+          packet.value+"packet. ; buffer : "+chunk.toString("hex"));
       else {
         this.push(packet);
         cb();
