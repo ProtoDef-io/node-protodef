@@ -1,5 +1,9 @@
 # History
 
+## 1.6.4
+
+* improve fullpacketparser error
+
 ## 1.6.3
 
 * fix fullpacketparser error
