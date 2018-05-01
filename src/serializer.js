@@ -72,20 +72,18 @@ class FullPacketParser extends Transform {
   }
 
   _transform(chunk, enc, cb) {
+    let packet;
     try {
-      const packet = this.parsePacketBuffer(chunk);
+      packet = this.parsePacketBuffer(chunk);
       if(packet.metadata.size!==chunk.length)
-        throw new Error("Chunk size is",chunk.length,"but only",packet.metadata.size,"was read ; partial packet :",
-          packet.data+"; buffer :",chunk.toString("hex"));
-      else {
-        this.push(packet);
-        cb();
-      }
+        console.log("Chunk size is "+chunk.length+" but only "+packet.metadata.size+" was read ; partial packet : "+
+          packet.data+"; buffer :"+chunk.toString("hex"));
     }
     catch(e) {
-      cb(e);
+      return cb(e);
     }
-
+    this.push(packet);
+    cb();
   }
 }
 
