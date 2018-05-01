@@ -1,5 +1,9 @@
 # History
 
+## 1.6.5
+
+* fix fullpacketparser error emission in case of partial packet
+
 ## 1.6.4
 
 * improve fullpacketparser error
