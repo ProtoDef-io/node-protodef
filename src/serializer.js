@@ -77,7 +77,7 @@ class FullPacketParser extends Transform {
       packet = this.parsePacketBuffer(chunk);
       if(packet.metadata.size!==chunk.length)
         console.log("Chunk size is "+chunk.length+" but only "+packet.metadata.size+" was read ; partial packet : "+
-          packet.data+"; buffer :"+chunk.toString("hex"));
+          JSON.stringify(packet.data)+"; buffer :"+chunk.toString("hex"));
     }
     catch(e) {
       return cb(e);
