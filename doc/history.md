@@ -1,5 +1,9 @@
 # History
 
+## 1.6.8
+
+* update deps
+
 ## 1.6.7
 
 * stringify packet data before displaying it for an error of wrong length for fullpacketserializer
