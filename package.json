@@ -13,9 +13,9 @@
   "license": "MIT",
   "dependencies": {
     "lodash.get": "^4.4.2",
-    "lodash.reduce": "^4.2.0",
-    "protodef-validator": "^1.1.2",
-    "readable-stream": "^2.0.5"
+    "lodash.reduce": "^4.6.0",
+    "protodef-validator": "^1.2.2",
+    "readable-stream": "^3.0.3"
   },
   "engines": {
     "node": ">=6"
@@ -29,10 +29,10 @@
     "url": "https://github.com/ProtoDef-io/node-protodef.git"
   },
   "devDependencies": {
-    "benchmark": "^2.1.0",
-    "chai": "^3.5.0",
-    "jsonschema": "^1.1.0",
-    "mocha": "^2.4.5",
+    "benchmark": "^2.1.4",
+    "chai": "^4.1.2",
+    "jsonschema": "^1.2.4",
+    "mocha": "^5.2.0",
     "require-self": "^0.1.0"
   }
 }
