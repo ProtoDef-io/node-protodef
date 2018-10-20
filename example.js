@@ -1,9 +1,7 @@
-const ProtoDef = require("protodef").ProtoDef;
-const Serializer = require("protodef").Serializer;
-const Parser = require("protodef").Parser;
+const { ProtoDef, Serializer, Parser } = require("protodef");
 
 // the protocol can be in a separate json file
-const example_protocol={
+const example_protocol = {
   "container": "native",
   "varint": "native",
   "byte": "native",
@@ -77,6 +75,4 @@ serializer.write({
 });
 serializer.pipe(parser);
 
-parser.on('data', function (chunk) {
-  console.log(JSON.stringify(chunk, null, 2));
-});
+parser.on('data', console.log);
