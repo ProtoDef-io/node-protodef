@@ -1,33 +1,33 @@
-const ProtoDef = require("protodef").ProtoDef;
-const Serializer = require("protodef").Serializer;
-const Parser = require("protodef").Parser;
+const ProtoDef = require('protodef').ProtoDef
+const Serializer = require('protodef').Serializer
+const Parser = require('protodef').Parser
 
-const example_protocol=require("./example_protocol.json");
+const exampleProtocol = require('./example_protocol.json')
 
-const proto = new ProtoDef();
-proto.addTypes(example_protocol);
-const parser = new Parser(proto, "packet");
-const serializer = new Serializer(proto, "packet");
+const proto = new ProtoDef()
+proto.addTypes(exampleProtocol)
+const parser = new Parser(proto, 'packet')
+const serializer = new Serializer(proto, 'packet')
 
 serializer.write({
-  name: "entity_look",
+  name: 'entity_look',
   params: {
-    "entityId": 1,
-    "yaw": 1,
-    "pitch": 1,
-    "onGround": true
+    'entityId': 1,
+    'yaw': 1,
+    'pitch': 1,
+    'onGround': true
   }
-});
+})
 
-parser.on('error',function(err){
-  console.log(err.stack);
-  console.log(err.buffer);
-});
+parser.on('error', function (err) {
+  console.log(err.stack)
+  console.log(err.buffer)
+})
 
-parser.write(Buffer.from([0x17,0x01,0x01,0x01,0x01]));
+parser.write(Buffer.from([0x17, 0x01, 0x01, 0x01, 0x01]))
 
-serializer.pipe(parser);
+serializer.pipe(parser)
 
 parser.on('data', function (chunk) {
-  console.log(JSON.stringify(chunk.data, null, 2));
-});
+  console.log(JSON.stringify(chunk.data, null, 2))
+})
