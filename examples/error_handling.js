@@ -24,7 +24,7 @@ parser.on('error',function(err){
   console.log(err.buffer);
 });
 
-parser.write(new Buffer([0x17,0x01,0x01,0x01,0x01]));
+parser.write(Buffer.from([0x17,0x01,0x01,0x01,0x01]));
 
 serializer.pipe(parser);
 
