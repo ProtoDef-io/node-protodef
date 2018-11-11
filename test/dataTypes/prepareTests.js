@@ -2,7 +2,7 @@ const ProtoDef = require("protodef").ProtoDef;
 
 const proto = new ProtoDef();
 
-const testData=[
+const testData = [
   {
     "kind":"conditional",
     "data":require("../../ProtoDef/test/conditional.json")
@@ -23,7 +23,7 @@ const testData=[
 
 function arrayToBuffer(arr)
 {
-  return new Buffer(arr.map(e => parseInt(e)));
+  return Buffer.from(arr.map(e => parseInt(e)));
 }
 
 function transformValues(type,values)
@@ -57,5 +57,5 @@ testData.forEach(tests => {
   });
 });
 
-module.exports.testData=testData;
-module.exports.proto=proto;
+module.exports.testData = testData;
+module.exports.proto = proto;
