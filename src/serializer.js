@@ -1,11 +1,11 @@
 const Transform = require("readable-stream").Transform;
 
 class Serializer extends Transform {
-  constructor(proto,mainType) {
+  constructor(proto, mainType) {
     super({ writableObjectMode: true });
-    this.proto=proto;
-    this.mainType=mainType;
-    this.queue=new Buffer(0);
+    this.proto = proto;
+    this.mainType = mainType;
+    this.queue = Buffer.alloc(0);
   }
 
   createPacketBuffer(packet) {
@@ -25,11 +25,11 @@ class Serializer extends Transform {
 }
 
 class Parser extends Transform {
-  constructor(proto,mainType) {
+  constructor(proto, mainType) {
     super({ readableObjectMode: true });
-    this.proto=proto;
-    this.mainType=mainType;
-    this.queue=new Buffer(0);
+    this.proto = proto;
+    this.mainType = mainType;
+    this.queue = Buffer.alloc(0);
   }
 
   parsePacketBuffer(buffer) {
@@ -47,8 +47,8 @@ class Parser extends Transform {
         if (e.partialReadError)
           return cb();
         else {
-          e.buffer=this.queue;
-          this.queue=new Buffer(0);
+          e.buffer = this.queue;
+          this.queue = Buffer.alloc(0);
           return cb(e);
         }
       }
@@ -87,8 +87,8 @@ class FullPacketParser extends Transform {
   }
 }
 
-module.exports={
-  Serializer:Serializer,
-  Parser:Parser,
-  FullPacketParser:FullPacketParser
+module.exports = {
+  Serializer: Serializer,
+  Parser: Parser,
+  FullPacketParser: FullPacketParser
 };
