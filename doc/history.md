@@ -1,5 +1,9 @@
 # History
 
+## 1.6.9
+
+* use standard style
+
 ## 1.6.8
 
 * update deps
