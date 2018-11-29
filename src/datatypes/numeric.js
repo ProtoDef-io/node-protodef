@@ -57,7 +57,7 @@ function writeLU64 (value, buffer, offset) {
 }
 
 function generateFunctions (bufferReader, bufferWriter, size, schema) {
-  const reader = function (buffer, offset) {
+  const reader = (buffer, offset) => {
     if (offset + size > buffer.length) { throw new PartialReadError() }
     const value = buffer[bufferReader](offset)
     return {
@@ -65,7 +65,7 @@ function generateFunctions (bufferReader, bufferWriter, size, schema) {
       size: size
     }
   }
-  const writer = function (value, buffer, offset) {
+  const writer = (value, buffer, offset) => {
     buffer[bufferWriter](value, offset)
     return offset + size
   }
@@ -91,7 +91,7 @@ const nums = {
   'lf64': ['readDoubleLE', 'writeDoubleLE', 8]
 }
 
-const types = Object.keys(nums).reduce(function (types, num) {
+const types = Object.keys(nums).reduce((types, num) => {
   types[num] = generateFunctions(nums[num][0], nums[num][1], nums[num][2], require('../../ProtoDef/schemas/numeric')[num])
   return types
 }, {})

@@ -47,7 +47,7 @@ function readContainer (buffer, offset, typeArgs, context) {
       offset += readResults.size
       if (anon) {
         if (readResults.value !== undefined) {
-          Object.keys(readResults.value).forEach(function (key) {
+          Object.keys(readResults.value).forEach(key => {
             results.value[key] = readResults.value[key]
           })
         }
