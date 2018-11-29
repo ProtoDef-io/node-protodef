@@ -184,7 +184,7 @@ function readBitField (buffer, offset, typeArgs) {
   let curVal = null
   let bits = 0
   const results = {}
-  results.value = typeArgs.reduce(function (acc, { size, signed, name }) {
+  results.value = typeArgs.reduce((acc, { size, signed, name }) => {
     let currentSize = size
     let val = 0
     while (currentSize > 0) {
@@ -208,7 +208,7 @@ function readBitField (buffer, offset, typeArgs) {
 function writeBitField (value, buffer, offset, typeArgs) {
   let toWrite = 0
   let bits = 0
-  typeArgs.forEach(function ({ size, signed, name }) {
+  typeArgs.forEach(({ size, signed, name }) => {
     const val = value[name]
     if ((!signed && val < 0) || (signed && val < -(1 << (size - 1)))) { throw new Error(value + ' < ' + signed ? (-(1 << (size - 1))) : 0) } else if ((!signed && val >= 1 << size) ||
         (signed && val >= (1 << (size - 1)) - 1)) { throw new Error(value + ' >= ' + signed ? (1 << size) : ((1 << (size - 1)) - 1)) }
@@ -230,7 +230,7 @@ function writeBitField (value, buffer, offset, typeArgs) {
 }
 
 function sizeOfBitField (value, typeArgs) {
-  return Math.ceil(typeArgs.reduce(function (acc, { size }) {
+  return Math.ceil(typeArgs.reduce((acc, { size }) => {
     return acc + size
   }, 0) / 8)
 }
