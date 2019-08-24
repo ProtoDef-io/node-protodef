@@ -1,5 +1,9 @@
 # History
 
+## 1.6.10
+
+* include .json files with the suffix
+
 ## 1.6.9
 
 * use standard style
