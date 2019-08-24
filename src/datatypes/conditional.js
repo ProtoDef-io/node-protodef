@@ -1,8 +1,8 @@
 const { getField, getFieldInfo, tryDoc, PartialReadError } = require('../utils')
 
 module.exports = {
-  'switch': [readSwitch, writeSwitch, sizeOfSwitch, require('../../ProtoDef/schemas/conditional')['switch']],
-  'option': [readOption, writeOption, sizeOfOption, require('../../ProtoDef/schemas/conditional')['option']]
+  'switch': [readSwitch, writeSwitch, sizeOfSwitch, require('../../ProtoDef/schemas/conditional.json')['switch']],
+  'option': [readOption, writeOption, sizeOfOption, require('../../ProtoDef/schemas/conditional.json')['option']]
 }
 
 function readSwitch (buffer, offset, { compareTo, fields, compareToValue, 'default': defVal }, rootNode) {

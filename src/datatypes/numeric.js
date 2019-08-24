@@ -92,12 +92,12 @@ const nums = {
 }
 
 const types = Object.keys(nums).reduce((types, num) => {
-  types[num] = generateFunctions(nums[num][0], nums[num][1], nums[num][2], require('../../ProtoDef/schemas/numeric')[num])
+  types[num] = generateFunctions(nums[num][0], nums[num][1], nums[num][2], require('../../ProtoDef/schemas/numeric.json')[num])
   return types
 }, {})
-types['i64'] = [readI64, writeI64, 8, require('../../ProtoDef/schemas/numeric')['i64']]
-types['li64'] = [readLI64, writeLI64, 8, require('../../ProtoDef/schemas/numeric')['li64']]
-types['u64'] = [readU64, writeU64, 8, require('../../ProtoDef/schemas/numeric')['u64']]
-types['lu64'] = [readLU64, writeLU64, 8, require('../../ProtoDef/schemas/numeric')['lu64']]
+types['i64'] = [readI64, writeI64, 8, require('../../ProtoDef/schemas/numeric.json')['i64']]
+types['li64'] = [readLI64, writeLI64, 8, require('../../ProtoDef/schemas/numeric.json')['li64']]
+types['u64'] = [readU64, writeU64, 8, require('../../ProtoDef/schemas/numeric.json')['u64']]
+types['lu64'] = [readLU64, writeLU64, 8, require('../../ProtoDef/schemas/numeric.json')['lu64']]
 
 module.exports = types
