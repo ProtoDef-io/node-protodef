@@ -7,21 +7,16 @@ module.exports = {
 }
 
 function readArray (buffer, offset, typeArgs, rootNode) {
-  const results = {
-    value: [],
-    size: 0
-  }
-  let value
+  const value = []
   let { count, size } = getCount.call(this, buffer, offset, typeArgs, rootNode)
-  offset += size
-  results.size += size
+  offset += _size
   for (let i = 0; i < count; i++) {
-    ({ size, value } = tryDoc(() => this.read(buffer, offset, typeArgs.type, rootNode), i))
-    results.size += size
-    offset += size
-    results.value.push(value)
+    const { size: _size, value: _value } = tryDoc(() => this.read(buffer, offset, typeArgs.type, rootNode), i)
+    size += _size
+    offset += _size
+    value[i] = _value
   }
-  return results
+  return { value, size }
 }
 
 function writeArray (value, buffer, offset, typeArgs, rootNode) {
