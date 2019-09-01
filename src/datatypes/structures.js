@@ -9,7 +9,7 @@ module.exports = {
 function readArray (buffer, offset, typeArgs, rootNode) {
   const value = []
   let { count, size } = getCount.call(this, buffer, offset, typeArgs, rootNode)
-  offset += _size
+  offset += size
   for (let i = 0; i < count; i++) {
     const { size: _size, value: _value } = tryDoc(() => this.read(buffer, offset, typeArgs.type, rootNode), i)
     size += _size
