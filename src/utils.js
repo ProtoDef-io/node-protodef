@@ -59,8 +59,9 @@ class ExtendableError extends Error {
     super(message)
     this.name = this.constructor.name
     this.message = message
-    if (Error.captureStackTrace != null)
+    if (Error.captureStackTrace != null) {
       Error.captureStackTrace(this, this.constructor.name)
+    }
   }
 }
 
