@@ -198,7 +198,7 @@ class ReadCompiler {
       throw new Error('Unknown parametrizable type: ' + type[0])
     } else { // Primitive type
       if (type === 'native') return 'null'
-      if (this.types[type] && this.types[type] !== 'native') { return 'ctx.' + type }
+      if (this.types[type]) { return 'ctx.' + type }
       return this.primitiveTypes[type]
     }
   }
@@ -207,12 +207,16 @@ class ReadCompiler {
     let functions = []
     this.types = types
     for (const type in this.context) {
-      functions.push(`${type}: ` + this.context[type])
+      functions[type] = this.context[type]
     }
     for (const type in types) {
-      if (types[type] !== 'native') { functions.push(`${type}: ` + this.compileType(types[type])) }
+      if (!functions[type]) {
+        if (types[type] !== 'native') { functions[type] = this.compileType(types[type]) } else { functions[type] = `native.${type}` }
+      }
     }
-    return '() => {\nconst ctx = {\n' + indent(functions.join(',\n')) + '\n}\n  return ctx\n}'
+    return '() => {\nconst ctx = {\n' + indent(Object.keys(functions).map((type) => {
+      return type + ': ' + functions[type]
+    }).join(',\n')) + '\n}\n  return ctx\n}'
   }
 
   /**
