@@ -13,12 +13,16 @@ class ReadCompiler {
     this.native = {}
     this.context = {}
     this.types = {}
+    this.scopeStack = [{}]
     this.parameterizableTypes = {
       // conditional
       'switch': (compiler, struct) => {
-        const compare = struct.compareTo ? struct.compareTo : struct.compareToValue
+        let compare = struct.compareTo ? struct.compareTo : struct.compareToValue
         let args = []
         if (compare.startsWith('$')) args.push(compare)
+        else if (struct.compareTo) {
+          compare = compiler.getField(compare)
+        }
         let code = `switch (${compare}) {\n`
         for (const key in struct.fields) {
           let val = key
@@ -127,9 +131,11 @@ class ReadCompiler {
         let names = []
         for (const i in values) {
           const { type, name } = values[i]
-          code += `const { value: ${name}, size: ${name}Size } = ` + compiler.callType(type, offsetExpr) + '\n'
-          offsetExpr += ` + ${name}Size`
-          names.push(name)
+          const trueName = compiler.getField(name)
+          code += `const { value: ${trueName}, size: ${trueName}Size } = ` + compiler.callType(type, offsetExpr) + '\n'
+          offsetExpr += ` + ${trueName}Size`
+          if (name === trueName) names.push(name)
+          else names.push(`${name}: ${trueName}`)
         }
         const sizes = offsetExpr.split(' + ')
         sizes.shift()
@@ -180,14 +186,16 @@ class ReadCompiler {
         code += 'let bits = buffer[offset++]\n'
         for (const i in values) {
           const { name, size, signed } = values[i]
+          const trueName = compiler.getField(name)
           while (totalSize < size) {
             totalSize += 8
             code += `bits = (bits << 8) | buffer[offset++]\n`
           }
-          code += `let ${name} = (bits >> ` + (totalSize - size) + ') & 0x' + ((1 << size) - 1).toString(16) + '\n'
-          if (signed) code += `${name} -= (${name} & 0x` + (1 << (size - 1)).toString(16) + ') << 1\n'
+          code += `let ${trueName} = (bits >> ` + (totalSize - size) + ') & 0x' + ((1 << size) - 1).toString(16) + '\n'
+          if (signed) code += `${trueName} -= (${trueName} & 0x` + (1 << (size - 1)).toString(16) + ') << 1\n'
           totalSize -= size
-          names.push(name)
+          if (name === trueName) names.push(name)
+          else names.push(`${name}: ${trueName}`)
         }
         code += 'return { value: { ' + names.join(', ') + ' }, size: offset }'
         return compiler.wrapCode(code)
@@ -253,14 +261,58 @@ class ReadCompiler {
     }
   }
 
+  addProtocol (protocolData, path) {
+    const self = this
+    function recursiveAddTypes (protocolData, path) {
+      if (protocolData === undefined) { return }
+      if (protocolData.types) { self.addTypesToCompile(protocolData.types) }
+      recursiveAddTypes(protocolData[path.shift()], path)
+    }
+    recursiveAddTypes(protocolData, path)
+  }
+
   wrapCode (code, args = []) {
     if (args.length > 0) return '(buffer, offset, ' + args.join(', ') + ') => {\n' + indent(code) + '\n}'
     return '(buffer, offset) => {\n' + indent(code) + '\n}'
   }
 
+  getField (name) {
+    let path = name.split('/')
+    let i = this.scopeStack.length - 1
+    while (path.length) {
+      let scope = this.scopeStack[i]
+      let field = path.shift()
+      if (field === '..') {
+        i--
+        continue
+      }
+      // We are at the right level
+      if (scope[field]) return scope[field] + (path.length ? ('.' + path.join('.')) : '')
+      if (path.length !== 0) {
+        throw new Error('Cannot access properties of undefined field')
+      }
+      // Count how many collision occured in the scope
+      let count = 0
+      for (let j = 0; j < i; j++) {
+        if (this.scopeStack[j][field]) count++
+      }
+      if (name === 'flags') {
+        console.log(this.scopeStack)
+        console.log(name)
+        console.log(count)
+      }
+      scope[field] = field + (count || '') // If the name is already used, add a number
+      return scope[field]
+    }
+    throw new Error('Unknown field ' + path)
+  }
+
   callType (type, offsetExpr = 'offset', args = []) {
-    if (args.length > 0) return '(' + this.compileType(type) + `)(buffer, ${offsetExpr}, ` + args.join(', ') + ')'
-    return '(' + this.compileType(type) + `)(buffer, ${offsetExpr})`
+    if (type instanceof Array && (type[0] === 'container' || type[0] === 'bitfield')) this.scopeStack.push({})
+    const code = this.compileType(type)
+    if (type instanceof Array && (type[0] === 'container' || type[0] === 'bitfield')) this.scopeStack.pop()
+    if (args.length > 0) return '(' + code + `)(buffer, ${offsetExpr}, ` + args.join(', ') + ')'
+    return '(' + code + `)(buffer, ${offsetExpr})`
   }
 
   compileType (type) {
@@ -278,6 +330,7 @@ class ReadCompiler {
   }
 
   generate () {
+    this.scopeStack = [{}]
     let functions = []
     for (const type in this.context) {
       functions[type] = this.context[type]
@@ -305,7 +358,6 @@ class ReadCompiler {
 
 function optimize (code, cb) {
   const closureCompiler = new ClosureCompiler({
-    language_in: 'ES6',
     compilation_level: 'SIMPLE'
   })
   closureCompiler.run([{
