@@ -296,11 +296,6 @@ class ReadCompiler {
       for (let j = 0; j < i; j++) {
         if (this.scopeStack[j][field]) count++
       }
-      if (name === 'flags') {
-        console.log(this.scopeStack)
-        console.log(name)
-        console.log(count)
-      }
       scope[field] = field + (count || '') // If the name is already used, add a number
       return scope[field]
     }
