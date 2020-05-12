@@ -16,37 +16,9 @@ const packetData = {
   }
 }
 
-/* const exampleProtocol = {
-  "position": [
-    "bitfield",
-    [
-      {
-        "name": "x",
-        "size": 26,
-        "signed": true
-      },
-      {
-        "name": "z",
-        "size": 26,
-        "signed": true
-      },
-      {
-        "name": "y",
-        "size": 12,
-        "signed": true
-      }
-    ]
-  ]
-}
-const mainType = 'position'
-const packetData = {
-  x: 1024,
-  y: 256,
-  z: -1337
-} */
-
 let compiler = new ReadCompiler()
-let code = compiler.generate(exampleProtocol)
+compiler.addTypesToCompile(exampleProtocol)
+let code = compiler.generate()
 console.log(code)
 const test = compiler.compile(code)
 
@@ -82,7 +54,7 @@ ps = nbTests / time
 console.log('parser: ' + time.toFixed(2) + ' ms (' + ps.toFixed(2) + 'k packet/s)')
 
 // Closure optimized:
-code = optimize(code, (code) => {
+optimize(code, (code) => {
   // console.log(code)
   const test2 = compiler.compile(code)
   start = performance.now()

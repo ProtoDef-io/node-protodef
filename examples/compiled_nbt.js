@@ -56,7 +56,6 @@ function sizeOfCompound (value, typeArgs, rootNode) {
   return 1 + size
 }
 
-const exampleProtocol = require('./nbt.json')
 const mainType = 'nbt'
 
 /* global native, ctx */
@@ -84,13 +83,14 @@ compiler.addContextType('compound', (buffer, offset) => {
   }
   return results
 })
-let code = compiler.generate(exampleProtocol)
+compiler.addTypesToCompile(require('./nbt.json'))
+let code = compiler.generate()
 console.log(code)
 const test = compiler.compile(code)
 
 const proto = new ProtoDef()
 proto.addType('compound', compound)
-proto.addTypes(exampleProtocol)
+proto.addTypes(require('./nbt.json'))
 const parser = new Parser(proto, mainType)
 
 const fs = require('fs')
@@ -127,7 +127,6 @@ fs.readFile('./examples/bigtest.nbt', function (error, buffer) {
 
   // Closure optimized:
   code = optimize(code, (code) => {
-    // console.log(code)
     const test2 = compiler.compile(code)
     start = performance.now()
     for (let i = 0; i < nbTests; i++) {

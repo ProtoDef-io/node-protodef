@@ -12,6 +12,7 @@ class ReadCompiler {
     this.primitiveTypes = {}
     this.native = {}
     this.context = {}
+    this.types = {}
     this.parameterizableTypes = {
       // conditional
       'switch': (compiler, struct) => {
@@ -20,7 +21,9 @@ class ReadCompiler {
         if (compare.startsWith('$')) args.push(compare)
         let code = `switch (${compare}) {\n`
         for (const key in struct.fields) {
-          code += indent(`case "${key}": return ` + compiler.callType(struct.fields[key])) + '\n'
+          let val = key
+          if (isNaN(val) && val !== 'true' && val !== 'false') val = '"' + val + '"'
+          code += indent(`case ${val}: return ` + compiler.callType(struct.fields[key])) + '\n'
         }
         if (struct.default) {
           code += indent('default: return ' + compiler.callType(struct.type)) + '\n'
@@ -29,12 +32,12 @@ class ReadCompiler {
         return compiler.wrapCode(code, args)
       },
       'option': (compiler, type) => {
-        let code = 'const {value} = utils.bool[0](buffer, offset)\n'
+        let code = 'const {value} = ctx.bool(buffer, offset)\n'
         code += 'if (value) {\n'
         code += '  const { value, size } = ' + compiler.callType(type) + '\n'
         code += '  return { value, size: size + 1 }\n'
         code += '}\n'
-        code += 'return {size: 1}'
+        code += 'return { value: undefined, size: 1}'
         return compiler.wrapCode(code)
       },
 
@@ -63,6 +66,62 @@ class ReadCompiler {
         throw new Error('count not supported, use array')
       },
       'container': (compiler, values) => {
+        // Inlining (support only 1 level)
+        const newValues = []
+        for (const i in values) {
+          const { type, anon } = values[i]
+          if (anon) {
+            if (type instanceof Array && type[0] === 'container') {
+              for (const j in type[1]) newValues.push(type[1][j])
+              console.log('Inlined an anonymous container')
+            } else if (type instanceof Array && type[0] === 'switch') {
+              const theSwitch = type[1]
+              const valueSet = new Set()
+              // search for containers and build a set of possible values
+              for (const field in theSwitch.fields) {
+                if (theSwitch.fields[field] instanceof Array && theSwitch.fields[field][0] === 'container') {
+                  for (const j in theSwitch.fields[field][1]) {
+                    const item = theSwitch.fields[field][1][j]
+                    valueSet.add(item.name)
+                  }
+                }
+              }
+              // For each value create a switch
+              for (const name of valueSet.keys()) {
+                const fields = {}
+                for (const field in theSwitch.fields) {
+                  if (theSwitch.fields[field] instanceof Array && theSwitch.fields[field][0] === 'container') {
+                    for (const j in theSwitch.fields[field][1]) {
+                      const item = theSwitch.fields[field][1][j]
+                      if (item.name === name) {
+                        fields[field] = theSwitch.fields[field][1][j].type
+                        break
+                      }
+                    }
+                  } else {
+                    fields[field] = theSwitch.fields[field]
+                  }
+                }
+                newValues.push({
+                  name,
+                  type: ['switch', {
+                    compareTo: theSwitch.compareTo,
+                    compareToValue: theSwitch.compareToValue,
+                    default: theSwitch.default,
+                    fields
+                  }]
+                })
+              }
+              console.log('Inlined an anonymous switch')
+            } else {
+              throw new Error('Cannot inline anonymous type: ' + type)
+            }
+          } else {
+            newValues.push(values[i])
+          }
+        }
+        values = newValues
+
         let code = ''
         let offsetExpr = 'offset'
         let names = []
@@ -179,6 +238,21 @@ class ReadCompiler {
     this.parameterizableTypes[type] = maker
   }
 
+  addTypes (types) {
+    for (const [type, [kind, fn]] of Object.entries(types)) {
+      if (kind === 'native') this.addNativeType(type, fn)
+      else if (kind === 'context') this.addContextType(type, fn)
+      else if (kind === 'parametrizable') this.addParametrizableType(type, fn)
+    }
+  }
+
+  addTypesToCompile (types) {
+    for (const [type, json] of Object.entries(types)) {
+      // Replace native type, otherwise first in wins
+      if (!this.types[type] || this.types[type] === 'native') this.types[type] = json
+    }
+  }
+
   wrapCode (code, args = []) {
     if (args.length > 0) return '(buffer, offset, ' + args.join(', ') + ') => {\n' + indent(code) + '\n}'
     return '(buffer, offset) => {\n' + indent(code) + '\n}'
@@ -203,15 +277,14 @@ class ReadCompiler {
     }
   }
 
-  generate (types) {
+  generate () {
     let functions = []
-    this.types = types
     for (const type in this.context) {
       functions[type] = this.context[type]
     }
-    for (const type in types) {
+    for (const type in this.types) {
       if (!functions[type]) {
-        if (types[type] !== 'native') { functions[type] = this.compileType(types[type]) } else { functions[type] = `native.${type}` }
+        if (this.types[type] !== 'native') { functions[type] = this.compileType(this.types[type]) } else { functions[type] = `native.${type}` }
       }
     }
     return '() => {\nconst ctx = {\n' + indent(Object.keys(functions).map((type) => {
@@ -232,6 +305,7 @@ class ReadCompiler {
 
 function optimize (code, cb) {
   const closureCompiler = new ClosureCompiler({
+    language_in: 'ES6',
     compilation_level: 'SIMPLE'
   })
   closureCompiler.run([{
