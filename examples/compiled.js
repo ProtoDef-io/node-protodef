@@ -39,7 +39,7 @@ const serializer = new Serializer(proto, mainType)
 const parser = new Parser(proto, mainType)
 
 console.log(JSON.stringify(testRead[mainType](serializer.createPacketBuffer(packetData), 0), null, 2))
-const buffer = Buffer.allocUnsafe(1024)
+const buffer = Buffer.allocUnsafe(100)
 testWrite[mainType](packetData, buffer, 0)
 console.log(JSON.stringify(parser.parsePacketBuffer(buffer), null, 2))
 

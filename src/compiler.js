@@ -74,6 +74,7 @@ class Compiler {
   getField (name) {
     let path = name.split('/')
     let i = this.scopeStack.length - 1
+    const reserved = { 'value': true }
     while (path.length) {
       let scope = this.scopeStack[i]
       let field = path.shift()
@@ -88,6 +89,7 @@ class Compiler {
       }
       // Count how many collision occured in the scope
       let count = 0
+      if (reserved[field]) count++
       for (let j = 0; j < i; j++) {
         if (this.scopeStack[j][field]) count++
       }
@@ -95,20 +97,6 @@ class Compiler {
       return scope[field]
     }
     throw new Error('Unknown field ' + path)
-  }
-
-  compileType (type) {
-    if (type instanceof Array) {
-      if (this.parameterizableTypes[type[0]]) { return this.parameterizableTypes[type[0]](this, type[1]) }
-      if (this.types[type[0]] && this.types[type[0]] !== 'native') {
-        return this.wrapCode('return ' + this.callType(type[0], 'offset', Object.values(type[1])))
-      }
-      throw new Error('Unknown parametrizable type: ' + type[0])
-    } else { // Primitive type
-      if (type === 'native') return 'null'
-      if (this.types[type]) { return 'ctx.' + type }
-      return this.primitiveTypes[type]
-    }
   }
 
   generate () {
@@ -289,6 +277,20 @@ class ReadCompiler extends Compiler {
     }
   }
 
+  compileType (type) {
+    if (type instanceof Array) {
+      if (this.parameterizableTypes[type[0]]) { return this.parameterizableTypes[type[0]](this, type[1]) }
+      if (this.types[type[0]] && this.types[type[0]] !== 'native') {
+        return this.wrapCode('return ' + this.callType(type[0], 'offset', Object.values(type[1])))
+      }
+      throw new Error('Unknown parametrizable type: ' + type[0])
+    } else { // Primitive type
+      if (type === 'native') return 'null'
+      if (this.types[type]) { return 'ctx.' + type }
+      return this.primitiveTypes[type]
+    }
+  }
+
   wrapCode (code, args = []) {
     if (args.length > 0) return '(buffer, offset, ' + args.join(', ') + ') => {\n' + indent(code) + '\n}'
     return '(buffer, offset) => {\n' + indent(code) + '\n}'
@@ -429,6 +431,20 @@ class WriteCompiler extends Compiler {
     }
     for (const key in utils) {
       this.addNativeType(key, utils[key][1])
+    }
+  }
+
+  compileType (type) {
+    if (type instanceof Array) {
+      if (this.parameterizableTypes[type[0]]) { return this.parameterizableTypes[type[0]](this, type[1]) }
+      if (this.types[type[0]] && this.types[type[0]] !== 'native') {
+        return this.wrapCode('return ' + this.callType('value', type[0], 'offset', Object.values(type[1])))
+      }
+      throw new Error('Unknown parametrizable type: ' + type[0])
+    } else { // Primitive type
+      if (type === 'native') return 'null'
+      if (this.types[type]) { return 'ctx.' + type }
+      return this.primitiveTypes[type]
     }
   }
 
