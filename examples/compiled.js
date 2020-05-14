@@ -2,7 +2,7 @@ const ProtoDef = require('protodef').ProtoDef
 const Serializer = require('protodef').Serializer
 const Parser = require('protodef').Parser
 const { performance } = require('perf_hooks')
-const { ReadCompiler, WriteCompiler, optimize } = require('protodef').Compiler
+const { ReadCompiler, WriteCompiler, SizeOfCompiler, optimize } = require('protodef').Compiler
 
 const exampleProtocol = require('./example_protocol.json')
 const mainType = 'packet'
@@ -20,6 +20,12 @@ const packetData = {
     }
   }
 }
+
+const sizeOfCompiler = new SizeOfCompiler()
+sizeOfCompiler.addTypesToCompile(exampleProtocol)
+const sizeOfCode = sizeOfCompiler.generate()
+console.log(sizeOfCode)
+const testSizeOf = sizeOfCompiler.compile(sizeOfCode)
 
 const writeCompiler = new WriteCompiler()
 writeCompiler.addTypesToCompile(exampleProtocol)
@@ -39,7 +45,7 @@ const serializer = new Serializer(proto, mainType)
 const parser = new Parser(proto, mainType)
 
 console.log(JSON.stringify(testRead[mainType](serializer.createPacketBuffer(packetData), 0), null, 2))
-const buffer = Buffer.allocUnsafe(100)
+const buffer = Buffer.allocUnsafe(testSizeOf[mainType](packetData))
 testWrite[mainType](packetData, buffer, 0)
 console.log(JSON.stringify(parser.parsePacketBuffer(buffer), null, 2))
 
@@ -50,6 +56,7 @@ let start, time, ps
 
 start = performance.now()
 for (let i = 0; i < nbTests; i++) {
+  const buffer = Buffer.allocUnsafe(testSizeOf[mainType](packetData))
   testWrite[mainType](packetData, buffer, 0)
   testRead[mainType](buffer, 0)
 }
@@ -67,17 +74,21 @@ ps = nbTests / time
 console.log('serializer / parser: ' + time.toFixed(2) + ' ms (' + ps.toFixed(2) + 'k packet/s)')
 
 // Closure optimized:
-optimize(writeCode, (writeCode) => {
-  optimize(readCode, (readCode) => {
-    const testWrite = writeCompiler.compile(writeCode)
-    const testRead = readCompiler.compile(readCode)
-    start = performance.now()
-    for (let i = 0; i < nbTests; i++) {
-      testWrite[mainType](packetData, buffer, 0)
-      testRead[mainType](buffer, 0)
-    }
-    time = performance.now() - start
-    ps = nbTests / time
-    console.log('write / read compiled (+closure): ' + time.toFixed(2) + ' ms (' + ps.toFixed(2) + 'k packet/s)')
+optimize(sizeOfCode, (sizeOfCode) => {
+  optimize(writeCode, (writeCode) => {
+    optimize(readCode, (readCode) => {
+      const testSizeOf = sizeOfCompiler.compile(sizeOfCode)
+      const testWrite = writeCompiler.compile(writeCode)
+      const testRead = readCompiler.compile(readCode)
+      start = performance.now()
+      for (let i = 0; i < nbTests; i++) {
+        const buffer = Buffer.allocUnsafe(testSizeOf[mainType](packetData))
+        testWrite[mainType](packetData, buffer, 0)
+        testRead[mainType](buffer, 0)
+      }
+      time = performance.now() - start
+      ps = nbTests / time
+      console.log('write / read compiled (+closure): ' + time.toFixed(2) + ' ms (' + ps.toFixed(2) + 'k packet/s)')
+    })
   })
 })

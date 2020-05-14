@@ -468,6 +468,155 @@ class WriteCompiler extends Compiler {
   }
 }
 
+class SizeOfCompiler extends Compiler {
+  constructor () {
+    super()
+    this.parameterizableTypes = {
+      // conditional
+      'switch': (compiler, struct) => {
+        let compare = struct.compareTo ? struct.compareTo : struct.compareToValue
+        let args = []
+        if (compare.startsWith('$')) args.push(compare)
+        else if (struct.compareTo) {
+          compare = compiler.getField(compare)
+        }
+        let code = `switch (${compare}) {\n`
+        for (const key in struct.fields) {
+          let val = key
+          if (isNaN(val) && val !== 'true' && val !== 'false') val = `"${val}"`
+          code += indent(`case ${val}: return ` + compiler.callType('value', struct.fields[key])) + '\n'
+        }
+        if (struct.default) {
+          code += indent('default: return ' + compiler.callType('value', struct.default)) + '\n'
+        }
+        code += `}`
+        return compiler.wrapCode(code, args)
+      },
+      'option': (compiler, type) => {
+        let code = 'if (value !== null) {\n'
+        code += '  return 1 + ' + compiler.callType('value', type) + '\n'
+        code += '}'
+        code += 'return 0'
+        return compiler.wrapCode(code)
+      },
+
+      // structures
+      'array': (compiler, array) => {
+        let code = ''
+        if (array.countType) {
+          code += 'let size = ' + compiler.callType('value.length', array.countType) + '\n'
+        } else if (array.count === null) {
+          throw new Error('Array must contain either count or countType')
+        }
+        code += 'for (let i = 0; i < value.length; i++) {\n'
+        code += '  size += ' + compiler.callType('value[i]', array.type) + '\n'
+        code += '}\n'
+        code += 'return size'
+        return compiler.wrapCode(code)
+      },
+      'count': (compiler, type) => {
+        throw new Error('count not supported, use array')
+      },
+      'container': (compiler, values) => {
+        values = containerInlining(values)
+        let code = 'let size = 0\n'
+        for (const i in values) {
+          const { type, name } = values[i]
+          const trueName = compiler.getField(name)
+          code += `const ${trueName} = value.${name}\n`
+          code += `size += ` + compiler.callType(trueName, type) + '\n'
+        }
+        code += 'return size'
+        return compiler.wrapCode(code)
+      },
+
+      // utils
+      'pstring': (compiler, string) => {
+        let code = 'let size = Buffer.byteLength(value, \'utf8\')\n'
+        if (string.countType) {
+          code += 'size += ' + compiler.callType('size', string.countType) + '\n'
+        } else if (string.count === null) {
+          throw new Error('pstring must contain either count or countType')
+        }
+        code += 'return size'
+        return compiler.wrapCode(code)
+      },
+      'buffer': (compiler, buffer) => {
+        let code = 'let size = value.length'
+        if (buffer.countType) {
+          code += 'size += ' + compiler.callType('size', buffer.countType) + '\n'
+        } else if (buffer.count === null) {
+          throw new Error('buffer must contain either count or countType')
+        }
+        code += 'return size'
+        return compiler.wrapCode(code)
+      },
+      'bitfield': (compiler, values) => {
+        const totalBits = values.reduce((acc, { size }) => acc + size, 0)
+        if (totalBits % 8 !== 0) throw new Error('Bitfield: The sum of the sizes must be a multiple of 8')
+        const totalBytes = totalBits / 8
+        return `${totalBytes}`
+      },
+      'mapper': (compiler, mapper) => {
+        const code = 'return ' + compiler.callType(`value`, mapper.type)
+        return compiler.wrapCode(code)
+      }
+    }
+
+    // Add default types
+    for (const key in numeric) {
+      this.addNativeType(key, numeric[key][2])
+    }
+    for (const key in utils) {
+      this.addNativeType(key, utils[key][2])
+    }
+  }
+
+  /**
+   * A native type is a type read or written by a function that will be called in it's
+   * original context.
+   * @param {*} type
+   * @param {*} fn
+   */
+  addNativeType (type, fn) {
+    if (!isNaN(fn)) {
+      this.primitiveTypes[type] = fn
+    } else {
+      this.primitiveTypes[type] = `native.${type}`
+      this.native[type] = fn
+    }
+  }
+
+  compileType (type) {
+    if (type instanceof Array) {
+      if (this.parameterizableTypes[type[0]]) { return this.parameterizableTypes[type[0]](this, type[1]) }
+      if (this.types[type[0]] && this.types[type[0]] !== 'native') {
+        return this.wrapCode('return ' + this.callType('value', type[0], Object.values(type[1])))
+      }
+      throw new Error('Unknown parametrizable type: ' + type[0])
+    } else { // Primitive type
+      if (type === 'native') return 'null'
+      if (!isNaN(this.primitiveTypes[type])) return this.primitiveTypes[type]
+      if (this.types[type]) { return 'ctx.' + type }
+      return this.primitiveTypes[type]
+    }
+  }
+
+  wrapCode (code, args = []) {
+    if (args.length > 0) return '(value, ' + args.join(', ') + ') => {\n' + indent(code) + '\n}'
+    return '(value) => {\n' + indent(code) + '\n}'
+  }
+
+  callType (value, type, offsetExpr = 'offset', args = []) {
+    if (type instanceof Array && type[0] === 'container') this.scopeStack.push({})
+    const code = this.compileType(type)
+    if (type instanceof Array && type[0] === 'container') this.scopeStack.pop()
+    if (!isNaN(code)) return code
+    if (args.length > 0) return '(' + code + `)(${value}, ` + args.join(', ') + ')'
+    return '(' + code + `)(${value})`
+  }
+}
+
 function indent (code, indent = '  ') {
   return code.split('\n').map((line) => indent + line).join('\n')
 }
@@ -552,5 +701,6 @@ function optimize (code, cb) {
 module.exports = {
   ReadCompiler,
   WriteCompiler,
+  SizeOfCompiler,
   optimize
 }
