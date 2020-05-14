@@ -122,6 +122,7 @@ class Compiler {
   compile (code) {
     // Local variable to provide some context to eval()
     const native = this.native // eslint-disable-line
+    const { PartialReadError } = require('./utils') // eslint-disable-line
     return eval(code)() // eslint-disable-line
   }
 }
@@ -218,7 +219,7 @@ class ReadCompiler extends Compiler {
         }
         code += 'offset += countSize\n'
         code += 'if (offset + count > buffer.length) {\n'
-        code += '  throw new Error("Partial read at " + offset + " count: " + count)\n'
+        code += '  throw new PartialReadError("Missing characters in string, found size is " + buffer.length + " expected size was " + (offset + count))\n'
         code += '}\n'
         code += 'return { value: buffer.toString(\'utf8\', offset, offset + count), size: count + countSize }'
         return compiler.wrapCode(code)
@@ -235,13 +236,18 @@ class ReadCompiler extends Compiler {
         }
         code += 'offset += countSize\n'
         code += 'if (offset + count > buffer.length) {\n'
-        code += '  throw new Error("Partial read at " + offset + " count: " + count)\n'
+        code += '  throw new PartialReadError()\n'
         code += '}\n'
         code += 'return { value: buffer.slice(offset, offset + count), size: count + countSize }'
         return compiler.wrapCode(code)
       },
       'bitfield': (compiler, values) => {
         let code = ''
+        const totalBits = values.reduce((acc, { size }) => acc + size, 0)
+        if (totalBits % 8 !== 0) throw new Error('Bitfield: The sum of the sizes must be a multiple of 8')
+        const totalBytes = totalBits / 8
+        code += `if ( offset + ${totalBytes} > buffer.length) { throw new PartialReadError() }\n`
+
         let names = []
         let totalSize = 8
         code += 'let bits = buffer[offset++]\n'
