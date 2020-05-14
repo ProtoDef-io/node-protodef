@@ -303,6 +303,11 @@ class ReadCompiler extends Compiler {
   }
 
   callType (type, offsetExpr = 'offset', args = []) {
+    if (type instanceof Array) {
+      if (this.types[type[0]] && this.types[type[0]] !== 'native') {
+        return this.callType(type[0], offsetExpr, Object.values(type[1]))
+      }
+    }
     if (type instanceof Array && type[0] === 'container') this.scopeStack.push({})
     const code = this.compileType(type)
     if (type instanceof Array && type[0] === 'container') this.scopeStack.pop()
@@ -460,6 +465,11 @@ class WriteCompiler extends Compiler {
   }
 
   callType (value, type, offsetExpr = 'offset', args = []) {
+    if (type instanceof Array) {
+      if (this.types[type[0]] && this.types[type[0]] !== 'native') {
+        return this.callType(value, type[0], offsetExpr, Object.values(type[1]))
+      }
+    }
     if (type instanceof Array && type[0] === 'container') this.scopeStack.push({})
     const code = this.compileType(type)
     if (type instanceof Array && type[0] === 'container') this.scopeStack.pop()
@@ -508,9 +518,13 @@ class SizeOfCompiler extends Compiler {
         } else if (array.count === null) {
           throw new Error('Array must contain either count or countType')
         }
-        code += 'for (let i = 0; i < value.length; i++) {\n'
-        code += '  size += ' + compiler.callType('value[i]', array.type) + '\n'
-        code += '}\n'
+        if (!isNaN(compiler.callType('value[i]', array.type))) {
+          code += 'size += value.length * ' + compiler.callType('value[i]', array.type) + '\n'
+        } else {
+          code += 'for (let i = 0; i < value.length; i++) {\n'
+          code += '  size += ' + compiler.callType('value[i]', array.type) + '\n'
+          code += '}\n'
+        }
         code += 'return size'
         return compiler.wrapCode(code)
       },
@@ -607,7 +621,12 @@ class SizeOfCompiler extends Compiler {
     return '(value) => {\n' + indent(code) + '\n}'
   }
 
-  callType (value, type, offsetExpr = 'offset', args = []) {
+  callType (value, type, args = []) {
+    if (type instanceof Array) {
+      if (this.types[type[0]] && this.types[type[0]] !== 'native') {
+        return this.callType(value, type[0], Object.values(type[1]))
+      }
+    }
     if (type instanceof Array && type[0] === 'container') this.scopeStack.push({})
     const code = this.compileType(type)
     if (type instanceof Array && type[0] === 'container') this.scopeStack.pop()
