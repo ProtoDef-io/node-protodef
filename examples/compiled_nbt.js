@@ -3,7 +3,7 @@ const Parser = require('protodef').Parser
 const Serializer = require('protodef').Serializer
 const { performance } = require('perf_hooks')
 const assert = require('assert')
-const { ReadCompiler, WriteCompiler, optimize } = require('protodef').Compiler
+const { ReadCompiler, WriteCompiler, SizeOfCompiler, optimize } = require('protodef').Compiler
 
 const compound = [readCompound, writeCompound, sizeOfCompound]
 
@@ -60,6 +60,23 @@ function sizeOfCompound (value, typeArgs, rootNode) {
 const mainType = 'nbt'
 
 /* global ctx */
+let sizeOfCompiler = new SizeOfCompiler()
+sizeOfCompiler.addContextType('compound', (value) => {
+  let size = 1
+  for (const key in value) {
+    size += ctx.nbt({
+      name: key,
+      type: value[key].type,
+      value: value[key].value
+    })
+  }
+  return size
+})
+sizeOfCompiler.addTypesToCompile(require('./nbt.json'))
+let sizeOfCode = sizeOfCompiler.generate()
+console.log(sizeOfCode)
+const sizeOfTest = sizeOfCompiler.compile(sizeOfCode)
+
 let writeCompiler = new WriteCompiler()
 writeCompiler.addContextType('compound', (value, buffer, offset) => {
   for (const key in value) {
@@ -120,14 +137,16 @@ fs.readFile('./examples/bigtest.nbt', function (error, buffer) {
 
   let result = readTest[mainType](buffer, 0).value
   let result2 = parser.parsePacketBuffer(buffer).data
+  let length = sizeOfTest[mainType](result)
 
-  let buffer2 = Buffer.allocUnsafe(buffer.length)
+  let buffer2 = Buffer.allocUnsafe(length)
   writeTest[mainType](result, buffer2, 0)
 
   let result3 = parser.parsePacketBuffer(buffer2).data
 
   assert.deepStrictEqual(result, result2)
   assert.deepStrictEqual(result2, result3)
+  assert.strictEqual(buffer.length, length)
 
   const nbTests = 10000
   console.log('Running ' + nbTests + ' tests')
@@ -137,6 +156,8 @@ fs.readFile('./examples/bigtest.nbt', function (error, buffer) {
   start = performance.now()
   for (let i = 0; i < nbTests; i++) {
     const result = readTest[mainType](buffer, 0).value
+    const length = sizeOfTest[mainType](result)
+    const buffer2 = Buffer.allocUnsafe(length)
     writeTest[mainType](result, buffer2, 0)
   }
   time = performance.now() - start
@@ -155,16 +176,21 @@ fs.readFile('./examples/bigtest.nbt', function (error, buffer) {
   // Closure optimized:
   optimize(readCode, (readCode) => {
     optimize(writeCode, (writeCode) => {
-      const readTest = readCompiler.compile(readCode)
-      const writeTest = writeCompiler.compile(writeCode)
-      start = performance.now()
-      for (let i = 0; i < nbTests; i++) {
-        const result = readTest[mainType](buffer, 0).value
-        writeTest[mainType](result, buffer2, 0)
-      }
-      time = performance.now() - start
-      ps = nbTests / time
-      console.log('read compiled (+closure): ' + time.toFixed(2) + ' ms (' + ps.toFixed(2) + 'k packet/s)')
+      optimize(sizeOfCode, (sizeOfCode) => {
+        const readTest = readCompiler.compile(readCode)
+        const writeTest = writeCompiler.compile(writeCode)
+        const sizeOfTest = sizeOfCompiler.compile(sizeOfCode)
+        start = performance.now()
+        for (let i = 0; i < nbTests; i++) {
+          const result = readTest[mainType](buffer, 0).value
+          const length = sizeOfTest[mainType](result)
+          const buffer2 = Buffer.allocUnsafe(length)
+          writeTest[mainType](result, buffer2, 0)
+        }
+        time = performance.now() - start
+        ps = nbTests / time
+        console.log('read compiled (+closure): ' + time.toFixed(2) + ' ms (' + ps.toFixed(2) + 'k packet/s)')
+      })
     })
   })
 })
