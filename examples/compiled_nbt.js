@@ -1,9 +1,7 @@
 const ProtoDef = require('protodef').ProtoDef
-const Parser = require('protodef').Parser
-const Serializer = require('protodef').Serializer
 const { performance } = require('perf_hooks')
 const assert = require('assert')
-const { ReadCompiler, WriteCompiler, SizeOfCompiler, optimize } = require('protodef').Compiler
+const { ProtoDefCompiler } = require('protodef').Compiler
 
 const compound = [readCompound, writeCompound, sizeOfCompound]
 
@@ -59,94 +57,30 @@ function sizeOfCompound (value, typeArgs, rootNode) {
 
 const mainType = 'nbt'
 
-/* global ctx */
-let sizeOfCompiler = new SizeOfCompiler()
-sizeOfCompiler.addContextType('compound', (value) => {
-  let size = 1
-  for (const key in value) {
-    size += ctx.nbt({
-      name: key,
-      type: value[key].type,
-      value: value[key].value
-    })
-  }
-  return size
-})
-sizeOfCompiler.addTypesToCompile(require('./nbt.json'))
-let sizeOfCode = sizeOfCompiler.generate()
-console.log(sizeOfCode)
-const sizeOfTest = sizeOfCompiler.compile(sizeOfCode)
-
-let writeCompiler = new WriteCompiler()
-writeCompiler.addContextType('compound', (value, buffer, offset) => {
-  for (const key in value) {
-    offset = ctx.nbt({
-      name: key,
-      type: value[key].type,
-      value: value[key].value
-    }, buffer, offset)
-  }
-  offset = ctx.i8(0, buffer, offset)
-  return offset
-})
-writeCompiler.addTypesToCompile(require('./nbt.json'))
-let writeCode = writeCompiler.generate()
-console.log(writeCode)
-const writeTest = writeCompiler.compile(writeCode)
-
-let readCompiler = new ReadCompiler()
-readCompiler.addContextType('compound', (buffer, offset) => {
-  const results = {
-    value: {},
-    size: 0
-  }
-  while (true) {
-    const typ = ctx.i8(buffer, offset)
-    if (typ.value === 0) {
-      offset += typ.size
-      results.size += typ.size
-      break
-    }
-
-    const readResults = ctx.nbt(buffer, offset)
-    offset += readResults.size
-    results.size += readResults.size
-    results.value[readResults.value.name] = {
-      type: readResults.value.type,
-      value: readResults.value.value
-    }
-  }
-  return results
-})
-readCompiler.addTypesToCompile(require('./nbt.json'))
-let readCode = readCompiler.generate()
-console.log(readCode)
-const readTest = readCompiler.compile(readCode)
-
-const proto = new ProtoDef()
-proto.addType('compound', compound)
-proto.addTypes(require('./nbt.json'))
-const parser = new Parser(proto, mainType)
-const serializer = new Serializer(proto, mainType)
-
 const fs = require('fs')
-fs.readFile('./examples/bigtest.nbt', function (error, buffer) {
+fs.readFile('./examples/bigtest.nbt', async (error, buffer) => {
   if (error) {
     throw error
   }
 
-  let result = readTest[mainType](buffer, 0).value
-  let result2 = parser.parsePacketBuffer(buffer).data
-  let length = sizeOfTest[mainType](result)
+  const proto = new ProtoDef()
+  proto.addType('compound', compound)
+  proto.addTypes(require('./nbt.json'))
 
-  let buffer2 = Buffer.allocUnsafe(length)
-  writeTest[mainType](result, buffer2, 0)
+  const compiler = new ProtoDefCompiler()
+  compiler.addTypes(require('./nbt-compound'))
+  compiler.addTypesToCompile(require('./nbt.json'))
+  const compiledProto = await compiler.compileProtoDef()
 
-  let result3 = parser.parsePacketBuffer(buffer2).data
+  let result = compiledProto.parsePacketBuffer(mainType, buffer).data
+  let result2 = proto.parsePacketBuffer(mainType, buffer).data
+
+  let buffer2 = compiledProto.createPacketBuffer(mainType, result)
+  let result3 = proto.parsePacketBuffer(mainType, buffer2).data
 
   assert.deepStrictEqual(result, result2)
   assert.deepStrictEqual(result2, result3)
-  assert.strictEqual(buffer.length, length)
+  assert.strictEqual(buffer.length, buffer2.length)
 
   const nbTests = 10000
   console.log('Running ' + nbTests + ' tests')
@@ -155,10 +89,8 @@ fs.readFile('./examples/bigtest.nbt', function (error, buffer) {
 
   start = performance.now()
   for (let i = 0; i < nbTests; i++) {
-    const result = readTest[mainType](buffer, 0).value
-    const length = sizeOfTest[mainType](result)
-    const buffer2 = Buffer.allocUnsafe(length)
-    writeTest[mainType](result, buffer2, 0)
+    const result = compiledProto.parsePacketBuffer(mainType, buffer).data
+    compiledProto.createPacketBuffer(mainType, result)
   }
   time = performance.now() - start
   ps = nbTests / time
@@ -166,31 +98,21 @@ fs.readFile('./examples/bigtest.nbt', function (error, buffer) {
 
   start = performance.now()
   for (let i = 0; i < nbTests; i++) {
-    const result = parser.parsePacketBuffer(buffer).data
-    serializer.createPacketBuffer(result)
+    const result = proto.parsePacketBuffer(mainType, buffer).data
+    proto.createPacketBuffer(mainType, result)
   }
   time = performance.now() - start
   ps = nbTests / time
   console.log('read / write parser: ' + time.toFixed(2) + ' ms (' + ps.toFixed(2) + 'k packet/s)')
 
   // Closure optimized:
-  optimize(readCode, (readCode) => {
-    optimize(writeCode, (writeCode) => {
-      optimize(sizeOfCode, (sizeOfCode) => {
-        const readTest = readCompiler.compile(readCode)
-        const writeTest = writeCompiler.compile(writeCode)
-        const sizeOfTest = sizeOfCompiler.compile(sizeOfCode)
-        start = performance.now()
-        for (let i = 0; i < nbTests; i++) {
-          const result = readTest[mainType](buffer, 0).value
-          const length = sizeOfTest[mainType](result)
-          const buffer2 = Buffer.allocUnsafe(length)
-          writeTest[mainType](result, buffer2, 0)
-        }
-        time = performance.now() - start
-        ps = nbTests / time
-        console.log('read compiled (+closure): ' + time.toFixed(2) + ' ms (' + ps.toFixed(2) + 'k packet/s)')
-      })
-    })
-  })
+  const optimizedProto = await compiler.compileProtoDef({ optimize: true })
+  start = performance.now()
+  for (let i = 0; i < nbTests; i++) {
+    const result = optimizedProto.parsePacketBuffer(mainType, buffer).data
+    optimizedProto.createPacketBuffer(mainType, result)
+  }
+  time = performance.now() - start
+  ps = nbTests / time
+  console.log('read / write compiled (+closure): ' + time.toFixed(2) + ' ms (' + ps.toFixed(2) + 'k packet/s)')
 })

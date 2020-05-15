@@ -7,14 +7,13 @@ const conditionalDatatypes = require('./datatypes/compiler-conditional')
 const structuresDatatypes = require('./datatypes/compiler-structures')
 const utilsDatatypes = require('./datatypes/compiler-utils')
 
-class Compiler {
+const { tryCatch } = require('./utils')
+
+class ProtoDefCompiler {
   constructor () {
-    this.primitiveTypes = {}
-    this.native = {}
-    this.context = {}
-    this.types = {}
-    this.scopeStack = []
-    this.parameterizableTypes = {}
+    this.readCompiler = new ReadCompiler()
+    this.writeCompiler = new WriteCompiler()
+    this.sizeOfCompiler = new SizeOfCompiler()
   }
 
   /**
@@ -24,8 +23,9 @@ class Compiler {
    * @param {*} fn
    */
   addNativeType (type, fn) {
-    this.primitiveTypes[type] = `native.${type}`
-    this.native[type] = fn
+    this.readCompiler.addNativeType(type, fn)
+    this.writeCompiler.addNativeType(type, fn)
+    this.sizeOfCompiler.addNativeType(type, fn)
   }
 
   /**
@@ -36,8 +36,9 @@ class Compiler {
    * @param {*} fn
    */
   addContextType (type, fn) {
-    this.primitiveTypes[type] = `ctx.${type}`
-    this.context[type] = fn.toString()
+    this.readCompiler.addContextType(type, fn)
+    this.writeCompiler.addContextType(type, fn)
+    this.sizeOfCompiler.addContextType(type, fn)
   }
 
   /**
@@ -46,6 +47,115 @@ class Compiler {
    * @param {*} type
    * @param {*} maker
    */
+  addParametrizableType (type, maker) {
+    this.readCompiler.addParametrizableType(type, maker)
+    this.writeCompiler.addParametrizableType(type, maker)
+    this.sizeOfCompiler.addParametrizableType(type, maker)
+  }
+
+  addTypes (types) {
+    this.readCompiler.addTypes(types.Read)
+    this.writeCompiler.addTypes(types.Write)
+    this.sizeOfCompiler.addTypes(types.SizeOf)
+  }
+
+  addTypesToCompile (types) {
+    this.readCompiler.addTypesToCompile(types)
+    this.writeCompiler.addTypesToCompile(types)
+    this.sizeOfCompiler.addTypesToCompile(types)
+  }
+
+  addProtocol (protocolData, path) {
+    this.readCompiler.addProtocol(protocolData, path)
+    this.writeCompiler.addProtocol(protocolData, path)
+    this.sizeOfCompiler.addProtocol(protocolData, path)
+  }
+
+  compileProtoDef (options = { optimize: false }) {
+    let c = this
+    return new Promise(resolve => {
+      const sizeOfCode = c.sizeOfCompiler.generate()
+
+      const writeCode = c.writeCompiler.generate()
+      const readCode = c.readCompiler.generate()
+
+      if (options.optimize) {
+        optimize(sizeOfCode, (sizeOfCode) => {
+          optimize(writeCode, (writeCode) => {
+            optimize(readCode, (readCode) => {
+              const sizeOfCtx = c.sizeOfCompiler.compile(sizeOfCode)
+              const writeCtx = c.writeCompiler.compile(writeCode)
+              const readCtx = c.readCompiler.compile(readCode)
+              resolve(new CompiledProtodef(sizeOfCtx, writeCtx, readCtx))
+            })
+          })
+        })
+      } else {
+        const sizeOfCtx = c.sizeOfCompiler.compile(sizeOfCode)
+        const writeCtx = c.writeCompiler.compile(writeCode)
+        const readCtx = c.readCompiler.compile(readCode)
+        resolve(new CompiledProtodef(sizeOfCtx, writeCtx, readCtx))
+      }
+    })
+  }
+}
+
+class CompiledProtodef {
+  constructor (sizeOfCtx, writeCtx, readCtx) {
+    this.sizeOfCtx = sizeOfCtx
+    this.writeCtx = writeCtx
+    this.readCtx = readCtx
+  }
+
+  createPacketBuffer (type, packet) {
+    const length = tryCatch(() => this.sizeOfCtx[type](packet),
+      (e) => {
+        e.message = `SizeOf error for ${e.field} : ${e.message}`
+        throw e
+      })
+    const buffer = Buffer.allocUnsafe(length)
+    tryCatch(() => this.writeCtx[type](packet, buffer, 0),
+      (e) => {
+        e.message = `Write error for ${e.field} : ${e.message}`
+        throw e
+      })
+    return buffer
+  }
+
+  parsePacketBuffer (type, buffer) {
+    const { value, size } = tryCatch(() => this.readCtx[type](buffer, 0),
+      (e) => {
+        e.message = `Read error for ${e.field} : ${e.message}`
+        throw e
+      })
+    return {
+      data: value,
+      metadata: { size },
+      buffer: buffer.slice(0, size)
+    }
+  }
+}
+
+class Compiler {
+  constructor () {
+    this.primitiveTypes = {}
+    this.native = {}
+    this.context = {}
+    this.types = {}
+    this.scopeStack = []
+    this.parameterizableTypes = {}
+  }
+
+  addNativeType (type, fn) {
+    this.primitiveTypes[type] = `native.${type}`
+    this.native[type] = fn
+  }
+
+  addContextType (type, fn) {
+    this.primitiveTypes[type] = `ctx.${type}`
+    this.context[type] = fn.toString()
+  }
+
   addParametrizableType (type, maker) {
     this.parameterizableTypes[type] = maker
   }
@@ -82,7 +192,7 @@ class Compiler {
   getField (name) {
     let path = name.split('/')
     let i = this.scopeStack.length - 1
-    const reserved = { 'value': true }
+    const reserved = { 'value': true, 'enum': true }
     while (path.length) {
       let scope = this.scopeStack[i]
       let field = path.shift()
@@ -317,5 +427,6 @@ module.exports = {
   ReadCompiler,
   WriteCompiler,
   SizeOfCompiler,
+  ProtoDefCompiler,
   optimize
 }
