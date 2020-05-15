@@ -96,6 +96,8 @@ const UUID = require('uuid-1345')
 }
 ```
 
+The native types implementations are compatible with the native functions of the ProtoDef interpreter, and can reuse them.
+
 ### Context Type
 
 A context type is a type that will be called in the protocol's context. It can refer to registred native types using `native.{type}()` or context types (provided and generated) using `ctx.{type}()`, but cannot access its original context.
