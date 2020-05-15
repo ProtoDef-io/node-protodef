@@ -16,43 +16,6 @@ class ProtoDefCompiler {
     this.sizeOfCompiler = new SizeOfCompiler()
   }
 
-  /**
-   * A native type is a type read or written by a function that will be called in it's
-   * original context.
-   * @param {*} type
-   * @param {*} fn
-   */
-  addNativeType (type, fn) {
-    this.readCompiler.addNativeType(type, fn)
-    this.writeCompiler.addNativeType(type, fn)
-    this.sizeOfCompiler.addNativeType(type, fn)
-  }
-
-  /**
-   * A context type is a type that will be called in the protocol's context. It can refer to
-   * registred native types using native.{type}() or context type (provided and generated)
-   * using ctx.{type}(), but cannot access it's original context.
-   * @param {*} type
-   * @param {*} fn
-   */
-  addContextType (type, fn) {
-    this.readCompiler.addContextType(type, fn)
-    this.writeCompiler.addContextType(type, fn)
-    this.sizeOfCompiler.addContextType(type, fn)
-  }
-
-  /**
-   * A parametrizable type is a function that will be generated at compile time using the
-   * provided maker function
-   * @param {*} type
-   * @param {*} maker
-   */
-  addParametrizableType (type, maker) {
-    this.readCompiler.addParametrizableType(type, maker)
-    this.writeCompiler.addParametrizableType(type, maker)
-    this.sizeOfCompiler.addParametrizableType(type, maker)
-  }
-
   addTypes (types) {
     this.readCompiler.addTypes(types.Read)
     this.writeCompiler.addTypes(types.Write)
@@ -146,16 +109,35 @@ class Compiler {
     this.parameterizableTypes = {}
   }
 
+  /**
+   * A native type is a type read or written by a function that will be called in it's
+   * original context.
+   * @param {*} type
+   * @param {*} fn
+   */
   addNativeType (type, fn) {
     this.primitiveTypes[type] = `native.${type}`
     this.native[type] = fn
   }
 
+  /**
+   * A context type is a type that will be called in the protocol's context. It can refer to
+   * registred native types using native.{type}() or context type (provided and generated)
+   * using ctx.{type}(), but cannot access it's original context.
+   * @param {*} type
+   * @param {*} fn
+   */
   addContextType (type, fn) {
     this.primitiveTypes[type] = `ctx.${type}`
     this.context[type] = fn.toString()
   }
 
+  /**
+   * A parametrizable type is a function that will be generated at compile time using the
+   * provided maker function
+   * @param {*} type
+   * @param {*} maker
+   */
   addParametrizableType (type, maker) {
     this.parameterizableTypes[type] = maker
   }
