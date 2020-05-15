@@ -62,7 +62,7 @@ module.exports = {
     }],
     'mapper': ['parametrizable', (compiler, mapper) => {
       let code = 'const { value, size } = ' + compiler.callType(mapper.type) + '\n'
-      code += 'return { value: ' + JSON.stringify(mapper.mappings) + '[value], size }'
+      code += 'return { value: ' + JSON.stringify(sanitizeMappings(mapper.mappings)) + '[value], size }'
       return compiler.wrapCode(code)
     }]
   },
@@ -156,10 +156,28 @@ module.exports = {
   }
 }
 
+// Convert hexadecimal keys to decimal
+function sanitizeMappings (json) {
+  const ret = {}
+  for (let key in json) {
+    let val = json[key]
+    key = hex2dec(key)
+    ret[key] = val
+  }
+  return ret
+}
+
 function swapMappings (json) {
   const ret = {}
   for (let key in json) {
-    ret[json[key]] = (isNaN(key)) ? key : parseInt(key, 10)
+    let val = json[key]
+    key = hex2dec(key)
+    ret[val] = (isNaN(key)) ? key : parseInt(key, 10)
   }
   return ret
+}
+
+function hex2dec (num) {
+  if ((num.match(/^0x[0-9a-f]+$/i))) { return parseInt(num.substring(2), 16) }
+  return num
 }

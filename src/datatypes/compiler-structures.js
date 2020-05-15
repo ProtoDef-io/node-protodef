@@ -120,7 +120,6 @@ function containerInlining (values) {
     if (anon) {
       if (type instanceof Array && type[0] === 'container') {
         for (const j in type[1]) newValues.push(type[1][j])
-        console.log('Inlined an anonymous container')
       } else if (type instanceof Array && type[0] === 'switch') {
         const theSwitch = type[1]
         const valueSet = new Set()
@@ -159,7 +158,6 @@ function containerInlining (values) {
             }]
           })
         }
-        console.log('Inlined an anonymous switch')
       } else {
         throw new Error('Cannot inline anonymous type: ' + type)
       }

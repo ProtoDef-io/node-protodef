@@ -34,18 +34,34 @@ class ProtoDefCompiler {
     this.sizeOfCompiler.addProtocol(protocolData, path)
   }
 
-  compileProtoDef (options = { optimize: false }) {
+  compileProtoDef (options = { optimize: false, printCode: false, printOptimizedCode: false }) {
     let c = this
     return new Promise(resolve => {
       const sizeOfCode = c.sizeOfCompiler.generate()
-
       const writeCode = c.writeCompiler.generate()
       const readCode = c.readCompiler.generate()
+
+      if (options.printCode) {
+        console.log('// SizeOf:')
+        console.log(sizeOfCode)
+        console.log('// Write:')
+        console.log(writeCode)
+        console.log('// Read:')
+        console.log(readCode)
+      }
 
       if (options.optimize) {
         optimize(sizeOfCode, (sizeOfCode) => {
           optimize(writeCode, (writeCode) => {
             optimize(readCode, (readCode) => {
+              if (options.printOptimizedCode) {
+                console.log('// SizeOf:')
+                console.log(sizeOfCode)
+                console.log('// Write:')
+                console.log(writeCode)
+                console.log('// Read:')
+                console.log(readCode)
+              }
               const sizeOfCtx = c.sizeOfCompiler.compile(sizeOfCode)
               const writeCtx = c.writeCompiler.compile(writeCode)
               const readCtx = c.readCompiler.compile(readCode)
