@@ -391,10 +391,10 @@ class SizeOfCompiler extends Compiler {
    * @param {*} fn
    */
   addNativeType (type, fn) {
+    this.primitiveTypes[type] = `native.${type}`
     if (!isNaN(fn)) {
-      this.primitiveTypes[type] = fn
+      this.native[type] = (value) => { return fn }
     } else {
-      this.primitiveTypes[type] = `native.${type}`
       this.native[type] = fn
     }
   }
