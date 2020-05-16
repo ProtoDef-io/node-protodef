@@ -30,12 +30,27 @@ module.exports = {
       let offsetExpr = 'offset'
       let names = []
       for (const i in values) {
-        const { type, name } = values[i]
-        const trueName = compiler.getField(name)
-        code += `const { value: ${trueName}, size: ${trueName}Size } = ` + compiler.callType(type, offsetExpr) + '\n'
-        offsetExpr += ` + ${trueName}Size`
-        if (name === trueName) names.push(name)
-        else names.push(`${name}: ${trueName}`)
+        const { type, name, anon } = values[i]
+        let trueName
+        let sizeName
+        if (type instanceof Array && type[0] === 'bitfield' && anon) {
+          const subnames = []
+          for (const { name } of type[1]) {
+            const trueName = compiler.getField(name)
+            subnames.push(trueName)
+            if (name === trueName) names.push(name)
+            else names.push(`${name}: ${trueName}`)
+          }
+          trueName = '{' + subnames.join(', ') + '}'
+          sizeName = `anon${i}Size`
+        } else {
+          trueName = compiler.getField(name)
+          sizeName = `${trueName}Size`
+          if (name === trueName) names.push(name)
+          else names.push(`${name}: ${trueName}`)
+        }
+        code += `const { value: ${trueName}, size: ${sizeName} } = ` + compiler.callType(type, offsetExpr) + '\n'
+        offsetExpr += ` + ${sizeName}`
       }
       const sizes = offsetExpr.split(' + ')
       sizes.shift()
@@ -66,9 +81,21 @@ module.exports = {
       values = containerInlining(values)
       let code = ''
       for (const i in values) {
-        const { type, name } = values[i]
-        const trueName = compiler.getField(name)
-        code += `const ${trueName} = value.${name}\n`
+        const { type, name, anon } = values[i]
+        let trueName
+        if (type instanceof Array && type[0] === 'bitfield' && anon) {
+          const names = []
+          for (const { name } of type[1]) {
+            const trueName = compiler.getField(name)
+            code += `const ${trueName} = value.${name}\n`
+            if (name === trueName) names.push(name)
+            else names.push(`${name}: ${trueName}`)
+          }
+          trueName = '{' + names.join(', ') + '}'
+        } else {
+          trueName = compiler.getField(name)
+          code += `const ${trueName} = value.${name}\n`
+        }
         code += `offset = ` + compiler.callType(trueName, type) + '\n'
       }
       code += 'return offset'
@@ -81,7 +108,9 @@ module.exports = {
       let code = ''
       if (array.countType) {
         code += 'let size = ' + compiler.callType('value.length', array.countType) + '\n'
-      } else if (array.count === null) {
+      } else if (array.count) {
+        code += 'let size = 0\n'
+      } else {
         throw new Error('Array must contain either count or countType')
       }
       if (!isNaN(compiler.callType('value[i]', array.type))) {
@@ -101,9 +130,21 @@ module.exports = {
       values = containerInlining(values)
       let code = 'let size = 0\n'
       for (const i in values) {
-        const { type, name } = values[i]
-        const trueName = compiler.getField(name)
-        code += `const ${trueName} = value.${name}\n`
+        const { type, name, anon } = values[i]
+        let trueName
+        if (type instanceof Array && type[0] === 'bitfield' && anon) {
+          const names = []
+          for (const { name } of type[1]) {
+            const trueName = compiler.getField(name)
+            code += `const ${trueName} = value.${name}\n`
+            if (name === trueName) names.push(name)
+            else names.push(`${name}: ${trueName}`)
+          }
+          trueName = '{' + names.join(', ') + '}'
+        } else {
+          trueName = compiler.getField(name)
+          code += `const ${trueName} = value.${name}\n`
+        }
         code += `size += ` + compiler.callType(trueName, type) + '\n'
       }
       code += 'return size'
@@ -117,7 +158,7 @@ function containerInlining (values) {
   const newValues = []
   for (const i in values) {
     const { type, anon } = values[i]
-    if (anon) {
+    if (anon && !(type instanceof Array && type[0] === 'bitfield')) {
       if (type instanceof Array && type[0] === 'container') {
         for (const j in type[1]) newValues.push(type[1][j])
       } else if (type instanceof Array && type[0] === 'switch') {
@@ -132,9 +173,26 @@ function containerInlining (values) {
             }
           }
         }
+        if (theSwitch.default instanceof Array && theSwitch.default[0] === 'container') {
+          for (const j in theSwitch.default[1]) {
+            const item = theSwitch.default[1][j]
+            valueSet.add(item.name)
+          }
+        }
         // For each value create a switch
         for (const name of valueSet.keys()) {
           const fields = {}
+          let theDefault = theSwitch.default
+
+          if (theDefault instanceof Array && theDefault[0] === 'container') {
+            for (const j in theDefault[1]) {
+              const item = theDefault[1][j]
+              if (item.name === name) {
+                theDefault = item.type
+                break
+              }
+            }
+          }
           for (const field in theSwitch.fields) {
             if (theSwitch.fields[field] instanceof Array && theSwitch.fields[field][0] === 'container') {
               for (const j in theSwitch.fields[field][1]) {
@@ -148,12 +206,15 @@ function containerInlining (values) {
               fields[field] = theSwitch.fields[field]
             }
           }
+          if (!theDefault) {
+            theDefault = 'void'
+          }
           newValues.push({
             name,
             type: ['switch', {
               compareTo: theSwitch.compareTo,
               compareToValue: theSwitch.compareToValue,
-              default: theSwitch.default,
+              default: theDefault,
               fields
             }]
           })

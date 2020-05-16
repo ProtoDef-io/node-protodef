@@ -13,16 +13,14 @@ module.exports = {
         if (isNaN(val) && val !== 'true' && val !== 'false') val = `"${val}"`
         code += compiler.indent(`case ${val}: return ` + compiler.callType(struct.fields[key])) + '\n'
       }
-      if (struct.default) {
-        code += compiler.indent('default: return ' + compiler.callType(struct.default)) + '\n'
-      }
+      code += compiler.indent('default: return ' + compiler.callType(struct.default ? struct.default : 'void')) + '\n'
       code += `}`
       return compiler.wrapCode(code, args)
     }],
     'option': ['parametrizable', (compiler, type) => {
       let code = 'const {value} = ctx.bool(buffer, offset)\n'
       code += 'if (value) {\n'
-      code += '  const { value, size } = ' + compiler.callType(type) + '\n'
+      code += '  const { value, size } = ' + compiler.callType(type, 'offset + 1') + '\n'
       code += '  return { value, size: size + 1 }\n'
       code += '}\n'
       code += 'return { value: undefined, size: 1}'
@@ -44,9 +42,7 @@ module.exports = {
         if (isNaN(val) && val !== 'true' && val !== 'false') val = `"${val}"`
         code += compiler.indent(`case ${val}: return ` + compiler.callType('value', struct.fields[key])) + '\n'
       }
-      if (struct.default) {
-        code += compiler.indent('default: return ' + compiler.callType('value', struct.default)) + '\n'
-      }
+      code += compiler.indent('default: return ' + compiler.callType('value', struct.default ? struct.default : 'void')) + '\n'
       code += `}`
       return compiler.wrapCode(code, args)
     }],
@@ -76,9 +72,7 @@ module.exports = {
         if (isNaN(val) && val !== 'true' && val !== 'false') val = `"${val}"`
         code += compiler.indent(`case ${val}: return ` + compiler.callType('value', struct.fields[key])) + '\n'
       }
-      if (struct.default) {
-        code += compiler.indent('default: return ' + compiler.callType('value', struct.default)) + '\n'
-      }
+      code += compiler.indent('default: return ' + compiler.callType('value', struct.default ? struct.default : 'void')) + '\n'
       code += `}`
       return compiler.wrapCode(code, args)
     }],

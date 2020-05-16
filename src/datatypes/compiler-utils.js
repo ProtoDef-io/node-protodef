@@ -57,7 +57,7 @@ module.exports = {
         if (name === trueName) names.push(name)
         else names.push(`${name}: ${trueName}`)
       }
-      code += 'return { value: { ' + names.join(', ') + ' }, size: offset }'
+      code += 'return { value: { ' + names.join(', ') + ` }, size: ${totalBytes} }`
       return compiler.wrapCode(code)
     }],
     'mapper': ['parametrizable', (compiler, mapper) => {
@@ -134,7 +134,7 @@ module.exports = {
       return compiler.wrapCode(code)
     }],
     'buffer': ['parametrizable', (compiler, buffer) => {
-      let code = 'let size = value.length'
+      let code = 'let size = value.length\n'
       if (buffer.countType) {
         code += 'size += ' + compiler.callType('size', buffer.countType) + '\n'
       } else if (buffer.count === null) {
@@ -150,7 +150,8 @@ module.exports = {
       return `${totalBytes}`
     }],
     'mapper': ['parametrizable', (compiler, mapper) => {
-      const code = 'return ' + compiler.callType(`value`, mapper.type)
+      const mappings = JSON.stringify(swapMappings(mapper.mappings))
+      const code = 'return ' + compiler.callType(`${mappings}[value]`, mapper.type)
       return compiler.wrapCode(code)
     }]
   }

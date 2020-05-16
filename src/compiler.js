@@ -244,6 +244,7 @@ class Compiler {
         if (this.types[type] !== 'native') {
           functions[type] = this.compileType(this.types[type])
           if (functions[type].startsWith('ctx')) { functions[type] = this.wrapCode(functions[type]) }
+          if (!isNaN(functions[type])) { functions[type] = this.wrapCode('  return ' + functions[type]) }
         } else {
           functions[type] = `native.${type}`
         }
@@ -311,7 +312,7 @@ class ReadCompiler extends Compiler {
     if (type instanceof Array && type[0] === 'container') this.scopeStack.push({})
     const code = this.compileType(type)
     if (type instanceof Array && type[0] === 'container') this.scopeStack.pop()
-    if (args.length > 0) return '(' + code + `)(buffer, ${offsetExpr}, ` + args.join(', ') + ')'
+    if (args.length > 0) return '(' + code + `)(buffer, ${offsetExpr}, ` + args.map(name => this.getField(name)).join(', ') + ')'
     return '(' + code + `)(buffer, ${offsetExpr})`
   }
 }
@@ -361,7 +362,7 @@ class WriteCompiler extends Compiler {
     if (type instanceof Array && type[0] === 'container') this.scopeStack.push({})
     const code = this.compileType(type)
     if (type instanceof Array && type[0] === 'container') this.scopeStack.pop()
-    if (args.length > 0) return '(' + code + `)(${value}, buffer, ${offsetExpr}, ` + args.join(', ') + ')'
+    if (args.length > 0) return '(' + code + `)(${value}, buffer, ${offsetExpr}, ` + args.map(name => this.getField(name)).join(', ') + ')'
     return '(' + code + `)(${value}, buffer, ${offsetExpr})`
   }
 }
@@ -428,7 +429,7 @@ class SizeOfCompiler extends Compiler {
     const code = this.compileType(type)
     if (type instanceof Array && type[0] === 'container') this.scopeStack.pop()
     if (!isNaN(code)) return code
-    if (args.length > 0) return '(' + code + `)(${value}, ` + args.join(', ') + ')'
+    if (args.length > 0) return '(' + code + `)(${value}, ` + args.map(name => this.getField(name)).join(', ') + ')'
     return '(' + code + `)(${value})`
   }
 }
