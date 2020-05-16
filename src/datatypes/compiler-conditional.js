@@ -85,7 +85,7 @@ module.exports = {
     'option': ['parametrizable', (compiler, type) => {
       let code = 'if (value !== null) {\n'
       code += '  return 1 + ' + compiler.callType('value', type) + '\n'
-      code += '}'
+      code += '}\n'
       code += 'return 0'
       return compiler.wrapCode(code)
     }]

@@ -198,7 +198,7 @@ class Compiler {
       if (protocolData.types) { self.addTypesToCompile(protocolData.types) }
       recursiveAddTypes(protocolData[path.shift()], path)
     }
-    recursiveAddTypes(protocolData, path)
+    recursiveAddTypes(protocolData, path.slice(0))
   }
 
   indent (code, indent = '  ') {
@@ -241,7 +241,12 @@ class Compiler {
     }
     for (const type in this.types) {
       if (!functions[type]) {
-        if (this.types[type] !== 'native') { functions[type] = this.compileType(this.types[type]) } else { functions[type] = `native.${type}` }
+        if (this.types[type] !== 'native') {
+          functions[type] = this.compileType(this.types[type])
+          if (functions[type].startsWith('ctx')) { functions[type] = this.wrapCode(functions[type]) }
+        } else {
+          functions[type] = `native.${type}`
+        }
       }
     }
     return '() => {\n' + this.indent('const ctx = {\n' + this.indent(Object.keys(functions).map((type) => {
