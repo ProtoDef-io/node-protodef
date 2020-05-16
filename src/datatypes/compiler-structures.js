@@ -21,7 +21,8 @@ module.exports = {
       return compiler.wrapCode(code)
     }],
     'count': ['parametrizable', (compiler, type) => {
-      throw new Error('count not supported, use array')
+      let code = 'return ' + compiler.callType(type.type)
+      return compiler.wrapCode(code)
     }],
     'container': ['parametrizable', (compiler, values) => {
       values = containerInlining(values)
@@ -75,7 +76,8 @@ module.exports = {
       return compiler.wrapCode(code)
     }],
     'count': ['parametrizable', (compiler, type) => {
-      throw new Error('count not supported, use array')
+      let code = 'return ' + compiler.callType('value', type.type)
+      return compiler.wrapCode(code)
     }],
     'container': ['parametrizable', (compiler, values) => {
       values = containerInlining(values)
@@ -124,7 +126,8 @@ module.exports = {
       return compiler.wrapCode(code)
     }],
     'count': ['parametrizable', (compiler, type) => {
-      throw new Error('count not supported, use array')
+      let code = 'return ' + compiler.callType('value', type.type)
+      return compiler.wrapCode(code)
     }],
     'container': ['parametrizable', (compiler, values) => {
       values = containerInlining(values)
