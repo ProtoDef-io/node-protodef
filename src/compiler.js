@@ -104,14 +104,36 @@ class CompiledProtodef {
     this.readCtx = readCtx
   }
 
+  read (buffer, cursor, type) {
+    const readFn = this.readCtx[type]
+    if (!readFn) { throw new Error('missing data type: ' + type) }
+    return readFn(buffer, cursor)
+  }
+
+  write (value, buffer, cursor, type) {
+    const writeFn = this.writeCtx[type]
+    if (!writeFn) { throw new Error('missing data type: ' + type) }
+    return writeFn(value, buffer, cursor)
+  }
+
+  sizeOf (value, type) {
+    const sizeFn = this.sizeOfCtx[type]
+    if (!sizeFn) { throw new Error('missing data type: ' + type) }
+    if (typeof sizeFn === 'function') {
+      return sizeFn(value)
+    } else {
+      return sizeFn
+    }
+  }
+
   createPacketBuffer (type, packet) {
-    const length = tryCatch(() => this.sizeOfCtx[type](packet),
+    const length = tryCatch(() => this.sizeOf(packet, type),
       (e) => {
         e.message = `SizeOf error for ${e.field} : ${e.message}`
         throw e
       })
     const buffer = Buffer.allocUnsafe(length)
-    tryCatch(() => this.writeCtx[type](packet, buffer, 0),
+    tryCatch(() => this.write(packet, buffer, 0, type),
       (e) => {
         e.message = `Write error for ${e.field} : ${e.message}`
         throw e
@@ -120,7 +142,7 @@ class CompiledProtodef {
   }
 
   parsePacketBuffer (type, buffer) {
-    const { value, size } = tryCatch(() => this.readCtx[type](buffer, 0),
+    const { value, size } = tryCatch(() => this.read(buffer, 0, type),
       (e) => {
         e.message = `Read error for ${e.field} : ${e.message}`
         throw e
