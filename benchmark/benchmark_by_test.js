@@ -1,7 +1,6 @@
 /* eslint-env mocha */
 
-const testData = require('../test/dataTypes/prepareTests').testData
-const proto = require('../test/dataTypes/prepareTests').proto
+const { testData, proto, compiledProto } = require('../test/dataTypes/prepareTests')
 const Benchmark = require('benchmark')
 
 function testValue (type, value, buffer) {
@@ -19,6 +18,27 @@ function testValue (type, value, buffer) {
     const suite = new Benchmark.Suite()
     suite.add('read', function () {
       proto.parsePacketBuffer(type, buffer)
+    })
+      .on('cycle', function (event) {
+        console.log(String(event.target))
+      })
+      .run({ 'async': false })
+  })
+
+  it('writes (compiled)', function () {
+    const suite = new Benchmark.Suite()
+    suite.add('writes (compiled)', function () {
+      compiledProto.createPacketBuffer(type, value)
+    })
+      .on('cycle', function (event) {
+        console.log(String(event.target))
+      })
+      .run({ 'async': false })
+  })
+  it('reads (compiled)', function () {
+    const suite = new Benchmark.Suite()
+    suite.add('read (compiled)', function () {
+      compiledProto.parsePacketBuffer(type, buffer)
     })
       .on('cycle', function (event) {
         console.log(String(event.target))

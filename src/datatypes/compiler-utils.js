@@ -111,9 +111,7 @@ module.exports = {
         }
       }
       if (bits !== 0) {
-        code += 'buffer[offset++] = ' + toWrite + ' << ' + (8 - bits) + '\n'
-        bits = 0
-        toWrite = ''
+        code += 'buffer[offset++] = (' + toWrite + ') << ' + (8 - bits) + '\n'
       }
       code += 'return offset'
       return compiler.wrapCode(code)

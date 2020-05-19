@@ -59,6 +59,8 @@ testData.forEach(tests => {
   })
 })
 
-module.exports.compiledProto = compiler.compileProtoDefSync()
-module.exports.testData = testData
-module.exports.proto = proto
+module.exports = {
+  testData,
+  proto,
+  compiledProto: compiler.compileProtoDefSync()
+}
