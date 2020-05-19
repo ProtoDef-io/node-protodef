@@ -36,9 +36,7 @@ module.exports = {
     }],
     'bitfield': ['parametrizable', (compiler, values) => {
       let code = ''
-      const totalBits = values.reduce((acc, { size }) => acc + size, 0)
-      if (totalBits % 8 !== 0) throw new Error('Bitfield: The sum of the sizes must be a multiple of 8')
-      const totalBytes = totalBits / 8
+      const totalBytes = Math.ceil(values.reduce((acc, { size }) => acc + size, 0) / 8)
       code += `if ( offset + ${totalBytes} > buffer.length) { throw new PartialReadError() }\n`
 
       let names = []
@@ -112,6 +110,11 @@ module.exports = {
           }
         }
       }
+      if (bits !== 0) {
+        code += 'buffer[offset++] = ' + toWrite + ' << ' + (8 - bits) + '\n'
+        bits = 0
+        toWrite = ''
+      }
       code += 'return offset'
       return compiler.wrapCode(code)
     }],
@@ -144,9 +147,7 @@ module.exports = {
       return compiler.wrapCode(code)
     }],
     'bitfield': ['parametrizable', (compiler, values) => {
-      const totalBits = values.reduce((acc, { size }) => acc + size, 0)
-      if (totalBits % 8 !== 0) throw new Error('Bitfield: The sum of the sizes must be a multiple of 8')
-      const totalBytes = totalBits / 8
+      const totalBytes = Math.ceil(values.reduce((acc, { size }) => acc + size, 0) / 8)
       return `${totalBytes}`
     }],
     'mapper': ['parametrizable', (compiler, mapper) => {

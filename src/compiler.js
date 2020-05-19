@@ -174,6 +174,7 @@ class Compiler {
   addNativeType (type, fn) {
     this.primitiveTypes[type] = `native.${type}`
     this.native[type] = fn
+    this.types[type] = 'native'
   }
 
   /**
@@ -419,6 +420,7 @@ class SizeOfCompiler extends Compiler {
     } else {
       this.native[type] = fn
     }
+    this.types[type] = 'native'
   }
 
   compileType (type) {
