@@ -47,7 +47,7 @@ module.exports = {
       return compiler.wrapCode(code, args)
     }],
     'option': ['parametrizable', (compiler, type) => {
-      let code = 'if (value !== null) {\n'
+      let code = 'if (value != null) {\n'
       code += '  offset = ctx.bool(1, buffer, offset)\n'
       code += '  offset = ' + compiler.callType('value', type) + '\n'
       code += '} else {\n'
@@ -77,10 +77,10 @@ module.exports = {
       return compiler.wrapCode(code, args)
     }],
     'option': ['parametrizable', (compiler, type) => {
-      let code = 'if (value !== null) {\n'
+      let code = 'if (value != null) {\n'
       code += '  return 1 + ' + compiler.callType('value', type) + '\n'
       code += '}\n'
-      code += 'return 0'
+      code += 'return 1'
       return compiler.wrapCode(code)
     }]
   }
