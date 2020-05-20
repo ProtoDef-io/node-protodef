@@ -1,5 +1,9 @@
 # History
 
+## 1.7.1
+
+* fix option in compiler
+
 ## 1.7.0
 
 * Add js compiler protodef implementation, that is 10x faster (thanks @Karang for this huge improvement !)
