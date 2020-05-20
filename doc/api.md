@@ -66,6 +66,28 @@ Returns a parsed packet of `buffer`.
 
 An object mapping the default type names to the corresponding `[read,write,sizeOf]` functions.
 
+## ProtoDefCompiler
+
+### ProtoDefCompiler.addTypes(types)
+
+Add `types` which is an object with keys the name of the types and values the type definitions.
+
+### ProtoDefCompiler.addProtocol(protocol,path)
+
+Add types in `protocol` recursively. The protocol object is an object with keys `types` and namespace keys.
+* The value of the `types` key is an object of type name to type definition.
+* The value of the namespace key is a protocol object.
+
+The `path` is an array of namespace keys which select a path of namespaces to be added to the protodef object.
+
+### ProtoDefCompiler.compileProtoDefSync(options = { printCode: false })
+
+Compile and return a `ProtoDef` object, optionaly print the generated javascript code.
+
+### ProtoDefCompiler.compileProtoDef(options = { optimize: false, printCode: false, printOptimizedCode: false })
+
+Async function, returns a promise. Compile and return a `ProtoDef` object, optionaly print the generated javascript code. When `optimize = true`, use closure-compiler to optimize the generated code.
+
 ## utils
 
 Some functions that can be useful to build new datatypes reader and writer.

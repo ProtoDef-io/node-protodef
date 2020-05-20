@@ -26,6 +26,7 @@ See [example](example.js)
 See the language independent [ProtoDef](https://github.com/ProtoDef-io/ProtoDef) specification.
 
 * [api.md](doc/api.md) documents the exposed functions and classes
+* [compiler.md](doc/compiler.md) documents the ProtoDef Compiler
 * [datatypes.md](https://github.com/ProtoDef-io/ProtoDef/blob/master/doc/datatypes.md) documents the default datatypes provided by Protodef.
 * [newDatatypes.md](doc/newDatatypes.md) explains how to create new datatypes for protodef
 * [history.md](doc/history.md) is the releases history

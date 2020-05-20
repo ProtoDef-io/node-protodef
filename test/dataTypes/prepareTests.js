@@ -1,6 +1,8 @@
 const ProtoDef = require('protodef').ProtoDef
+const { ProtoDefCompiler } = require('protodef').Compiler
 
 const proto = new ProtoDef()
+const compiler = new ProtoDefCompiler()
 
 const testData = [
   {
@@ -41,6 +43,9 @@ testData.forEach(tests => {
       test.subtypes.forEach((subtype, i) => {
         const type = test.type + '_' + i
         proto.addType(type, subtype.type)
+        let types = {}
+        types[type] = subtype.type
+        compiler.addTypesToCompile(types)
 
         subtype.values = transformValues(test.type, subtype.values)
         subtype.type = type
@@ -54,5 +59,8 @@ testData.forEach(tests => {
   })
 })
 
-module.exports.testData = testData
-module.exports.proto = proto
+module.exports = {
+  testData,
+  proto,
+  compiledProto: compiler.compileProtoDefSync()
+}

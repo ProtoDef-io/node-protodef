@@ -5,8 +5,7 @@ const Validator = require('jsonschema').Validator
 const v = new Validator()
 const assert = require('assert')
 
-const testData = require('./prepareTests').testData
-const proto = require('./prepareTests').proto
+const { testData, proto, compiledProto } = require('./prepareTests')
 
 function testValue (type, value, buffer) {
   it('writes', function () {
@@ -14,6 +13,14 @@ function testValue (type, value, buffer) {
   })
   it('reads', function () {
     const actualResult = proto.parsePacketBuffer(type, buffer)
+    if (value === null) { assert.ok(actualResult.data === undefined) } else { expect(actualResult.data).to.deep.equal(value) }
+    expect(actualResult.metadata.size).to.deep.equal(buffer.length)
+  })
+  it('writes (compiled)', function () {
+    expect(compiledProto.createPacketBuffer(type, value)).to.deep.equal(buffer)
+  })
+  it('reads (compiled)', function () {
+    const actualResult = compiledProto.parsePacketBuffer(type, buffer)
     if (value === null) { assert.ok(actualResult.data === undefined) } else { expect(actualResult.data).to.deep.equal(value) }
     expect(actualResult.metadata.size).to.deep.equal(buffer.length)
   })
@@ -36,6 +43,16 @@ function testType (type, values) {
     it('reads 0 bytes and throw a PartialReadError', () => {
       try {
         proto.parsePacketBuffer(type, Buffer.alloc(0))
+      } catch (e) {
+        if (!e.partialReadError) { throw e }
+        return
+      }
+      throw Error('no PartialReadError thrown')
+    })
+
+    it('reads 0 bytes and throw a PartialReadError (compiled)', () => {
+      try {
+        compiledProto.parsePacketBuffer(type, Buffer.alloc(0))
       } catch (e) {
         if (!e.partialReadError) { throw e }
         return
