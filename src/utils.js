@@ -1,35 +1,47 @@
 function getField (countField, context) {
-  const countFieldArr = countField.split('/')
-  let i = 0
-  if (countFieldArr[i] === '') {
-    while (context.hasOwnProperty('..')) { context = context['..'] }
-    i++
+  if (countField.startsWith('/')) {
+    while (context.hasOwnProperty('..')) {
+      context = context['..']
+    }
+    countField = countField.slice(1)
   }
-  for (; i < countFieldArr.length; i++) { context = context[countFieldArr[i]] }
+  const countFieldArr = countField.split('/')
+  for (const field of countFieldArr) {
+    context = context[field]
+  }
   return context
 }
 
 function getFieldInfo (fieldInfo) {
-  if (typeof fieldInfo === 'string') { return { type: fieldInfo } } else if (Array.isArray(fieldInfo)) { return { type: fieldInfo[0], typeArgs: fieldInfo[1] } } else if (typeof fieldInfo.type === 'string') { return fieldInfo } else { throw new Error('Not a fieldinfo') }
+  switch (true) {
+    case typeof fieldInfo === 'string':
+      return { type: fieldInfo }
+    case Array.isArray(fieldInfo):
+      return { type: fieldInfo[0], typeArgs: fieldInfo[1] }
+    case typeof fieldInfo.type === 'string':
+      return fieldInfo
+    default:
+      throw new Error('Not a fieldinfo')
+  }
 }
 
 function getCount (buffer, offset, { count, countType }, rootNode) {
-  let c = 0
-  let size = 0
-  if (typeof count === 'number') { c = count } else if (typeof count !== 'undefined') {
-    c = getField(count, rootNode)
-  } else if (typeof countType !== 'undefined') {
-    ({ size, value: c } = tryDoc(() => this.read(buffer, offset, getFieldInfo(countType), rootNode), '$count'))
-  } else { // TODO : broken schema, should probably error out.
-    c = 0
+  if (count !== undefined) {
+    count = typeof count === 'number' ? count : getField(count, rootNode)
+    return { count, size: 0 }
   }
-  return { count: c, size }
+  if (countType !== undefined) {
+    const { size, value } = tryDoc(() => this.read(buffer, offset, getFieldInfo(countType), rootNode), '$count')
+    return { count: value, size }
+  }
+  // TODO : broken schema, should probably error out.
+  return { count: 0, size: 0 }
 }
 
 function sendCount (len, buffer, offset, { count, countType }, rootNode) {
-  if (typeof count !== 'undefined' && len !== count) {
+  if (count !== undefined && len !== count) {
     // TODO: Throw
-  } else if (typeof countType !== 'undefined') {
+  } else if (countType !== undefined) {
     offset = this.write(len, buffer, offset, getFieldInfo(countType), rootNode)
   } else {
     // TODO: Throw
@@ -38,12 +50,10 @@ function sendCount (len, buffer, offset, { count, countType }, rootNode) {
 }
 
 function calcCount (len, { count, countType }, rootNode) {
-  if (typeof count === 'undefined' && typeof countType !== 'undefined') { return tryDoc(() => this.sizeOf(len, getFieldInfo(countType), rootNode), '$count') } else { return 0 }
-}
-
-function addErrorField (e, field) {
-  e.field = e.field ? field + '.' + e.field : field
-  throw e
+  if (count === undefined && countType !== undefined) {
+    return tryDoc(() => this.sizeOf(len, getFieldInfo(countType), rootNode), '$count')
+  }
+  return 0
 }
 
 function tryCatch (tryfn, catchfn) {
@@ -51,7 +61,10 @@ function tryCatch (tryfn, catchfn) {
 }
 
 function tryDoc (tryfn, field) {
-  return tryCatch(tryfn, (e) => addErrorField(e, field))
+  return tryCatch(tryfn, e => {
+    e.field = e.field ? `${field}.${e.field}` : field
+    throw e
+  })
 }
 
 class ExtendableError extends Error {
@@ -73,13 +86,12 @@ class PartialReadError extends ExtendableError {
 }
 
 module.exports = {
-  getField: getField,
-  getFieldInfo: getFieldInfo,
-  addErrorField: addErrorField,
-  getCount: getCount,
-  sendCount: sendCount,
-  calcCount: calcCount,
-  tryCatch: tryCatch,
-  tryDoc: tryDoc,
-  PartialReadError: PartialReadError
+  getField,
+  getFieldInfo,
+  getCount,
+  sendCount,
+  calcCount,
+  tryCatch,
+  tryDoc,
+  PartialReadError
 }

@@ -1,104 +1,63 @@
-const assert = require('assert')
-
 const { getCount, sendCount, calcCount, PartialReadError } = require('../utils')
-
-module.exports = {
-  'varint': [readVarInt, writeVarInt, sizeOfVarInt, require('../../ProtoDef/schemas/utils.json')['varint']],
-  'bool': [readBool, writeBool, 1, require('../../ProtoDef/schemas/utils.json')['bool']],
-  'pstring': [readPString, writePString, sizeOfPString, require('../../ProtoDef/schemas/utils.json')['pstring']],
-  'buffer': [readBuffer, writeBuffer, sizeOfBuffer, require('../../ProtoDef/schemas/utils.json')['buffer']],
-  'void': [readVoid, writeVoid, 0, require('../../ProtoDef/schemas/utils.json')['void']],
-  'bitfield': [readBitField, writeBitField, sizeOfBitField, require('../../ProtoDef/schemas/utils.json')['bitfield']],
-  'cstring': [readCString, writeCString, sizeOfCString, require('../../ProtoDef/schemas/utils.json')['cstring']],
-  'mapper': [readMapper, writeMapper, sizeOfMapper, require('../../ProtoDef/schemas/utils.json')['mapper']]
-}
-
-function mapperEquality (a, b) {
-  return a === b || parseInt(a) === parseInt(b)
-}
 
 function readMapper (buffer, offset, { type, mappings }, rootNode) {
   const { size, value } = this.read(buffer, offset, type, rootNode)
-  let mappedValue = null
-  const keys = Object.keys(mappings)
-  for (let i = 0; i < keys.length; i++) {
-    if (mapperEquality(keys[i], value)) {
-      mappedValue = mappings[keys[i]]
-      break
+  for (const key in mappings) {
+    if (key === value || +key === +value) {
+      return { value: mappings[key], size }
     }
   }
-  if (mappedValue == null) throw new Error(value + ' is not in the mappings value')
-  return {
-    size: size,
-    value: mappedValue
-  }
+  throw new Error(`${typeof value} "${value}" is not in the mappings value`)
 }
 
 function writeMapper (value, buffer, offset, { type, mappings }, rootNode) {
-  const keys = Object.keys(mappings)
-  let mappedValue = null
-  for (let i = 0; i < keys.length; i++) {
-    if (mapperEquality(mappings[keys[i]], value)) {
-      mappedValue = keys[i]
-      break
+  for (const key in mappings) {
+    const writeValue = mappings[key]
+    if (writeValue === value || +writeValue === +value) {
+      return this.write(key, buffer, offset, type, rootNode)
     }
   }
-  if (mappedValue == null) throw new Error(value + ' is not in the mappings value')
-  return this.write(mappedValue, buffer, offset, type, rootNode)
+  throw new Error(`${value} is not in the mappings value`)
 }
 
 function sizeOfMapper (value, { type, mappings }, rootNode) {
-  const keys = Object.keys(mappings)
-  let mappedValue = null
-  for (let i = 0; i < keys.length; i++) {
-    if (mapperEquality(mappings[keys[i]], value)) {
-      mappedValue = keys[i]
-      break
+  for (const key in mappings) {
+    const sizeValue = mappings[key]
+    if (sizeValue === value || +sizeValue === +value) {
+      return this.sizeOf(key, type, rootNode)
     }
   }
-  if (mappedValue == null) throw new Error(value + ' is not in the mappings value')
-  return this.sizeOf(mappedValue, type, rootNode)
+  throw new Error(`${value} is not in the mappings value`)
 }
 
 function readVarInt (buffer, offset) {
-  let result = 0
-  let shift = 0
-  let cursor = offset
-
+  let value = 0
+  let size = 0
   while (true) {
-    if (cursor + 1 > buffer.length) { throw new PartialReadError() }
-    const b = buffer.readUInt8(cursor)
-    result |= ((b & 0x7f) << shift) // Add the bits to our number, except MSB
-    cursor++
-    if (!(b & 0x80)) { // If the MSB is not set, we return the number
-      return {
-        value: result,
-        size: cursor - offset
-      }
-    }
-    shift += 7 // we only have 7 bits, MSB being the return-trigger
-    assert.ok(shift < 64, 'varint is too big') // Make sure our shift don't overflow.
+    const v = buffer[offset + size]
+    value |= (v & 0x7F) << (size++ * 7)
+    if ((v & 0x80) === 0) break
   }
+  if (offset + size > buffer.length) throw new PartialReadError()
+  return { value, size }
 }
 
 function sizeOfVarInt (value) {
-  let cursor = 0
+  let size = 1
   while (value & ~0x7F) {
+    size++
     value >>>= 7
-    cursor++
   }
-  return cursor + 1
+  return size
 }
 
 function writeVarInt (value, buffer, offset) {
-  let cursor = 0
   while (value & ~0x7F) {
-    buffer.writeUInt8((value & 0xFF) | 0x80, offset + cursor)
-    cursor++
+    buffer[offset++] = (value & 0xFF) | 0x80
     value >>>= 7
   }
-  buffer.writeUInt8(value, offset + cursor)
-  return offset + cursor + 1
+  buffer[offset++] = value | 0
+  return offset
 }
 
 function readPString (buffer, offset, typeArgs, rootNode) {
@@ -106,13 +65,12 @@ function readPString (buffer, offset, typeArgs, rootNode) {
   const cursor = offset + size
   const strEnd = cursor + count
   if (strEnd > buffer.length) {
-    throw new PartialReadError('Missing characters in string, found size is ' + buffer.length +
-    ' expected size was ' + strEnd)
+    throw new PartialReadError('Missing characters in string, found size is ' +
+    buffer.length + ' expected size was ' + strEnd)
   }
-
   return {
     value: buffer.toString('utf8', cursor, strEnd),
-    size: strEnd - offset
+    size: size + count
   }
 }
 
@@ -130,17 +88,16 @@ function sizeOfPString (value, typeArgs, rootNode) {
 }
 
 function readBool (buffer, offset) {
-  if (offset + 1 > buffer.length) throw new PartialReadError()
-  const value = buffer.readInt8(offset)
+  if (buffer.length <= offset) throw new PartialReadError()
   return {
-    value: !!value,
+    value: buffer[offset] === 1,
     size: 1
   }
 }
 
 function writeBool (value, buffer, offset) {
-  buffer.writeInt8(+value, offset)
-  return offset + 1
+  buffer.writeUInt8(value & 1, offset++)
+  return offset
 }
 
 function readBuffer (buffer, offset, typeArgs, rootNode) {
@@ -155,13 +112,11 @@ function readBuffer (buffer, offset, typeArgs, rootNode) {
 
 function writeBuffer (value, buffer, offset, typeArgs, rootNode) {
   offset = sendCount.call(this, value.length, buffer, offset, typeArgs, rootNode)
-  value.copy(buffer, offset)
-  return offset + value.length
+  return offset + value.copy(buffer, offset)
 }
 
 function sizeOfBuffer (value, typeArgs, rootNode) {
-  const size = calcCount.call(this, value.length, typeArgs, rootNode)
-  return size + value.length
+  return calcCount.call(this, value.length, typeArgs, rootNode) + value.length
 }
 
 function readVoid () {
@@ -230,31 +185,37 @@ function writeBitField (value, buffer, offset, typeArgs) {
 }
 
 function sizeOfBitField (value, typeArgs) {
-  return Math.ceil(typeArgs.reduce((acc, { size }) => {
-    return acc + size
-  }, 0) / 8)
+  let i = 0
+  for (const { size } of typeArgs) { i += size }
+  return Math.ceil(i / 8)
 }
 
 function readCString (buffer, offset) {
-  let size = 0
-  while (offset + size < buffer.length && buffer[offset + size] !== 0x00) { size++ }
-  if (buffer.length < offset + size + 1) { throw new PartialReadError() }
-
+  const index = buffer.indexOf(0x00)
+  if (index === -1) throw new PartialReadError()
   return {
-    value: buffer.toString('utf8', offset, offset + size),
-    size: size + 1
+    value: buffer.toString('utf8', offset, index),
+    size: index - offset + 1
   }
 }
 
 function writeCString (value, buffer, offset) {
   const length = Buffer.byteLength(value, 'utf8')
   buffer.write(value, offset, length, 'utf8')
-  offset += length
-  buffer.writeInt8(0x00, offset)
-  return offset + 1
+  return buffer.writeInt8(0x00, offset + length)
 }
 
 function sizeOfCString (value) {
-  const length = Buffer.byteLength(value, 'utf8')
-  return length + 1
+  return Buffer.byteLength(value, 'utf8') + 1
+}
+
+module.exports = {
+  'varint': [readVarInt, writeVarInt, sizeOfVarInt, require('../../ProtoDef/schemas/utils.json')['varint']],
+  'bool': [readBool, writeBool, 1, require('../../ProtoDef/schemas/utils.json')['bool']],
+  'pstring': [readPString, writePString, sizeOfPString, require('../../ProtoDef/schemas/utils.json')['pstring']],
+  'buffer': [readBuffer, writeBuffer, sizeOfBuffer, require('../../ProtoDef/schemas/utils.json')['buffer']],
+  'void': [readVoid, writeVoid, 0, require('../../ProtoDef/schemas/utils.json')['void']],
+  'bitfield': [readBitField, writeBitField, sizeOfBitField, require('../../ProtoDef/schemas/utils.json')['bitfield']],
+  'cstring': [readCString, writeCString, sizeOfCString, require('../../ProtoDef/schemas/utils.json')['cstring']],
+  'mapper': [readMapper, writeMapper, sizeOfMapper, require('../../ProtoDef/schemas/utils.json')['mapper']]
 }
