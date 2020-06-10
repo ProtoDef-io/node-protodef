@@ -15,7 +15,6 @@
   "tonicExampleFilename": "example.js",
   "license": "MIT",
   "dependencies": {
-    "google-closure-compiler": "^20200504.0.0",
     "lodash.get": "^4.4.2",
     "lodash.reduce": "^4.6.0",
     "protodef-validator": "^1.2.2",
