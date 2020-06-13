@@ -1,64 +1,16 @@
-const { getFieldInfo, tryCatch } = require('./utils')
+const { getFieldInfo, isFieldInfo, tryCatch } = require('./utils')
 const reduce = require('lodash.reduce')
 const get = require('lodash.get')
 const Validator = require('protodef-validator')
 const defaultDatatypes = require('./datatypes/interpreter')
 
-function isFieldInfo (type) {
-  return typeof type === 'string' ||
-    (Array.isArray(type) && typeof type[0] === 'string') ||
-    type.type
-}
-
-function findArgs (acc, v, k) {
-  if (typeof v === 'string' && v.charAt(0) === '$') {
-    acc.push({ path: k, val: v.substr(1) })
-  } else if (Array.isArray(v) || typeof v === 'object') {
-    acc = acc.concat(reduce(v, findArgs, []).map((v) => ({ path: `${k}.${v.path}`, val: v.val })))
-  }
-  return acc
-}
-
-function setField (path, val, into) {
-  const c = path.split('.').reverse()
-  while (c.length > 1) {
-    into = into[c.pop()]
-  }
-  into[c.pop()] = val
-}
-
-function extendType (functions, defaultTypeArgs) {
-  const argPos = reduce(defaultTypeArgs, findArgs, [])
-  const produceArgs = typeof defaultTypeArgs === 'object'
-    ? function produceArgsObject (typeArgs) {
-      const args = Object.assign(defaultTypeArgs.constructor(), defaultTypeArgs)
-      argPos.forEach(v => setField(v.path, typeArgs[v.val], args))
-      return args
-    }
-    : function produceArgsPrimitive () { return defaultTypeArgs }
-  function read (buffer, offset, typeArgs, context) {
-    return functions[0].call(this, buffer, offset, produceArgs(typeArgs), context)
-  }
-  function write (value, buffer, offset, typeArgs, context) {
-    return functions[1].call(this, value, buffer, offset, produceArgs(typeArgs), context)
-  }
-  function sizeOf (value, typeArgs, context) {
-    if (typeof functions[2] === 'function') {
-      return functions[2].call(this, value, produceArgs(typeArgs), context)
-    }
-    return functions[2]
-  }
-  return [read, write, sizeOf]
-}
+// FIXME: Increases performance but introduces unexpected bugs in future
+const DATATYPE_NOCOPY = true
 
 class ProtoDef {
   constructor (validation = true) {
-    this.types = {}
     this.validator = validation ? new Validator() : null
-    this.addDefaultTypes()
-  }
-
-  addDefaultTypes () {
+    this.clearTypes()
     this.addTypes(defaultDatatypes)
   }
 
@@ -99,15 +51,18 @@ class ProtoDef {
     }
   }
 
+  removeType (name) {
+    delete this.types[name]
+  }
+
   addTypes (types) {
-    Object.keys(types).forEach((name) => this.addType(name, types[name], false))
-    if (this.validator) {
-      Object.keys(types).forEach((name) => {
-        if (isFieldInfo(types[name])) {
-          this.validator.validateType(types[name])
-        }
-      })
+    for (const name in types) {
+      this.addType(name, types[name], this.validator)
     }
+  }
+
+  clearTypes () {
+    this.types = {}
   }
 
   read (buffer, cursor, _fieldInfo, rootNodes) {
@@ -164,6 +119,47 @@ class ProtoDef {
       buffer: buffer.slice(0, size)
     }
   }
+}
+
+function findArgs (acc, v, k) {
+  if (typeof v === 'string' && v.charAt(0) === '$') {
+    acc.push({ path: k, val: v.substr(1) })
+  } else if (Array.isArray(v) || typeof v === 'object') {
+    acc = acc.concat(reduce(v, findArgs, []).map((v) => ({ path: `${k}.${v.path}`, val: v.val })))
+  }
+  return acc
+}
+
+function extendType (functions, defaultTypeArgs) {
+  const argPos = reduce(defaultTypeArgs, findArgs, [])
+  const produceArgs = !DATATYPE_NOCOPY && typeof defaultTypeArgs === 'object'
+    ? function produceArgsObject (typeArgs) {
+      const args = Object.assign(defaultTypeArgs.constructor(), defaultTypeArgs)
+      argPos.forEach(({ path, val }) => {
+        // Set field
+        const c = path.split('.').reverse()
+        let into = args
+        while (c.length > 1) {
+          into = into[c.pop()]
+        }
+        into[c.pop()] = typeArgs[val]
+      })
+      return args
+    }
+    : function produceArgsPrimitive () { return defaultTypeArgs }
+  function read (buffer, offset, typeArgs, context) {
+    return functions[0].call(this, buffer, offset, produceArgs(typeArgs), context)
+  }
+  function write (value, buffer, offset, typeArgs, context) {
+    return functions[1].call(this, value, buffer, offset, produceArgs(typeArgs), context)
+  }
+  function sizeOf (value, typeArgs, context) {
+    if (typeof functions[2] === 'function') {
+      return functions[2].call(this, value, produceArgs(typeArgs), context)
+    }
+    return functions[2]
+  }
+  return [read, write, sizeOf]
 }
 
 module.exports = ProtoDef

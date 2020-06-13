@@ -110,19 +110,72 @@ class CompiledProtodef {
 
 class Compiler {
   constructor () {
+    this.scopeStack = []
+    this.clearTypes()
+  }
+
+  /**
+   * See `addNativeType` / `addContextType` / `addParametrizableType`
+   * @param {String} name
+   * @param {Function} fn
+   * @param {*} kind
+   */
+  addType (name, fn, kind = NATIVE) {
+    switch (kind) {
+      case NATIVE:
+        this.addNativeType(name, fn); break
+      case CONTEXT:
+        this.addContextType(name, fn); break
+      case PARAMETRIZABLE:
+        this.addParametrizableType(name, fn); break
+      default:
+        throw new Error('Unknown datatype kind ' + kind)
+    }
+  }
+
+  /**
+   * @param {String} name
+   * @param {Function} fn
+   * @param {*} kind
+   */
+  removeType (name, fn, kind = NATIVE) {
+    switch (kind) {
+      case NATIVE:
+        delete this.primitiveTypes[name]
+        delete this.native[name]
+        delete this.types[name]
+        break
+      case CONTEXT:
+        delete this.primitiveTypes[name]
+        delete this.context[name]
+        break
+      case PARAMETRIZABLE:
+        delete this.parameterizableTypes[name]
+        break
+      default:
+        throw new Error('Unknown datatype kind ' + kind)
+    }
+  }
+
+  addTypes (types) {
+    for (const [type, [kind, fn]] of Object.entries(types)) {
+      this.addType(type, fn, kind)
+    }
+  }
+
+  clearTypes () {
     this.primitiveTypes = {}
     this.native = {}
     this.context = {}
     this.types = {}
-    this.scopeStack = []
     this.parameterizableTypes = {}
   }
 
   /**
    * A native type is a type read or written by a function that will be called in it's
    * original context.
-   * @param {*} type
-   * @param {*} fn
+   * @param {String} type
+   * @param {Function} fn
    */
   addNativeType (type, fn) {
     this.primitiveTypes[type] = `native.${type}`
@@ -134,8 +187,8 @@ class Compiler {
    * A context type is a type that will be called in the protocol's context. It can refer to
    * registred native types using native.{type}() or context type (provided and generated)
    * using ctx.{type}(), but cannot access it's original context.
-   * @param {*} type
-   * @param {*} fn
+   * @param {String} type
+   * @param {Function} fn
    */
   addContextType (type, fn) {
     this.primitiveTypes[type] = `ctx.${type}`
@@ -145,24 +198,11 @@ class Compiler {
   /**
    * A parametrizable type is a function that will be generated at compile time using the
    * provided maker function
-   * @param {*} type
-   * @param {*} maker
+   * @param {String} type
+   * @param {Function} maker
    */
   addParametrizableType (type, maker) {
     this.parameterizableTypes[type] = maker
-  }
-
-  addTypes (types) {
-    for (const [type, [kind, fn]] of Object.entries(types)) {
-      switch (kind) {
-        case NATIVE:
-          this.addNativeType(type, fn); break
-        case CONTEXT:
-          this.addContextType(type, fn); break
-        case PARAMETRIZABLE:
-          this.addParametrizableType(type, fn); break
-      }
-    }
   }
 
   addTypesToCompile (types) {
@@ -182,10 +222,17 @@ class Compiler {
     recursiveAddTypes(protocolData, path.slice(0))
   }
 
+  /**
+   * @param {String} code
+   * @param {String} indent
+   */
   indent (code, indent = '  ') {
-    return code.split('\n').map((line) => indent + line).join('\n')
+    return code.split('\n').map(line => indent + line).join('\n')
   }
 
+  /**
+   * @param {String} name Slash-separated field name
+   */
   getField (name) {
     let path = name.split('/')
     let i = this.scopeStack.length - 1
@@ -214,6 +261,10 @@ class Compiler {
     throw new Error('Unknown field ' + path)
   }
 
+  /**
+   * Generates code to eval
+   * @private
+   */
   generate () {
     this.scopeStack = [{}]
     let functions = []
@@ -238,7 +289,7 @@ class Compiler {
 
   /**
    * Compile the given js code, providing native.{type} to the context, return the compiled types
-   * @param {*} code
+   * @param {String} code
    */
   compile (code) {
     // Local variable to provide some context to eval()

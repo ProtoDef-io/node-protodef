@@ -1,3 +1,40 @@
+const Enum = Object.freeze({
+  CompilerTypeKind: {
+    NATIVE: 'native',
+    CONTEXT: 'context',
+    PARAMETRIZABLE: 'parametrizable'
+  }
+})
+
+class ExtendableError extends Error {
+  constructor (message) {
+    super(message)
+    this.name = this.constructor.name
+    this.message = message
+    if (Error.captureStackTrace != null) {
+      Error.captureStackTrace(this, this.constructor.name)
+    }
+  }
+}
+
+class PartialReadError extends ExtendableError {
+  constructor (message) {
+    super(message)
+    this.partialReadError = true
+  }
+}
+
+function tryCatch (tryfn, catchfn) {
+  try { return tryfn() } catch (e) { catchfn(e) }
+}
+
+function tryDoc (tryfn, field) {
+  return tryCatch(tryfn, e => {
+    e.field = e.field ? `${field}.${e.field}` : field
+    throw e
+  })
+}
+
 function getField (countField, context) {
   if (countField.startsWith('/')) {
     while (context.hasOwnProperty('..')) {
@@ -21,8 +58,14 @@ function getFieldInfo (fieldInfo) {
     case typeof fieldInfo.type === 'string':
       return fieldInfo
     default:
-      throw new Error('Not a fieldinfo')
+      throw new Error(fieldInfo + ' is not a fieldinfo')
   }
+}
+
+function isFieldInfo (type) {
+  return typeof type === 'string' ||
+    (Array.isArray(type) && typeof type[0] === 'string') ||
+    type.type
 }
 
 function getCount (buffer, offset, { count, countType }, rootNode) {
@@ -34,19 +77,20 @@ function getCount (buffer, offset, { count, countType }, rootNode) {
     const { size, value } = tryDoc(() => this.read(buffer, offset, getFieldInfo(countType), rootNode), '$count')
     return { count: value, size }
   }
-  // TODO : broken schema, should probably error out.
-  return { count: 0, size: 0 }
+  throw new Error('Broken schema, neither count nor countType defined')
 }
 
 function sendCount (len, buffer, offset, { count, countType }, rootNode) {
-  if (count !== undefined && len !== count) {
-    // TODO: Throw
-  } else if (countType !== undefined) {
-    offset = this.write(len, buffer, offset, getFieldInfo(countType), rootNode)
-  } else {
-    // TODO: Throw
+  if (count !== undefined) {
+    if (typeof count === 'number' && len !== count) {
+      throw new Error('Datatype length is not equal to count defined in schema')
+    }
+    return offset
   }
-  return offset
+  if (countType !== undefined) {
+    return this.write(len, buffer, offset, getFieldInfo(countType), rootNode)
+  }
+  throw new Error('Broken schema, neither count nor countType defined')
 }
 
 function calcCount (len, { count, countType }, rootNode) {
@@ -56,51 +100,15 @@ function calcCount (len, { count, countType }, rootNode) {
   return 0
 }
 
-function tryCatch (tryfn, catchfn) {
-  try { return tryfn() } catch (e) { catchfn(e) }
-}
-
-function tryDoc (tryfn, field) {
-  return tryCatch(tryfn, e => {
-    e.field = e.field ? `${field}.${e.field}` : field
-    throw e
-  })
-}
-
-class ExtendableError extends Error {
-  constructor (message) {
-    super(message)
-    this.name = this.constructor.name
-    this.message = message
-    if (Error.captureStackTrace != null) {
-      Error.captureStackTrace(this, this.constructor.name)
-    }
-  }
-}
-
-class PartialReadError extends ExtendableError {
-  constructor (message) {
-    super(message)
-    this.partialReadError = true
-  }
-}
-
-const Enum = Object.freeze({
-  CompilerTypeKind: {
-    NATIVE: 'native',
-    CONTEXT: 'context',
-    PARAMETRIZABLE: 'parametrizable'
-  }
-})
-
 module.exports = {
-  getField,
-  getFieldInfo,
-  getCount,
-  sendCount,
-  calcCount,
+  Enum,
+  PartialReadError,
   tryCatch,
   tryDoc,
-  PartialReadError,
-  Enum
+  getField,
+  getFieldInfo,
+  isFieldInfo,
+  getCount,
+  sendCount,
+  calcCount
 }

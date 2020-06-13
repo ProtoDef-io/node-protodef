@@ -40,8 +40,7 @@ function readBool (buffer, offset) {
 }
 
 function writeBool (value, buffer, offset) {
-  buffer.writeUInt8(value & 1, offset++)
-  return offset
+  return buffer.writeUInt8(value & 1, offset)
 }
 
 function readVoid () {

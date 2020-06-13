@@ -82,11 +82,11 @@ function generateBitMask (n) {
 }
 
 function readBitField (buffer, offset, typeArgs) {
+  const value = {}
   const beginOffset = offset
   let curVal = null
   let bits = 0
-  const results = {}
-  results.value = typeArgs.reduce((acc, { size, signed, name }) => {
+  for (const { size, signed, name } of typeArgs) {
     let currentSize = size
     let val = 0
     while (currentSize > 0) {
@@ -101,19 +101,23 @@ function readBitField (buffer, offset, typeArgs) {
       currentSize -= bitsToRead
     }
     if (signed && val >= 1 << (size - 1)) { val -= 1 << size }
-    acc[name] = val
-    return acc
-  }, {})
-  results.size = offset - beginOffset
-  return results
+    value[name] = val
+  }
+  return {
+    value,
+    size: offset - beginOffset
+  }
 }
+
 function writeBitField (value, buffer, offset, typeArgs) {
   let toWrite = 0
   let bits = 0
-  typeArgs.forEach(({ size, signed, name }) => {
+  for (let { size, signed, name } of typeArgs) {
     const val = value[name]
-    if ((!signed && val < 0) || (signed && val < -(1 << (size - 1)))) { throw new Error(value + ' < ' + signed ? (-(1 << (size - 1))) : 0) } else if ((!signed && val >= 1 << size) ||
-        (signed && val >= (1 << (size - 1)) - 1)) { throw new Error(value + ' >= ' + signed ? (1 << size) : ((1 << (size - 1)) - 1)) }
+    const min = +signed && -(1 << (size - 1))
+    const max = (1 << (size - signed)) - signed
+    if (value < min) { throw new Error(value + ' < ' + min) }
+    if (val >= max) { throw new Error(value + ' >= ' + max) }
     while (size > 0) {
       const writeBits = Math.min(8 - bits, size)
       toWrite = toWrite << writeBits |
@@ -126,8 +130,10 @@ function writeBitField (value, buffer, offset, typeArgs) {
         toWrite = 0
       }
     }
-  })
-  if (bits !== 0) { buffer[offset++] = toWrite << (8 - bits) }
+  }
+  if (bits !== 0) {
+    buffer[offset++] = toWrite << (8 - bits)
+  }
   return offset
 }
 
