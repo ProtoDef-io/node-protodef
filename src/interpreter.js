@@ -4,9 +4,6 @@ const get = require('lodash.get')
 const Validator = require('protodef-validator')
 const defaultDatatypes = require('./datatypes/interpreter')
 
-// FIXME: Increases performance but introduces unexpected bugs in future
-const DATATYPE_NOCOPY = true
-
 class ProtoDef {
   constructor (validation = true) {
     this.validator = validation ? new Validator() : null
@@ -132,7 +129,7 @@ function findArgs (acc, v, k) {
 
 function extendType (functions, defaultTypeArgs) {
   const argPos = reduce(defaultTypeArgs, findArgs, [])
-  const produceArgs = !DATATYPE_NOCOPY && typeof defaultTypeArgs === 'object'
+  const produceArgs = typeof defaultTypeArgs === 'object'
     ? function produceArgsObject (typeArgs) {
       const args = Object.assign(defaultTypeArgs.constructor(), defaultTypeArgs)
       argPos.forEach(({ path, val }) => {
@@ -146,7 +143,7 @@ function extendType (functions, defaultTypeArgs) {
       })
       return args
     }
-    : function produceArgsPrimitive () { return defaultTypeArgs }
+    : function produceArgsPrimitive (typeArgs = defaultTypeArgs) { return typeArgs }
   function read (buffer, offset, typeArgs, context) {
     return functions[0].call(this, buffer, offset, produceArgs(typeArgs), context)
   }
