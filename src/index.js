@@ -3,6 +3,7 @@ const ProtoDef = require('./interpreter')
 const Compiler = require('./compiler')
 const utils = require('./utils')
 const types = require('./datatypes/interpreter')
+const { createEncoding } = utils
 
 module.exports = {
   ProtoDef,
@@ -10,6 +11,7 @@ module.exports = {
   Serializer,
   Parser,
   FullPacketParser,
+  createEncoding,
   utils,
   types
 }

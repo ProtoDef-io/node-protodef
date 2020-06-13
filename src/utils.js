@@ -100,6 +100,28 @@ function calcCount (len, { count, countType }, rootNode) {
   return 0
 }
 
+function createEncoding (inst, type) {
+  const encoding = {}
+  encoding.encode = (obj, buffer, offset) => {
+    if (buffer) {
+      encoding.encode.bytes = inst.write(obj, buffer, offset, type)
+    } else {
+      buffer = inst.createPacketBuffer(type, obj)
+      encoding.encode.bytes = buffer.length
+    }
+    return buffer
+  }
+  encoding.decode = (buffer, start, end) => {
+    const { value, size } = inst.read(buffer.slice(start, end), 0, type)
+    encoding.decode.bytes = size
+    return value
+  }
+  encoding.encodingLength = (obj) => {
+    return inst.sizeOf(obj, type)
+  }
+  return encoding
+}
+
 module.exports = {
   Enum,
   PartialReadError,
@@ -110,5 +132,6 @@ module.exports = {
   isFieldInfo,
   getCount,
   sendCount,
-  calcCount
+  calcCount,
+  createEncoding
 }
