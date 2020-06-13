@@ -84,6 +84,10 @@ The `path` is an array of namespace keys which select a path of namespaces to be
 
 Compile and return a `ProtoDef` object, optionaly print the generated javascript code.
 
+### ProtoDefCompiler.compileProtoDef(options = { optimize: false, printCode: false, printOptimizedCode: false })
+
+Async function, returns a promise. Compile and return a `ProtoDef` object, optionaly print the generated javascript code. When `optimize = true`, use closure-compiler to optimize the generated code.
+
 ## utils
 
 Some functions that can be useful to build new datatypes reader and writer.

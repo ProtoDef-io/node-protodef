@@ -1,3 +1,5 @@
+const ClosureCompiler = require('google-closure-compiler').jsCompiler
+
 const numeric = require('./datatypes/numeric')
 const utils = require('./datatypes/utils')
 
@@ -48,6 +50,50 @@ class ProtoDefCompiler {
     const writeCtx = this.writeCompiler.compile(writeCode)
     const readCtx = this.readCompiler.compile(readCode)
     return new CompiledProtodef(sizeOfCtx, writeCtx, readCtx)
+  }
+
+  compileProtoDef (options = { optimize: false, printCode: false, printOptimizedCode: false }) {
+    let c = this
+    return new Promise(resolve => {
+      const sizeOfCode = c.sizeOfCompiler.generate()
+      const writeCode = c.writeCompiler.generate()
+      const readCode = c.readCompiler.generate()
+
+      if (options.printCode) {
+        console.log('// SizeOf:')
+        console.log(sizeOfCode)
+        console.log('// Write:')
+        console.log(writeCode)
+        console.log('// Read:')
+        console.log(readCode)
+      }
+
+      if (options.optimize) {
+        optimize(sizeOfCode, (sizeOfCode) => {
+          optimize(writeCode, (writeCode) => {
+            optimize(readCode, (readCode) => {
+              if (options.printOptimizedCode) {
+                console.log('// SizeOf:')
+                console.log(sizeOfCode)
+                console.log('// Write:')
+                console.log(writeCode)
+                console.log('// Read:')
+                console.log(readCode)
+              }
+              const sizeOfCtx = c.sizeOfCompiler.compile(sizeOfCode)
+              const writeCtx = c.writeCompiler.compile(writeCode)
+              const readCtx = c.readCompiler.compile(readCode)
+              resolve(new CompiledProtodef(sizeOfCtx, writeCtx, readCtx))
+            })
+          })
+        })
+      } else {
+        const sizeOfCtx = c.sizeOfCompiler.compile(sizeOfCode)
+        const writeCtx = c.writeCompiler.compile(writeCode)
+        const readCtx = c.readCompiler.compile(readCode)
+        resolve(new CompiledProtodef(sizeOfCtx, writeCtx, readCtx))
+      }
+    })
   }
 }
 
@@ -412,9 +458,21 @@ class SizeOfCompiler extends Compiler {
   }
 }
 
+function optimize (code, cb) {
+  const closureCompiler = new ClosureCompiler({
+    compilation_level: 'SIMPLE'
+  })
+  closureCompiler.run([{
+    src: code
+  }], (exitCode, stdOut, stdErr) => {
+    cb(stdOut[0].src)
+  })
+}
+
 module.exports = {
   ReadCompiler,
   WriteCompiler,
   SizeOfCompiler,
-  ProtoDefCompiler
+  ProtoDefCompiler,
+  optimize
 }

@@ -1,9 +1,5 @@
 # History
 
-## 1.7.2
-
-* remove closure compiler
-
 ## 1.7.1
 
 * fix option in compiler
