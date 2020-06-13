@@ -55,15 +55,4 @@ const packetData = {
   time = performance.now() - start
   ps = nbTests / 10 / time
   console.log('read / write parser: ' + time.toFixed(2) + ' ms (' + ps.toFixed(2) + 'k packet/s)')
-
-  // Closure optimized:
-  const optimizedProto = await compiler.compileProtoDef({ optimize: true })
-  start = performance.now()
-  for (let i = 0; i < nbTests; i++) {
-    const result = optimizedProto.parsePacketBuffer(mainType, buffer).data
-    optimizedProto.createPacketBuffer(mainType, result)
-  }
-  time = performance.now() - start
-  ps = nbTests / time
-  console.log('read / write compiled (+closure): ' + time.toFixed(2) + ' ms (' + ps.toFixed(2) + 'k packet/s)')
 })()
