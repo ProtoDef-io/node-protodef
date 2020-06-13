@@ -85,6 +85,14 @@ class PartialReadError extends ExtendableError {
   }
 }
 
+const Enum = Object.freeze({
+  CompilerTypeKind: {
+    NATIVE: 'native',
+    CONTEXT: 'context',
+    PARAMETRIZABLE: 'parametrizable'
+  }
+})
+
 module.exports = {
   getField,
   getFieldInfo,
@@ -93,5 +101,6 @@ module.exports = {
   calcCount,
   tryCatch,
   tryDoc,
-  PartialReadError
+  PartialReadError,
+  Enum
 }

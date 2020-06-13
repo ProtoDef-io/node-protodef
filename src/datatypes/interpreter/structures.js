@@ -1,4 +1,5 @@
-const { getField, getCount, sendCount, calcCount, tryDoc } = require('../utils')
+const { getField, getCount, sendCount, calcCount, tryDoc } = require('../../utils')
+const schema = require('../../../ProtoDef/schemas/structures.json')
 
 function readArray (buffer, offset, typeArgs, rootNode) {
   const value = []
@@ -94,7 +95,7 @@ function sizeOfContainer (value, typeArgs, context) {
 }
 
 module.exports = {
-  'array': [readArray, writeArray, sizeOfArray, require('../../ProtoDef/schemas/structures.json')['array']],
-  'count': [readCount, writeCount, sizeOfCount, require('../../ProtoDef/schemas/structures.json')['count']],
-  'container': [readContainer, writeContainer, sizeOfContainer, require('../../ProtoDef/schemas/structures.json')['container']]
+  'array': [readArray, writeArray, sizeOfArray, schema['array']],
+  'count': [readCount, writeCount, sizeOfCount, schema['count']],
+  'container': [readContainer, writeContainer, sizeOfContainer, schema['container']]
 }

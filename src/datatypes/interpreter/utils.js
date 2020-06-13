@@ -1,4 +1,5 @@
-const { getCount, sendCount, calcCount, PartialReadError } = require('../utils')
+const { getCount, sendCount, calcCount, PartialReadError } = require('../../utils')
+const schema = require('../../../ProtoDef/schemas/utils.json')
 
 function readMapper (buffer, offset, { type, mappings }, rootNode) {
   const { size, value } = this.read(buffer, offset, type, rootNode)
@@ -30,36 +31,6 @@ function sizeOfMapper (value, { type, mappings }, rootNode) {
   throw new Error(`${value} is not in the mappings value`)
 }
 
-function readVarInt (buffer, offset) {
-  let value = 0
-  let size = 0
-  while (true) {
-    const v = buffer[offset + size]
-    value |= (v & 0x7F) << (size++ * 7)
-    if ((v & 0x80) === 0) break
-  }
-  if (offset + size > buffer.length) throw new PartialReadError()
-  return { value, size }
-}
-
-function sizeOfVarInt (value) {
-  let size = 1
-  while (value & ~0x7F) {
-    size++
-    value >>>= 7
-  }
-  return size
-}
-
-function writeVarInt (value, buffer, offset) {
-  while (value & ~0x7F) {
-    buffer[offset++] = (value & 0xFF) | 0x80
-    value >>>= 7
-  }
-  buffer[offset++] = value | 0
-  return offset
-}
-
 function readPString (buffer, offset, typeArgs, rootNode) {
   const { size, count } = getCount.call(this, buffer, offset, typeArgs, rootNode)
   const cursor = offset + size
@@ -87,19 +58,6 @@ function sizeOfPString (value, typeArgs, rootNode) {
   return size + length
 }
 
-function readBool (buffer, offset) {
-  if (buffer.length <= offset) throw new PartialReadError()
-  return {
-    value: buffer[offset] === 1,
-    size: 1
-  }
-}
-
-function writeBool (value, buffer, offset) {
-  buffer.writeUInt8(value & 1, offset++)
-  return offset
-}
-
 function readBuffer (buffer, offset, typeArgs, rootNode) {
   const { size, count } = getCount.call(this, buffer, offset, typeArgs, rootNode)
   offset += size
@@ -117,17 +75,6 @@ function writeBuffer (value, buffer, offset, typeArgs, rootNode) {
 
 function sizeOfBuffer (value, typeArgs, rootNode) {
   return calcCount.call(this, value.length, typeArgs, rootNode) + value.length
-}
-
-function readVoid () {
-  return {
-    value: undefined,
-    size: 0
-  }
-}
-
-function writeVoid (value, buffer, offset) {
-  return offset
 }
 
 function generateBitMask (n) {
@@ -190,32 +137,9 @@ function sizeOfBitField (value, typeArgs) {
   return Math.ceil(i / 8)
 }
 
-function readCString (buffer, offset) {
-  const index = buffer.indexOf(0x00)
-  if (index === -1) throw new PartialReadError()
-  return {
-    value: buffer.toString('utf8', offset, index),
-    size: index - offset + 1
-  }
-}
-
-function writeCString (value, buffer, offset) {
-  const length = Buffer.byteLength(value, 'utf8')
-  buffer.write(value, offset, length, 'utf8')
-  return buffer.writeInt8(0x00, offset + length)
-}
-
-function sizeOfCString (value) {
-  return Buffer.byteLength(value, 'utf8') + 1
-}
-
 module.exports = {
-  'varint': [readVarInt, writeVarInt, sizeOfVarInt, require('../../ProtoDef/schemas/utils.json')['varint']],
-  'bool': [readBool, writeBool, 1, require('../../ProtoDef/schemas/utils.json')['bool']],
-  'pstring': [readPString, writePString, sizeOfPString, require('../../ProtoDef/schemas/utils.json')['pstring']],
-  'buffer': [readBuffer, writeBuffer, sizeOfBuffer, require('../../ProtoDef/schemas/utils.json')['buffer']],
-  'void': [readVoid, writeVoid, 0, require('../../ProtoDef/schemas/utils.json')['void']],
-  'bitfield': [readBitField, writeBitField, sizeOfBitField, require('../../ProtoDef/schemas/utils.json')['bitfield']],
-  'cstring': [readCString, writeCString, sizeOfCString, require('../../ProtoDef/schemas/utils.json')['cstring']],
-  'mapper': [readMapper, writeMapper, sizeOfMapper, require('../../ProtoDef/schemas/utils.json')['mapper']]
+  'pstring': [readPString, writePString, sizeOfPString, schema['pstring']],
+  'buffer': [readBuffer, writeBuffer, sizeOfBuffer, schema['buffer']],
+  'bitfield': [readBitField, writeBitField, sizeOfBitField, schema['bitfield']],
+  'mapper': [readMapper, writeMapper, sizeOfMapper, schema['mapper']]
 }

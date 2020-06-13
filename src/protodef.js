@@ -2,6 +2,7 @@ const { getFieldInfo, tryCatch } = require('./utils')
 const reduce = require('lodash.reduce')
 const get = require('lodash.get')
 const Validator = require('protodef-validator')
+const defaultDatatypes = require('./datatypes/interpreter')
 
 function isFieldInfo (type) {
   return typeof type === 'string' ||
@@ -10,7 +11,11 @@ function isFieldInfo (type) {
 }
 
 function findArgs (acc, v, k) {
-  if (typeof v === 'string' && v.charAt(0) === '$') { acc.push({ 'path': k, 'val': v.substr(1) }) } else if (Array.isArray(v) || typeof v === 'object') { acc = acc.concat(reduce(v, findArgs, []).map((v) => ({ 'path': k + '.' + v.path, 'val': v.val }))) }
+  if (typeof v === 'string' && v.charAt(0) === '$') {
+    acc.push({ path: k, val: v.substr(1) })
+  } else if (Array.isArray(v) || typeof v === 'object') {
+    acc = acc.concat(reduce(v, findArgs, []).map((v) => ({ path: `${k}.${v.path}`, val: v.val })))
+  }
   return acc
 }
 
@@ -23,22 +28,27 @@ function setField (path, val, into) {
 }
 
 function extendType (functions, defaultTypeArgs) {
-  const json = JSON.stringify(defaultTypeArgs)
   const argPos = reduce(defaultTypeArgs, findArgs, [])
-  function produceArgs (typeArgs) {
-    const args = JSON.parse(json)
-    argPos.forEach((v) => {
-      setField(v.path, typeArgs[v.val], args)
-    })
-    return args
-  }
-  return [function read (buffer, offset, typeArgs, context) {
+  const produceArgs = typeof defaultTypeArgs === 'object'
+    ? function produceArgsObject (typeArgs) {
+      const args = Object.assign(defaultTypeArgs.constructor(), defaultTypeArgs)
+      argPos.forEach(v => setField(v.path, typeArgs[v.val], args))
+      return args
+    }
+    : function produceArgsPrimitive () { return defaultTypeArgs }
+  function read (buffer, offset, typeArgs, context) {
     return functions[0].call(this, buffer, offset, produceArgs(typeArgs), context)
-  }, function write (value, buffer, offset, typeArgs, context) {
+  }
+  function write (value, buffer, offset, typeArgs, context) {
     return functions[1].call(this, value, buffer, offset, produceArgs(typeArgs), context)
-  }, function sizeOf (value, typeArgs, context) {
-    if (typeof functions[2] === 'function') { return functions[2].call(this, value, produceArgs(typeArgs), context) } else { return functions[2] }
-  }]
+  }
+  function sizeOf (value, typeArgs, context) {
+    if (typeof functions[2] === 'function') {
+      return functions[2].call(this, value, produceArgs(typeArgs), context)
+    }
+    return functions[2]
+  }
+  return [read, write, sizeOf]
 }
 
 class ProtoDef {
@@ -49,10 +59,7 @@ class ProtoDef {
   }
 
   addDefaultTypes () {
-    this.addTypes(require('./datatypes/numeric'))
-    this.addTypes(require('./datatypes/utils'))
-    this.addTypes(require('./datatypes/structures'))
-    this.addTypes(require('./datatypes/conditional'))
+    this.addTypes(defaultDatatypes)
   }
 
   addProtocol (protocolData, path) {
