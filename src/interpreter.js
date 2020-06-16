@@ -5,7 +5,7 @@ const Validator = require('protodef-validator')
 const defaultDatatypes = require('./datatypes/interpreter')
 
 // FIXME: Increases performance but introduces unexpected bugs in future
-const DATATYPE_NOCOPY = true
+const DATATYPE_NOCOPY = false
 
 class ProtoDef {
   constructor (validation = true) {
