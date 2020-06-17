@@ -50,6 +50,7 @@ function readContainer (buffer, offset, typeArgs, context) {
   let size = 0
   Object.defineProperty(value, '..', {
     enumerable: false,
+    configurable: true,
     value: context
   })
   for (const { type, name, anon } of typeArgs) {
@@ -61,6 +62,7 @@ function readContainer (buffer, offset, typeArgs, context) {
         for (const k in v) {
           value[k] = v[k]
         }
+        continue
       }
       value[name] = v
     }, name || 'unknown')
