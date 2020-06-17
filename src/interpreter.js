@@ -130,37 +130,39 @@ function findArgs (acc, v, k) {
   return acc
 }
 
-function extendType (functions, defaultTypeArgs) {
-  const argPos = reduce(defaultTypeArgs, findArgs, [])
-  const produceArgs = typeof defaultTypeArgs === 'object'
-    ? function produceArgsObject (typeArgs) {
-      if (typeArgs === undefined) return defaultTypeArgs
-      const args = JSON.parse(JSON.stringify(defaultTypeArgs))
-      for (const { path, val } of argPos) {
-        // Set field
-        const c = path.split('.').reverse()
-        let into = args
-        while (c.length > 1) {
-          into = into[c.pop()]
-        }
-        into[c.pop()] = typeArgs[val]
+function constructProduceArgs (defaultTypeArgs) {
+  const json = JSON.stringify(defaultTypeArgs)
+  if (defaultTypeArgs !== 'object') return () => defaultTypeArgs
+  return function produceArgsObject (typeArgs) {
+    if (typeArgs === undefined) return defaultTypeArgs
+    const args = DATATYPE_NOCOPY ? defaultTypeArgs : JSON.parse(json)
+    for (const { path, val } of argPos) {
+      // Set field
+      const c = path.split('.').reverse()
+      let into = args
+      while (c.length > 1) {
+        into = into[c.pop()]
       }
-      return args
+      into[c.pop()] = typeArgs[val]
     }
-    : function produceArgsPrimitive () { return defaultTypeArgs }
+    return args
+  }
+}
+
+function extendType ([ _read, _write, _sizeOf ], defaultTypeArgs) {
+  const argPos = reduce(defaultTypeArgs, findArgs, [])
+  const produceArgs = constructProduceArgs(defaultTypeArgs)
   function read (buffer, offset, typeArgs, context) {
-    return functions[0].call(this, buffer, offset, produceArgs(typeArgs), context)
+    return _read.call(this, buffer, offset, produceArgs(typeArgs), context)
   }
   function write (value, buffer, offset, typeArgs, context) {
-    return functions[1].call(this, value, buffer, offset, produceArgs(typeArgs), context)
+    return _write.call(this, value, buffer, offset, produceArgs(typeArgs), context)
   }
   function sizeOf (value, typeArgs, context) {
-    if (typeof functions[2] === 'function') {
-      return functions[2].call(this, value, produceArgs(typeArgs), context)
-    }
-    return functions[2]
+    return _sizeOf.call(this, value, produceArgs(typeArgs), context)
   }
-  return [read, write, sizeOf]
+  function sizeOfStatic () { return _sizeOf }
+  return [read, write, typeof _sizeOf === 'function' ? sizeOf : sizeOfStatic]
 }
 
 module.exports = ProtoDef
