@@ -131,6 +131,7 @@ function findArgs (acc, v, k) {
 }
 
 function constructProduceArgs (defaultTypeArgs) {
+  const argPos = reduce(defaultTypeArgs, findArgs, [])
   const json = JSON.stringify(defaultTypeArgs)
   if (defaultTypeArgs !== 'object') return () => defaultTypeArgs
   return function produceArgsObject (typeArgs) {
@@ -150,7 +151,6 @@ function constructProduceArgs (defaultTypeArgs) {
 }
 
 function extendType ([ _read, _write, _sizeOf ], defaultTypeArgs) {
-  const argPos = reduce(defaultTypeArgs, findArgs, [])
   const produceArgs = constructProduceArgs(defaultTypeArgs)
   function read (buffer, offset, typeArgs, context) {
     return _read.call(this, buffer, offset, produceArgs(typeArgs), context)

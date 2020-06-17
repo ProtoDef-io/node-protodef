@@ -62,7 +62,7 @@ function readContainer (buffer, offset, typeArgs, context) {
         for (const k in v) {
           value[k] = v[k]
         }
-        continue
+        return
       }
       value[name] = v
     }, name || 'unknown')
