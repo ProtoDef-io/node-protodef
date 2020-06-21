@@ -1,5 +1,9 @@
 # History
 
+## 1.8.0
+
+* add option not to log partial packets in full chunk parser
+
 ## 1.7.2
 
 * remove closure compiler
