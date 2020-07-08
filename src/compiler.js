@@ -220,7 +220,7 @@ class Compiler {
       if (!functions[type]) {
         if (this.types[type] !== 'native') {
           functions[type] = this.compileType(this.types[type])
-          if (functions[type].startsWith('ctx')) { functions[type] = this.wrapCode(functions[type]) }
+          if (functions[type].startsWith('ctx')) { functions[type] = this.wrapCode('return ' + this.callType(functions[type].split('.')[1])) }
           if (!isNaN(functions[type])) { functions[type] = this.wrapCode('  return ' + functions[type]) }
         } else {
           functions[type] = `native.${type}`
