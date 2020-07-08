@@ -1,5 +1,9 @@
 # History
 
+## 1.8.1
+
+* fixed to aliases in compiler (thanks @Karang)
+
 ## 1.8.0
 
 * add option not to log partial packets in full chunk parser
