@@ -1,5 +1,9 @@
 # History
 
+## 1.8.2
+
+* fixed aliases in compiler for write and size (thanks @Karang)
+
 ## 1.8.1
 
 * fixed to aliases in compiler (thanks @Karang)
