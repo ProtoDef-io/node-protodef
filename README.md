@@ -42,4 +42,6 @@ See the language independent [ProtoDef](https://github.com/ProtoDef-io/ProtoDef)
 * [node-raknet](https://github.com/mhsjlw/node-raknet) describe the raknet protocol in a protocol.json and uses ProtoDef to read it
 * [minecraft-classic-protocol](https://github.com/mhsjlw/minecraft-classic-protocol) defines the classic minecraft protocol with ProtoDef
 * [pocket-minecraft-protocol](https://github.com/mhsjlw/pocket-minecraft-protocol) defines the minecraft pocket edition protocol
+* [diablo2-protocol](https://github.com/MephisTools/diablo2-protocol) Diablo 2 network protocol
+* [dofus-protocol](https://github.com/AstrubTools/dofus-protocol) Network protocol for dofus : create client and servers for dofus 1.30
 
