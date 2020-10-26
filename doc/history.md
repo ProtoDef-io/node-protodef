@@ -1,5 +1,9 @@
 # History
 
+## 1.8.3
+
+* in full packet parser don't error out in case of missing bytes
+
 ## 1.8.2
 
 * fixed aliases in compiler for write and size (thanks @Karang)
