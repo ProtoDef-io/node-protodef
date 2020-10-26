@@ -77,7 +77,14 @@ class FullPacketParser extends Transform {
           JSON.stringify(packet.data) + '; buffer :' + chunk.toString('hex'))
       }
     } catch (e) {
-      return cb(e)
+      if (e.partialReadError) {
+        if (!this.noErrorLogging) {
+          console.log(e.stack)
+        }
+        return cb()
+      } else {
+        return cb(e)
+      }
     }
     this.push(packet)
     cb()
