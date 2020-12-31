@@ -91,6 +91,10 @@ class FullPacketParser extends Transform {
   }
 }
 
+function recursiveGet(target, path, receiver) {
+  return path.reduce((object, key) => Reflect.get(object, key, receiver), target)
+}
+
 class LazyPacketParser extends Transform {
   constructor (proto, mainType, shallowType, noErrorLogging = false) {
     super({ readableObjectMode: true })
@@ -101,35 +105,39 @@ class LazyPacketParser extends Transform {
   }
 
   parsePacketBuffer (buffer) {
-    let packetName
+    let shallowPacketData
     try {
-      packetName = this.proto.parsePacketBuffer(this.shallowType, buffer).data.name
+      shallowPacketData = this.proto.parsePacketBuffer(this.shallowType, buffer).data
     } catch (e) {
-      console.error(e)
       return this.proto.parsePacketBuffer(this.mainType, buffer)
     }
 
-    const packetParams = {
-      toJSON: () => '' // lot of accesses to toJSON for some reason, not sure who's making these
-    }
-
     const self = this
-    const paramsProxy = {
-      get: function (target, prop, receiver) {
-        if (!(prop in target)) {
-          console.log(`parsing for ${prop}`)
-          const parsed = self.proto.parsePacketBuffer(self.mainType, buffer).data.params
-          Object.assign(packetParams, parsed)
+    let fullPacketData = null
+    function makeProxyHandler(path) {
+      return {
+        get: function (target, key, receiver) {
+          if (key === "_isProxy") return true;
+          if (fullPacketData !== null) {
+            return Reflect.get(recursiveGet(fullPacketData, path, receiver), key, receiver)
+          }
+          if (!(key in target)) {
+            fullPacketData = self.proto.parsePacketBuffer(self.mainType, buffer).data
+            return Reflect.get(recursiveGet(fullPacketData, path, receiver), key, receiver)
+          }
+
+          let prop = Reflect.get(...arguments)
+          if (typeof prop === 'object' && !prop._isProxy) {
+            prop = new Proxy(prop, makeProxyHandler([...path, key]))
+            Reflect.set(target, key, prop, receiver)
+          }
+          return prop
         }
-        return Reflect.get(...arguments)
       }
     }
 
     let packet = {
-      data: {
-        name: packetName,
-        params: new Proxy(packetParams, paramsProxy)
-      },
+      data: new Proxy(shallowPacketData, makeProxyHandler([])),
       metadata: { size: buffer.length },
       buffer
     }
