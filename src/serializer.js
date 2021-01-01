@@ -91,7 +91,7 @@ class FullPacketParser extends Transform {
   }
 }
 
-function recursiveGet(target, path, receiver) {
+function recursiveGet (target, path, receiver) {
   return path.reduce((object, key) => Reflect.get(object, key, receiver), target)
 }
 
@@ -114,10 +114,10 @@ class LazyPacketParser extends Transform {
 
     const self = this
     let fullPacketData = null
-    function makeProxyHandler(path) {
+    function makeProxyHandler (path) {
       return {
         get: function (target, key, receiver) {
-          if (key === "_isProxy") return true;
+          if (key === '_isProxy') return true
           if (fullPacketData !== null) {
             return Reflect.get(recursiveGet(fullPacketData, path, receiver), key, receiver)
           }
