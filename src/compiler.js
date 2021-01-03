@@ -59,19 +59,19 @@ class CompiledProtodef {
 
   read (buffer, cursor, type) {
     const readFn = this.readCtx[type]
-    if (!readFn) { throw new Error('missing data type: ' + type) }
+    if (!readFn) { throw new Error(`missing data type: ${type}`) }
     return readFn(buffer, cursor)
   }
 
   write (value, buffer, cursor, type) {
     const writeFn = this.writeCtx[type]
-    if (!writeFn) { throw new Error('missing data type: ' + type) }
+    if (!writeFn) { throw new Error(`missing data type: ${type}`) }
     return writeFn(value, buffer, cursor)
   }
 
   sizeOf (value, type) {
     const sizeFn = this.sizeOfCtx[type]
-    if (!sizeFn) { throw new Error('missing data type: ' + type) }
+    if (!sizeFn) { throw new Error(`missing data type: ${type}`) }
     if (typeof sizeFn === 'function') {
       return sizeFn(value)
     } else {
@@ -218,7 +218,7 @@ class Compiler {
   addProtocol (protocolData, path) {
     const self = this
     function recursiveAddTypes (protocolData, path) {
-      if (protocolData === undefined) { return }
+      if (protocolData === undefined) return
       if (protocolData.types) { self.addTypesToCompile(protocolData.types) }
       recursiveAddTypes(protocolData[path.shift()], path)
     }
@@ -261,7 +261,7 @@ class Compiler {
       scope[field] = field + (count || '') // If the name is already used, add a number
       return scope[field]
     }
-    throw new Error('Unknown field ' + path)
+    throw new Error(`Unknown field ${path}`)
   }
 
   /**
@@ -310,21 +310,23 @@ class ReadCompiler extends Compiler {
 
   compileType (type) {
     if (type instanceof Array) {
-      if (this.parameterizableTypes[type[0]]) { return this.parameterizableTypes[type[0]](this, type[1]) }
+      if (this.parameterizableTypes[type[0]]) {
+        return this.parameterizableTypes[type[0]](this, type[1])
+      }
       if (this.types[type[0]] && this.types[type[0]] !== NATIVE) {
         return this.wrapCode('return ' + this.callType(type[0], 'offset', Object.values(type[1])))
       }
-      throw new Error('Unknown parametrizable type: ' + type[0])
+      throw new Error(`Unknown parametrizable type: ${type[0]}`)
     } else { // Primitive type
       if (type === NATIVE) return 'null'
-      if (this.types[type]) { return 'ctx.' + type }
+      if (this.types[type]) { return `ctx.${type}` }
       return this.primitiveTypes[type]
     }
   }
 
   wrapCode (code, args = []) {
-    if (args.length > 0) return '(buffer, offset, ' + args.join(', ') + ') => {\n' + this.indent(code) + '\n}'
-    return '(buffer, offset) => {\n' + this.indent(code) + '\n}'
+    if (args.length > 0) return `(buffer, offset, ${args.join(', ')}) => {\n${this.indent(code)}\n}`
+    return `(buffer, offset) => {\n${this.indent(code)}\n}`
   }
 
   callType (type, offsetExpr = 'offset', args = []) {
@@ -336,8 +338,8 @@ class ReadCompiler extends Compiler {
     if (type instanceof Array && type[0] === 'container') this.scopeStack.push({})
     const code = this.compileType(type)
     if (type instanceof Array && type[0] === 'container') this.scopeStack.pop()
-    if (args.length > 0) return '(' + code + `)(buffer, ${offsetExpr}, ` + args.map(name => this.getField(name)).join(', ') + ')'
-    return '(' + code + `)(buffer, ${offsetExpr})`
+    if (args.length > 0) return `(${code})(buffer, ${offsetExpr}, ${args.map(name => this.getField(name)).join(', ')})`
+    return `(${code})(buffer, ${offsetExpr})`
   }
 }
 
@@ -349,21 +351,23 @@ class WriteCompiler extends Compiler {
 
   compileType (type) {
     if (type instanceof Array) {
-      if (this.parameterizableTypes[type[0]]) { return this.parameterizableTypes[type[0]](this, type[1]) }
+      if (this.parameterizableTypes[type[0]]) {
+        return this.parameterizableTypes[type[0]](this, type[1])
+      }
       if (this.types[type[0]] && this.types[type[0]] !== NATIVE) {
         return this.wrapCode('return ' + this.callType('value', type[0], 'offset', Object.values(type[1])))
       }
-      throw new Error('Unknown parametrizable type: ' + type[0])
+      throw new Error(`Unknown parametrizable type: ${type[0]}`)
     } else { // Primitive type
       if (type === NATIVE) return 'null'
-      if (this.types[type]) { return 'ctx.' + type }
+      if (this.types[type]) { return `ctx.${type}` }
       return this.primitiveTypes[type]
     }
   }
 
   wrapCode (code, args = []) {
-    if (args.length > 0) return '(value, buffer, offset, ' + args.join(', ') + ') => {\n' + this.indent(code) + '\n}'
-    return '(value, buffer, offset) => {\n' + this.indent(code) + '\n}'
+    if (args.length > 0) return `(value, buffer, offset, ${args.join(', ')}) => {\n${this.indent(code)}\n}`
+    return `(value, buffer, offset) => {\n${this.indent(code)}\n}`
   }
 
   callType (value, type, offsetExpr = 'offset', args = []) {
@@ -375,8 +379,8 @@ class WriteCompiler extends Compiler {
     if (type instanceof Array && type[0] === 'container') this.scopeStack.push({})
     const code = this.compileType(type)
     if (type instanceof Array && type[0] === 'container') this.scopeStack.pop()
-    if (args.length > 0) return '(' + code + `)(${value}, buffer, ${offsetExpr}, ` + args.map(name => this.getField(name)).join(', ') + ')'
-    return '(' + code + `)(${value}, buffer, ${offsetExpr})`
+    if (args.length > 0) return `(${code})(${value}, buffer, ${offsetExpr}, ${args.map(this.getField, this).join(', ')})`
+    return `(${code})(${value}, buffer, ${offsetExpr})`
   }
 }
 
@@ -404,22 +408,24 @@ class SizeOfCompiler extends Compiler {
 
   compileType (type) {
     if (type instanceof Array) {
-      if (this.parameterizableTypes[type[0]]) { return this.parameterizableTypes[type[0]](this, type[1]) }
+      if (this.parameterizableTypes[type[0]]) {
+        return this.parameterizableTypes[type[0]](this, type[1])
+      }
       if (this.types[type[0]] && this.types[type[0]] !== NATIVE) {
         return this.wrapCode('return ' + this.callType('value', type[0], Object.values(type[1])))
       }
-      throw new Error('Unknown parametrizable type: ' + type[0])
+      throw new Error(`Unknown parametrizable type: ${type[0]}`)
     } else { // Primitive type
       if (type === NATIVE) return 'null'
       if (!isNaN(this.primitiveTypes[type])) return this.primitiveTypes[type]
-      if (this.types[type]) { return 'ctx.' + type }
+      if (this.types[type]) { return `ctx.${type}` }
       return this.primitiveTypes[type]
     }
   }
 
   wrapCode (code, args = []) {
-    if (args.length > 0) return '(value, ' + args.join(', ') + ') => {\n' + this.indent(code) + '\n}'
-    return '(value) => {\n' + this.indent(code) + '\n}'
+    if (args.length > 0) return `(value, ${args.join(', ')}) => {\n${this.indent(code)}\n}`
+    return `(value) => {\n${this.indent(code)}\n}`
   }
 
   callType (value, type, args = []) {
@@ -432,8 +438,8 @@ class SizeOfCompiler extends Compiler {
     const code = this.compileType(type)
     if (type instanceof Array && type[0] === 'container') this.scopeStack.pop()
     if (!isNaN(code)) return code
-    if (args.length > 0) return '(' + code + `)(${value}, ` + args.map(name => this.getField(name)).join(', ') + ')'
-    return '(' + code + `)(${value})`
+    if (args.length > 0) return `(${code})(${value}, ${args.map(this.getField, this).join(', ')})`
+    return `(${code})(${value})`
   }
 }
 

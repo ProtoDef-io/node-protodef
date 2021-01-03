@@ -64,23 +64,21 @@ class ProtoDef {
   read (buffer, cursor, _fieldInfo, rootNodes) {
     const { type, typeArgs } = getFieldInfo(_fieldInfo)
     const typeFunctions = this.types[type]
-    if (!typeFunctions) { throw new Error('missing data type: ' + type) }
+    if (!typeFunctions) { throw new Error(`missing data type: ${type}`) }
     return typeFunctions[0].call(this, buffer, cursor, typeArgs, rootNodes)
   }
 
   write (value, buffer, offset, _fieldInfo, rootNode) {
     const { type, typeArgs } = getFieldInfo(_fieldInfo)
     const typeFunctions = this.types[type]
-    if (!typeFunctions) { throw new Error('missing data type: ' + type) }
+    if (!typeFunctions) { throw new Error(`missing data type: ${type}`) }
     return typeFunctions[1].call(this, value, buffer, offset, typeArgs, rootNode)
   }
 
   sizeOf (value, _fieldInfo, rootNode) {
     const { type, typeArgs } = getFieldInfo(_fieldInfo)
     const typeFunctions = this.types[type]
-    if (!typeFunctions) {
-      throw new Error('missing data type: ' + type)
-    }
+    if (!typeFunctions) { throw new Error(`missing data type: ${type}`) }
     if (typeof typeFunctions[2] === 'function') {
       return typeFunctions[2].call(this, value, typeArgs, rootNode)
     } else {

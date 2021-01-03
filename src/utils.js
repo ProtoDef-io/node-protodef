@@ -76,7 +76,7 @@ function getFieldInfo (fieldInfo) {
     case typeof fieldInfo.type === 'string':
       return fieldInfo
     default:
-      throw new Error(fieldInfo + ' is not a fieldinfo')
+      throw new Error(`${fieldInfo} is not a fieldinfo`)
   }
 }
 
