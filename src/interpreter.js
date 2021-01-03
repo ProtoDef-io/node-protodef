@@ -5,9 +5,6 @@ const clonedeep = require('lodash.clonedeep')
 const Validator = require('protodef-validator')
 const defaultDatatypes = require('./datatypes/interpreter')
 
-// FIXME: Increases performance but introduces unexpected bugs in future
-const DATATYPE_NOCOPY = false
-
 class ProtoDef {
   constructor (validation = true) {
     this.validator = validation ? new Validator() : null
@@ -134,7 +131,7 @@ function findArgs (acc, v, k) {
 
 function produceArgsObject (defaultTypeArgs, argPos, typeArgs) {
   if (typeArgs === undefined) return defaultTypeArgs
-  const args = DATATYPE_NOCOPY ? defaultTypeArgs : clonedeep(defaultTypeArgs)
+  const args = clonedeep(defaultTypeArgs)
   for (const { path, val } of argPos) {
     // Set field
     const c = path.split('.').reverse()
