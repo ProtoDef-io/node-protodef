@@ -28,11 +28,13 @@ function tryCatch (tryfn, catchfn) {
   try { return tryfn() } catch (e) { catchfn(e) }
 }
 
+function typeDocErrorHandler (field, e) {
+  e.field = e.field ? `${field}.${e.field}` : field
+  throw e
+}
+
 function tryDoc (tryfn, field) {
-  return tryCatch(tryfn, e => {
-    e.field = e.field ? `${field}.${e.field}` : field
-    throw e
-  })
+  return tryCatch(tryfn, typeDocErrorHandler.bind(this, field))
 }
 
 function getField (countField, context) {
@@ -100,26 +102,37 @@ function calcCount (len, { count, countType }, rootNode) {
   return 0
 }
 
-function createEncoding (inst, type) {
-  const encoding = {}
-  encoding.encode = (obj, buffer, offset) => {
+class ProtoDefEncoding {
+  constructor (inst, type) {
+    this.inst = inst
+    this.type = type
+    this.encode.bytes = 0
+    this.decode.bytes = 0
+  }
+
+  encode (obj, buffer, offset) {
     if (buffer) {
-      encoding.encode.bytes = inst.write(obj, buffer, offset, type)
+      this.encode.bytes = this.inst.write(obj, buffer, offset, this.type)
     } else {
-      buffer = inst.createPacketBuffer(type, obj)
-      encoding.encode.bytes = buffer.length
+      buffer = this.inst.createPacketBuffer(this.type, obj)
+      this.encode.bytes = buffer.length
     }
     return buffer
   }
-  encoding.decode = (buffer, start, end) => {
-    const { value, size } = inst.read(buffer.slice(start, end), 0, type)
-    encoding.decode.bytes = size
+
+  decode (buffer, start, end) {
+    const { value, size } = this.inst.read(buffer.slice(start, end), 0, this.type)
+    this.decode.bytes = size
     return value
   }
-  encoding.encodingLength = (obj) => {
-    return inst.sizeOf(obj, type)
+
+  encodingLength (obj) {
+    return this.inst.sizeOf(obj, this.type)
   }
-  return encoding
+}
+
+function createEncoding (inst, type) {
+  return new ProtoDefEncoding(inst, type)
 }
 
 module.exports = {
