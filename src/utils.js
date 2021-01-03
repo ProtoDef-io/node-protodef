@@ -1,8 +1,8 @@
 const Enum = Object.freeze({
   CompilerTypeKind: {
-    NATIVE: 'native',
-    CONTEXT: 'context',
-    PARAMETRIZABLE: 'parametrizable'
+    NATIVE: 0,
+    CONTEXT: 1,
+    PARAMETRIZABLE: 2
   },
   ParentSymbol: typeof Symbol !== 'undefined' ? Symbol('ProtoDefContext') : '..'
 })
