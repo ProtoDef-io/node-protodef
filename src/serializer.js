@@ -1,5 +1,4 @@
 const Transform = require('readable-stream').Transform
-const PROTODEF_LOUD = true // TODO: Add environment variable for this
 
 class Serializer extends Transform {
   constructor (proto, mainType) {
@@ -58,10 +57,11 @@ class Parser extends Transform {
 }
 
 class FullPacketParser extends Transform {
-  constructor (proto, mainType) {
+  constructor (proto, mainType, noErrorLogging = false) {
     super({ readableObjectMode: true })
     this.proto = proto
     this.mainType = mainType
+    this.noErrorLogging = noErrorLogging
   }
 
   parsePacketBuffer (buffer) {
@@ -72,12 +72,19 @@ class FullPacketParser extends Transform {
     let packet
     try {
       packet = this.parsePacketBuffer(chunk)
-      if (packet.metadata.size !== chunk.length && PROTODEF_LOUD) {
+      if (packet.metadata.size !== chunk.length && !this.noErrorLogging) {
         console.log('Chunk size is ' + chunk.length + ' but only ' + packet.metadata.size + ' was read ; partial packet : ' +
           JSON.stringify(packet.data) + '; buffer :' + chunk.toString('hex'))
       }
     } catch (e) {
-      return cb(e)
+      if (e.partialReadError) {
+        if (!this.noErrorLogging) {
+          console.log(e.stack)
+        }
+        return cb()
+      } else {
+        return cb(e)
+      }
     }
     this.push(packet)
     cb()
