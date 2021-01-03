@@ -3,8 +3,24 @@ const Enum = Object.freeze({
     NATIVE: 'native',
     CONTEXT: 'context',
     PARAMETRIZABLE: 'parametrizable'
-  }
+  },
+  ParentSymbol: typeof Symbol !== 'undefined' ? Symbol('ProtoDefContext') : '..'
 })
+
+class Result {
+  // Using this wrapper is up to 30% faster than constructing
+  // plain objects ({ value, size }). V8 will use inline caching
+  // and hidden classes to speed this up.
+  constructor (value = undefined, size = 0) {
+    this.value = value
+    this.size = size
+  }
+}
+
+class CountResult extends Result {
+  // This line will be inlined
+  get count () { return this.value }
+}
 
 class ExtendableError extends Error {
   constructor (message) {
@@ -39,8 +55,8 @@ function tryDoc (tryfn, field) {
 
 function getField (countField, context) {
   if (countField.startsWith('/')) {
-    while (context.hasOwnProperty('..')) {
-      context = context['..']
+    while (context.hasOwnProperty(Enum.ParentSymbol)) {
+      context = context[Enum.ParentSymbol]
     }
     countField = countField.slice(1)
   }
@@ -73,11 +89,11 @@ function isFieldInfo (type) {
 function getCount (buffer, offset, { count, countType }, rootNode) {
   if (count !== undefined) {
     count = typeof count === 'number' ? count : getField(count, rootNode)
-    return { count, size: 0 }
+    return new CountResult(count, 0)
   }
   if (countType !== undefined) {
     const { size, value } = tryDoc(() => this.read(buffer, offset, getFieldInfo(countType), rootNode), '$count')
-    return { count: value, size }
+    return new CountResult(value, size)
   }
   throw new Error('Broken schema, neither count nor countType defined')
 }
@@ -137,6 +153,7 @@ function createEncoding (inst, type) {
 
 module.exports = {
   Enum,
+  Result,
   PartialReadError,
   tryCatch,
   tryDoc,

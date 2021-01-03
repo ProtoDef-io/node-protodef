@@ -24,10 +24,10 @@ module.exports = {
     'option': [PARAMETRIZABLE, (compiler, type) => {
       let code = 'const {value} = ctx.bool(buffer, offset)\n'
       code += 'if (value) {\n'
-      code += '  const { value, size } = ' + compiler.callType(type, 'offset + 1') + '\n'
-      code += '  return { value, size: size + 1 }\n'
+      code += '  const result = ' + compiler.callType(type, 'offset + 1') + '\n'
+      code += '  return new Result(result.value, result.size + 1)\n'
       code += '}\n'
-      code += 'return { value: undefined, size: 1}'
+      code += 'return new Result(undefined, 1)'
       return compiler.wrapCode(code)
     }]
   },

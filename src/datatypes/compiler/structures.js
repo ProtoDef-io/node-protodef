@@ -21,7 +21,7 @@ module.exports = {
       code += '  data.push(elem.value)\n'
       code += '  size += elem.size\n'
       code += '}\n'
-      code += 'return { value: data, size }'
+      code += 'return new Result(data, size)'
       return compiler.wrapCode(code)
     }],
     'count': [PARAMETRIZABLE, (compiler, type) => {
@@ -60,7 +60,7 @@ module.exports = {
       const sizes = offsetExpr.split(' + ')
       sizes.shift()
       if (sizes.length === 0) sizes.push('0')
-      code += 'return { value: { ' + names.join(', ') + ' }, size: ' + sizes.join(' + ') + '}'
+      code += 'return new Result({ ' + names.join(', ') + ' }, ' + sizes.join(' + ') + ')'
       return compiler.wrapCode(code)
     }]
   },

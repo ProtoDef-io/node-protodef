@@ -18,7 +18,7 @@ module.exports = {
       code += 'if (offset + count > buffer.length) {\n'
       code += '  throw new PartialReadError("Missing characters in string, found size is " + buffer.length + " expected size was " + (offset + count))\n'
       code += '}\n'
-      code += 'return { value: buffer.toString(\'utf8\', offset, offset + count), size: count + countSize }'
+      code += 'return new Result(buffer.toString(\'utf8\', offset, offset + count), count + countSize)'
       return compiler.wrapCode(code)
     }],
     'buffer': [PARAMETRIZABLE, (compiler, buffer) => {
@@ -35,7 +35,7 @@ module.exports = {
       code += 'if (offset + count > buffer.length) {\n'
       code += '  throw new PartialReadError()\n'
       code += '}\n'
-      code += 'return { value: buffer.slice(offset, offset + count), size: count + countSize }'
+      code += 'return new Result(buffer.slice(offset, offset + count), count + countSize)'
       return compiler.wrapCode(code)
     }],
     'bitfield': [PARAMETRIZABLE, (compiler, values) => {
@@ -59,12 +59,12 @@ module.exports = {
         if (name === trueName) names.push(name)
         else names.push(`${name}: ${trueName}`)
       }
-      code += 'return { value: { ' + names.join(', ') + ` }, size: ${totalBytes} }`
+      code += 'return new Result({ ' + names.join(', ') + ` }, ${totalBytes})`
       return compiler.wrapCode(code)
     }],
     'mapper': [PARAMETRIZABLE, (compiler, mapper) => {
       let code = 'const { value, size } = ' + compiler.callType(mapper.type) + '\n'
-      code += 'return { value: ' + JSON.stringify(sanitizeMappings(mapper.mappings)) + '[value], size }'
+      code += 'return new Result(' + JSON.stringify(sanitizeMappings(mapper.mappings)) + '[value], size)'
       return compiler.wrapCode(code)
     }]
   },

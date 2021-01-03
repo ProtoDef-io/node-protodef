@@ -1,4 +1,4 @@
-const { getField, getFieldInfo, tryDoc, PartialReadError } = require('../../utils')
+const { getField, getFieldInfo, tryDoc, PartialReadError, Result } = require('../../utils')
 const schema = require('../../../ProtoDef/schemas/conditional.json')
 
 function readSwitch (buffer, offset, { compareTo, fields, compareToValue, 'default': defVal }, rootNode) {
@@ -11,7 +11,7 @@ function readSwitch (buffer, offset, { compareTo, fields, compareToValue, 'defau
     }
   }
   const fieldInfo = getFieldInfo(fields[compareTo])
-  return tryDoc(() => this.read(buffer, offset, fieldInfo, rootNode), compareTo)
+  return tryDoc(this.read.bind(this, buffer, offset, fieldInfo, rootNode), compareTo)
 }
 
 function writeSwitch (value, buffer, offset, { compareTo, fields, compareToValue, 'default': defVal }, rootNode) {
@@ -24,7 +24,7 @@ function writeSwitch (value, buffer, offset, { compareTo, fields, compareToValue
     }
   }
   const fieldInfo = getFieldInfo(fields[compareTo])
-  return tryDoc(() => this.write(value, buffer, offset, fieldInfo, rootNode), compareTo)
+  return tryDoc(this.write.bind(this, value, buffer, offset, fieldInfo, rootNode), compareTo)
 }
 
 function sizeOfSwitch (value, { compareTo, fields, compareToValue, 'default': defVal }, rootNode) {
@@ -37,7 +37,7 @@ function sizeOfSwitch (value, { compareTo, fields, compareToValue, 'default': de
     }
   }
   const fieldInfo = getFieldInfo(fields[compareTo])
-  return tryDoc(() => this.sizeOf(value, fieldInfo, rootNode), compareTo)
+  return tryDoc(this.sizeOf.bind(this, value, fieldInfo, rootNode), compareTo)
 }
 
 function readOption (buffer, offset, typeArgs, context) {
@@ -48,7 +48,7 @@ function readOption (buffer, offset, typeArgs, context) {
     retval.size++
     return retval
   }
-  return { size: 1 }
+  return new Result(undefined, 1)
 }
 
 function writeOption (value, buffer, offset, typeArgs, context) {

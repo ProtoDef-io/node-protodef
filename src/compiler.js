@@ -79,31 +79,34 @@ class CompiledProtodef {
     }
   }
 
+  _readErrorHandler (e) {
+    e.message = `Read error for ${e.field} : ${e.message}`
+    throw e
+  }
+
+  _writeErrorHandler (e) {
+    e.message = `Write error for ${e.field} : ${e.message}`
+    throw e
+  }
+
+  _sizeOfErrorHandler (e) {
+    e.message = `SizeOf error for ${e.field} : ${e.message}`
+    throw e
+  }
+
   createPacketBuffer (type, packet) {
-    const length = tryCatch(() => this.sizeOf(packet, type),
-      (e) => {
-        e.message = `SizeOf error for ${e.field} : ${e.message}`
-        throw e
-      })
+    const length = tryCatch(() => this.sizeOf(packet, type), this._sizeOfErrorHandler)
     const buffer = Buffer.allocUnsafe(length)
-    tryCatch(() => this.write(packet, buffer, 0, type),
-      (e) => {
-        e.message = `Write error for ${e.field} : ${e.message}`
-        throw e
-      })
+    tryCatch(() => this.write(packet, buffer, 0, type), this._readErrorHandler)
     return buffer
   }
 
   parsePacketBuffer (type, buffer) {
-    const { value: data, size } = tryCatch(() => this.read(buffer, 0, type),
-      (e) => {
-        e.message = `Read error for ${e.field} : ${e.message}`
-        throw e
-      })
+    const result = tryCatch(() => this.read(buffer, 0, type), this._writeErrorHandler)
     return {
-      data,
-      metadata: { size },
-      buffer: buffer.slice(0, size)
+      data: result.value,
+      metadata: { size: result.size },
+      buffer: buffer.slice(0, result.size)
     }
   }
 }
@@ -294,7 +297,7 @@ class Compiler {
   compile (code) {
     // Local variable to provide some context to eval()
     const native = this.native // eslint-disable-line
-    const { PartialReadError } = require('./utils') // eslint-disable-line
+    const { PartialReadError, Result } = require('./utils') // eslint-disable-line
     return eval(code)() // eslint-disable-line
   }
 }

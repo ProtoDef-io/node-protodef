@@ -1,11 +1,11 @@
-const { getCount, sendCount, calcCount, PartialReadError } = require('../../utils')
+const { getCount, sendCount, calcCount, PartialReadError, Result } = require('../../utils')
 const schema = require('../../../ProtoDef/schemas/utils.json')
 
 function readMapper (buffer, offset, { type, mappings }, rootNode) {
   const { size, value } = this.read(buffer, offset, type, rootNode)
   for (const key in mappings) {
     if (key === value || +key === +value) {
-      return { value: mappings[key], size }
+      return new Result(mappings[key], size)
     }
   }
   throw new Error(`${typeof value} "${value}" is not in the mappings value`)
@@ -39,10 +39,7 @@ function readPString (buffer, offset, typeArgs, rootNode) {
     throw new PartialReadError('Missing characters in string, found size is ' +
     buffer.length + ' expected size was ' + strEnd)
   }
-  return {
-    value: buffer.toString('utf8', cursor, strEnd),
-    size: size + count
-  }
+  return new Result(buffer.toString('utf8', cursor, strEnd), size + count)
 }
 
 function writePString (value, buffer, offset, typeArgs, rootNode) {
@@ -62,10 +59,7 @@ function readBuffer (buffer, offset, typeArgs, rootNode) {
   const { size, count } = getCount.call(this, buffer, offset, typeArgs, rootNode)
   offset += size
   if (offset + count > buffer.length) throw new PartialReadError()
-  return {
-    value: buffer.slice(offset, offset + count),
-    size: size + count
-  }
+  return new Result(buffer.slice(offset, offset + count), size + count)
 }
 
 function writeBuffer (value, buffer, offset, typeArgs, rootNode) {
@@ -103,10 +97,7 @@ function readBitField (buffer, offset, typeArgs) {
     if (signed && val >= 1 << (size - 1)) { val -= 1 << size }
     value[name] = val
   }
-  return {
-    value,
-    size: offset - beginOffset
-  }
+  return new Result(value, offset - beginOffset)
 }
 
 function writeBitField (value, buffer, offset, typeArgs) {

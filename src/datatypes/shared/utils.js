@@ -1,4 +1,4 @@
-const { PartialReadError } = require('../../utils')
+const { PartialReadError, Result } = require('../../utils')
 const schema = require('../../../ProtoDef/schemas/utils.json')
 
 function readVarInt (buffer, offset) {
@@ -10,7 +10,7 @@ function readVarInt (buffer, offset) {
     if ((v & 0x80) === 0) break
   }
   if (offset + size > buffer.length) throw new PartialReadError()
-  return { value, size }
+  return new Result(value, size)
 }
 
 function sizeOfVarInt (value) {
@@ -33,10 +33,7 @@ function writeVarInt (value, buffer, offset) {
 
 function readBool (buffer, offset) {
   if (buffer.length <= offset) throw new PartialReadError()
-  return {
-    value: buffer[offset] === 1,
-    size: 1
-  }
+  return new Result(buffer[offset] === 1, 1)
 }
 
 function writeBool (value, buffer, offset) {
@@ -44,10 +41,7 @@ function writeBool (value, buffer, offset) {
 }
 
 function readVoid () {
-  return {
-    value: undefined,
-    size: 0
-  }
+  return new Result()
 }
 
 function writeVoid (value, buffer, offset) {
@@ -57,10 +51,7 @@ function writeVoid (value, buffer, offset) {
 function readCString (buffer, offset) {
   const index = buffer.indexOf(0x00)
   if (index === -1) throw new PartialReadError()
-  return {
-    value: buffer.toString('utf8', offset, index),
-    size: index - offset + 1
-  }
+  return new Result(buffer.toString('utf8', offset, index), index - offset + 1)
 }
 
 function writeCString (value, buffer, offset) {

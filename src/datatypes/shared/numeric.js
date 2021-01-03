@@ -1,11 +1,8 @@
-const { PartialReadError } = require('../../utils')
+const { PartialReadError, Result } = require('../../utils')
 
 function readI64 (buffer, offset) {
   if (offset + 8 > buffer.length) { throw new PartialReadError() }
-  return {
-    value: [buffer.readInt32BE(offset), buffer.readInt32BE(offset + 4)],
-    size: 8
-  }
+  return new Result([buffer.readInt32BE(offset), buffer.readInt32BE(offset + 4)], 8)
 }
 
 function writeI64 (value, buffer, offset) {
@@ -16,10 +13,7 @@ function writeI64 (value, buffer, offset) {
 
 function readLI64 (buffer, offset) {
   if (offset + 8 > buffer.length) { throw new PartialReadError() }
-  return {
-    value: [buffer.readInt32LE(offset + 4), buffer.readInt32LE(offset)],
-    size: 8
-  }
+  return new Result([buffer.readInt32LE(offset + 4), buffer.readInt32LE(offset)], 8)
 }
 
 function writeLI64 (value, buffer, offset) {
@@ -30,10 +24,7 @@ function writeLI64 (value, buffer, offset) {
 
 function readU64 (buffer, offset) {
   if (offset + 8 > buffer.length) { throw new PartialReadError() }
-  return {
-    value: [buffer.readUInt32BE(offset), buffer.readUInt32BE(offset + 4)],
-    size: 8
-  }
+  return new Result([buffer.readUInt32BE(offset), buffer.readUInt32BE(offset + 4)], 8)
 }
 
 function writeU64 (value, buffer, offset) {
@@ -44,10 +35,7 @@ function writeU64 (value, buffer, offset) {
 
 function readLU64 (buffer, offset) {
   if (offset + 8 > buffer.length) { throw new PartialReadError() }
-  return {
-    value: [buffer.readUInt32LE(offset + 4), buffer.readUInt32LE(offset)],
-    size: 8
-  }
+  return new Result([buffer.readUInt32LE(offset + 4), buffer.readUInt32LE(offset)], 8)
 }
 
 function writeLU64 (value, buffer, offset) {
@@ -82,19 +70,20 @@ const types = {
   lu64: [readLU64, writeLU64, 8, require('../../../ProtoDef/schemas/numeric.json')['lu64']]
 }
 
+function readIntN (method, size, buffer, offset) {
+  if (offset + size > buffer.length) throw new PartialReadError()
+  return new Result(buffer[method](offset), size)
+}
+
+function writeIntN (method, value, buffer, offset) {
+  return buffer[method](value, offset)
+}
+
 for (const num in nums) {
   const [ bufferReader, bufferWriter, size ] = nums[num]
   types[num] = [
-    function readIntN (buffer, offset) {
-      if (offset + size > buffer.length) throw new PartialReadError()
-      return {
-        value: buffer[bufferReader](offset),
-        size
-      }
-    },
-    function writeIntN (value, buffer, offset) {
-      return buffer[bufferWriter](value, offset)
-    },
+    readIntN.bind(null, bufferReader, size),
+    writeIntN.bind(null, bufferWriter),
     size,
     require('../../../ProtoDef/schemas/numeric.json')[num]
   ]
