@@ -1,6 +1,7 @@
 const { getFieldInfo, isFieldInfo, tryCatch } = require('./utils')
 const reduce = require('lodash.reduce')
 const get = require('lodash.get')
+const clonedeep = require('lodash.clonedeep')
 const Validator = require('protodef-validator')
 const defaultDatatypes = require('./datatypes/interpreter')
 
@@ -66,21 +67,21 @@ class ProtoDef {
   }
 
   read (buffer, cursor, _fieldInfo, rootNodes) {
-    let { type, typeArgs } = getFieldInfo(_fieldInfo)
+    const { type, typeArgs } = getFieldInfo(_fieldInfo)
     const typeFunctions = this.types[type]
     if (!typeFunctions) { throw new Error('missing data type: ' + type) }
     return typeFunctions[0].call(this, buffer, cursor, typeArgs, rootNodes)
   }
 
   write (value, buffer, offset, _fieldInfo, rootNode) {
-    let { type, typeArgs } = getFieldInfo(_fieldInfo)
+    const { type, typeArgs } = getFieldInfo(_fieldInfo)
     const typeFunctions = this.types[type]
     if (!typeFunctions) { throw new Error('missing data type: ' + type) }
     return typeFunctions[1].call(this, value, buffer, offset, typeArgs, rootNode)
   }
 
   sizeOf (value, _fieldInfo, rootNode) {
-    let { type, typeArgs } = getFieldInfo(_fieldInfo)
+    const { type, typeArgs } = getFieldInfo(_fieldInfo)
     const typeFunctions = this.types[type]
     if (!typeFunctions) {
       throw new Error('missing data type: ' + type)
@@ -130,24 +131,25 @@ function findArgs (acc, v, k) {
   return acc
 }
 
+function produceArgsObject (defaultTypeArgs, argPos, typeArgs) {
+  if (typeArgs === undefined) return defaultTypeArgs
+  const args = DATATYPE_NOCOPY ? defaultTypeArgs : clonedeep(defaultTypeArgs)
+  for (const { path, val } of argPos) {
+    // Set field
+    const c = path.split('.').reverse()
+    let into = args
+    while (c.length > 1) {
+      into = into[c.pop()]
+    }
+    into[c.pop()] = typeArgs[val]
+  }
+  return args
+}
+
 function constructProduceArgs (defaultTypeArgs) {
   const argPos = reduce(defaultTypeArgs, findArgs, [])
-  const json = JSON.stringify(defaultTypeArgs)
-  if (defaultTypeArgs !== 'object') return () => defaultTypeArgs
-  return function produceArgsObject (typeArgs) {
-    if (typeArgs === undefined) return defaultTypeArgs
-    const args = DATATYPE_NOCOPY ? defaultTypeArgs : JSON.parse(json)
-    for (const { path, val } of argPos) {
-      // Set field
-      const c = path.split('.').reverse()
-      let into = args
-      while (c.length > 1) {
-        into = into[c.pop()]
-      }
-      into[c.pop()] = typeArgs[val]
-    }
-    return args
-  }
+  if (typeof defaultTypeArgs !== 'object') return () => defaultTypeArgs
+  return produceArgsObject.bind(this, defaultTypeArgs, argPos)
 }
 
 function extendType ([ _read, _write, _sizeOf ], defaultTypeArgs) {
