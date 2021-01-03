@@ -16,16 +16,14 @@ class ProtoDef {
   }
 
   addProtocol (protocolData, path) {
-    const self = this
-    function recursiveAddTypes (protocolData, path) {
-      if (protocolData === undefined) { return }
-      if (protocolData.types) { self.addTypes(protocolData.types) }
-      recursiveAddTypes(get(protocolData, path.shift()), path)
-    }
-
     if (this.validator) { this.validator.validateProtocol(protocolData) }
+    this.recursiveAddTypes(protocolData, path)
+  }
 
-    recursiveAddTypes(protocolData, path)
+  recursiveAddTypes (protocolData, path) {
+    if (protocolData === undefined) return
+    if (protocolData.types) { this.addTypes(protocolData.types) }
+    this.recursiveAddTypes(get(protocolData, path.shift()), path)
   }
 
   addType (name, functions, validate = true) {
@@ -40,7 +38,7 @@ class ProtoDef {
       }
 
       let { type, typeArgs } = getFieldInfo(functions)
-      this.types[name] = typeArgs ? extendType(this.types[type], typeArgs) : this.types[type]
+      this.types[name] = typeArgs ? extendType.call(this, this.types[type], typeArgs) : this.types[type]
     } else {
       if (this.validator) {
         if (functions[3]) {
@@ -93,27 +91,30 @@ class ProtoDef {
     }
   }
 
+  _readErrorHandler (e) {
+    e.message = `Read error for ${e.field} : ${e.message}`
+    throw e
+  }
+
+  _writeErrorHandler (e) {
+    e.message = `Write error for ${e.field} : ${e.message}`
+    throw e
+  }
+
+  _sizeOfErrorHandler (e) {
+    e.message = `SizeOf error for ${e.field} : ${e.message}`
+    throw e
+  }
+
   createPacketBuffer (type, packet) {
-    const length = tryCatch(() => this.sizeOf(packet, type, {}),
-      (e) => {
-        e.message = `SizeOf error for ${e.field} : ${e.message}`
-        throw e
-      })
+    const length = tryCatch(() => this.sizeOf(packet, type, {}), this._sizeOfErrorHandler)
     const buffer = Buffer.allocUnsafe(length)
-    tryCatch(() => this.write(packet, buffer, 0, type, {}),
-      (e) => {
-        e.message = `Write error for ${e.field} : ${e.message}`
-        throw e
-      })
+    tryCatch(() => this.write(packet, buffer, 0, type, {}), this._writeErrorHandler)
     return buffer
   }
 
   parsePacketBuffer (type, buffer) {
-    const { value: data, size } = tryCatch(() => this.read(buffer, 0, type, {}),
-      (e) => {
-        e.message = `Read error for ${e.field} : ${e.message}`
-        throw e
-      })
+    const { value: data, size } = tryCatch(() => this.read(buffer, 0, type, {}), this._readErrorHandler)
     return {
       data,
       metadata: { size },
@@ -152,19 +153,31 @@ function constructProduceArgs (defaultTypeArgs) {
   return produceArgsObject.bind(this, defaultTypeArgs, argPos)
 }
 
+function extendedRead (_read, _produceArgs, buffer, offset, typeArgs, context) {
+  return _read.call(this, buffer, offset, _produceArgs(typeArgs), context)
+}
+
+function extendedWrite (_write, _produceArgs, value, buffer, offset, typeArgs, context) {
+  return _write.call(this, value, buffer, offset, _produceArgs(typeArgs), context)
+}
+
+function extendedSizeOf (_sizeOf, _produceArgs, value, typeArgs, context) {
+  return _sizeOf.call(this, value, _produceArgs(typeArgs), context)
+}
+
+function staticSizeOf (_sizeOf) {
+  return _sizeOf
+}
+
 function extendType ([ _read, _write, _sizeOf ], defaultTypeArgs) {
   const produceArgs = constructProduceArgs(defaultTypeArgs)
-  function read (buffer, offset, typeArgs, context) {
-    return _read.call(this, buffer, offset, produceArgs(typeArgs), context)
-  }
-  function write (value, buffer, offset, typeArgs, context) {
-    return _write.call(this, value, buffer, offset, produceArgs(typeArgs), context)
-  }
-  function sizeOf (value, typeArgs, context) {
-    return _sizeOf.call(this, value, produceArgs(typeArgs), context)
-  }
-  function sizeOfStatic () { return _sizeOf }
-  return [read, write, typeof _sizeOf === 'function' ? sizeOf : sizeOfStatic]
+  return [
+    extendedRead.bind(this, _read, produceArgs),
+    extendedWrite.bind(this, _write, produceArgs),
+    typeof _sizeOf === 'function'
+      ? extendedSizeOf.bind(this, _sizeOf, produceArgs)
+      : staticSizeOf.bind(this, _sizeOf)
+  ]
 }
 
 module.exports = ProtoDef
