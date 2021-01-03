@@ -1,6 +1,7 @@
 const { PartialReadError, Result } = require('../../utils')
 const schema = require('../../../ProtoDef/schemas/utils.json')
 
+const LOG2 = Math.log2(0x7F)
 function readVarInt (buffer, offset) {
   let value = 0
   let size = 0
@@ -14,12 +15,7 @@ function readVarInt (buffer, offset) {
 }
 
 function sizeOfVarInt (value) {
-  let size = 1
-  while (value & ~0x7F) {
-    size++
-    value >>>= 7
-  }
-  return size
+  return value >= 0 ? Math.ceil(Math.log2(Math.max(value, 127)) / LOG2) : 5
 }
 
 function writeVarInt (value, buffer, offset) {
@@ -41,7 +37,7 @@ function writeBool (value, buffer, offset) {
 }
 
 function readVoid () {
-  return new Result()
+  return new Result(undefined, 0)
 }
 
 function writeVoid (value, buffer, offset) {
