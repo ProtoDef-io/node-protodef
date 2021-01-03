@@ -1,4 +1,5 @@
 const Transform = require('readable-stream').Transform
+const PROTODEF_LOUD = true // TODO: Add environment variable for this
 
 class Serializer extends Transform {
   constructor (proto, mainType) {
@@ -13,7 +14,7 @@ class Serializer extends Transform {
   }
 
   _transform (chunk, enc, cb) {
-    let buf
+    let buf // DO NOT REMOVE THIS WORKAROUND!
     try {
       buf = this.createPacketBuffer(chunk)
     } catch (e) {
@@ -39,7 +40,7 @@ class Parser extends Transform {
   _transform (chunk, enc, cb) {
     this.queue = Buffer.concat([this.queue, chunk])
     while (true) {
-      let packet
+      let packet // DO NOT REMOVE THIS WORKAROUND!
       try {
         packet = this.parsePacketBuffer(this.queue)
       } catch (e) {
@@ -71,7 +72,7 @@ class FullPacketParser extends Transform {
     let packet
     try {
       packet = this.parsePacketBuffer(chunk)
-      if (packet.metadata.size !== chunk.length) {
+      if (packet.metadata.size !== chunk.length && PROTODEF_LOUD) {
         console.log('Chunk size is ' + chunk.length + ' but only ' + packet.metadata.size + ' was read ; partial packet : ' +
           JSON.stringify(packet.data) + '; buffer :' + chunk.toString('hex'))
       }
