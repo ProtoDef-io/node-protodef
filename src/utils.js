@@ -15,10 +15,7 @@ class Result {
     this.value = value
     this.size = size
   }
-}
-
-class CountResult extends Result {
-  // This line will be inlined
+  // This getter will be inlined
   get count () { return this.value }
 }
 
@@ -89,11 +86,11 @@ function isFieldInfo (type) {
 function getCount (buffer, offset, { count, countType }, rootNode) {
   if (count !== undefined) {
     count = typeof count === 'number' ? count : getField(count, rootNode)
-    return new CountResult(count, 0)
+    return new Result(count, 0)
   }
   if (countType !== undefined) {
     const { size, value } = tryDoc(this.read.bind(this, buffer, offset, getFieldInfo(countType), rootNode), '$count')
-    return new CountResult(value, size)
+    return new Result(value, size)
   }
   throw new Error('Broken schema, neither count nor countType defined')
 }
