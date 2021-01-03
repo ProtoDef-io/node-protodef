@@ -102,18 +102,18 @@ class ProtoDef {
   }
 
   createPacketBuffer (type, packet) {
-    const length = tryCatch(() => this.sizeOf(packet, type, {}), this._sizeOfErrorHandler)
+    const length = tryCatch(this.sizeOf.bind(this, packet, type, {}), this._sizeOfErrorHandler)
     const buffer = Buffer.allocUnsafe(length)
-    tryCatch(() => this.write(packet, buffer, 0, type, {}), this._writeErrorHandler)
+    tryCatch(this.write.bind(this, packet, buffer, 0, type, {}), this._writeErrorHandler)
     return buffer
   }
 
   parsePacketBuffer (type, buffer) {
-    const { value: data, size } = tryCatch(() => this.read(buffer, 0, type, {}), this._readErrorHandler)
+    const result = tryCatch(this.read.bind(this, buffer, 0, type, {}), this._readErrorHandler)
     return {
-      data,
-      metadata: { size },
-      buffer: buffer.slice(0, size)
+      data: result.value,
+      metadata: { size: result.size },
+      buffer: buffer.slice(0, result.size)
     }
   }
 }
@@ -142,9 +142,13 @@ function produceArgsObject (defaultTypeArgs, argPos, typeArgs) {
   return args
 }
 
+function produceArgsStatic (defaultTypeArgs) {
+  return defaultTypeArgs
+}
+
 function constructProduceArgs (defaultTypeArgs) {
   const argPos = reduce(defaultTypeArgs, findArgs, [])
-  if (typeof defaultTypeArgs !== 'object') return () => defaultTypeArgs
+  if (typeof defaultTypeArgs !== 'object') return produceArgsStatic.bind(this, defaultTypeArgs)
   return produceArgsObject.bind(this, defaultTypeArgs, argPos)
 }
 

@@ -92,7 +92,7 @@ function getCount (buffer, offset, { count, countType }, rootNode) {
     return new CountResult(count, 0)
   }
   if (countType !== undefined) {
-    const { size, value } = tryDoc(() => this.read(buffer, offset, getFieldInfo(countType), rootNode), '$count')
+    const { size, value } = tryDoc(this.read.bind(this, buffer, offset, getFieldInfo(countType), rootNode), '$count')
     return new CountResult(value, size)
   }
   throw new Error('Broken schema, neither count nor countType defined')
@@ -113,7 +113,7 @@ function sendCount (len, buffer, offset, { count, countType }, rootNode) {
 
 function calcCount (len, { count, countType }, rootNode) {
   if (count === undefined && countType !== undefined) {
-    return tryDoc(() => this.sizeOf(len, getFieldInfo(countType), rootNode), '$count')
+    return tryDoc(this.sizeOf.bind(this, len, getFieldInfo(countType), rootNode), '$count')
   }
   return 0
 }

@@ -6,10 +6,10 @@ function readArray (buffer, offset, typeArgs, rootNode) {
   let { count, size } = getCount.call(this, buffer, offset, typeArgs, rootNode)
   offset += size
   for (let i = 0; i < count; i++) {
-    const { size: s, value: v } = tryDoc(this.read.bind(this, buffer, offset, typeArgs.type, rootNode), i)
-    size += s
-    offset += s
-    value.push(v)
+    const res = tryDoc(this.read.bind(this, buffer, offset, typeArgs.type, rootNode), i)
+    size += res.size
+    offset += res.size
+    value.push(res.value)
   }
   return new Result(value, size)
 }
@@ -49,18 +49,16 @@ function readContainer (buffer, offset, typeArgs, context) {
   const value = { [ParentSymbol]: context }
   let size = 0
   for (const { type, name, anon } of typeArgs) {
-    tryDoc(() => {
-      const { size: s, value: v } = this.read(buffer, offset, type, value)
-      size += s
-      offset += s
-      if (anon && v !== undefined) {
-        for (const k in v) {
-          value[k] = v[k]
-        }
-        return
+    const res = tryDoc(this.read.bind(this, buffer, offset, type, value), name || 'unknown')
+    size += res.size
+    offset += res.size
+    if (anon && res.value !== undefined) {
+      for (const k in res.value) {
+        value[k] = res.value[k]
       }
-      value[name] = v
-    }, name || 'unknown')
+      continue
+    }
+    value[name] = res.value
   }
   value[ParentSymbol] = undefined
   return new Result(value, size)
@@ -69,7 +67,7 @@ function readContainer (buffer, offset, typeArgs, context) {
 function writeContainer (value, buffer, offset, typeArgs, context) {
   value[ParentSymbol] = context
   for (const { type, name, anon } of typeArgs) {
-    offset = tryDoc(() => this.write(anon ? value : value[name], buffer, offset, type, value), name || 'unknown')
+    offset = tryDoc(this.write.bind(this, anon ? value : value[name], buffer, offset, type, value), name || 'unknown')
   }
   value[ParentSymbol] = undefined
   return offset
@@ -79,7 +77,7 @@ function sizeOfContainer (value, typeArgs, context) {
   value[ParentSymbol] = context
   let size = 0
   for (const { type, name, anon } of typeArgs) {
-    size += tryDoc(() => this.sizeOf(anon ? value : value[name], type, value), name || 'unknown')
+    size += tryDoc(this.sizeOf.bind(this, anon ? value : value[name], type, value), name || 'unknown')
   }
   value[ParentSymbol] = undefined
   return size

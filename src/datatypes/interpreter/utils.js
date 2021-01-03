@@ -36,8 +36,7 @@ function readPString (buffer, offset, typeArgs, rootNode) {
   const cursor = offset + size
   const strEnd = cursor + count
   if (strEnd > buffer.length) {
-    throw new PartialReadError('Missing characters in string, found size is ' +
-    buffer.length + ' expected size was ' + strEnd)
+    throw new PartialReadError(`Missing characters in string, found size is ${buffer.length} expected size was ${strEnd}`)
   }
   return new Result(buffer.toString('utf8', cursor, strEnd), size + count)
 }

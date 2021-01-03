@@ -95,14 +95,14 @@ class CompiledProtodef {
   }
 
   createPacketBuffer (type, packet) {
-    const length = tryCatch(() => this.sizeOf(packet, type), this._sizeOfErrorHandler)
+    const length = tryCatch(this.sizeOf.bind(this, packet, type), this._sizeOfErrorHandler)
     const buffer = Buffer.allocUnsafe(length)
-    tryCatch(() => this.write(packet, buffer, 0, type), this._readErrorHandler)
+    tryCatch(this.write.bind(this, packet, buffer, 0, type), this._readErrorHandler)
     return buffer
   }
 
   parsePacketBuffer (type, buffer) {
-    const result = tryCatch(() => this.read(buffer, 0, type), this._writeErrorHandler)
+    const result = tryCatch(this.read.bind(this, buffer, 0, type), this._writeErrorHandler)
     return {
       data: result.value,
       metadata: { size: result.size },
@@ -399,7 +399,7 @@ class SizeOfCompiler extends Compiler {
   addNativeType (type, fn) {
     this.primitiveTypes[type] = `native.${type}`
     if (!isNaN(fn)) {
-      this.native[type] = (value) => { return fn }
+      this.native[type] = () => fn
     } else {
       this.native[type] = fn
     }
