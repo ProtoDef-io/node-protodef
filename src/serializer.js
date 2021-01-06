@@ -104,6 +104,33 @@ class LazyPacketParser extends Transform {
     this.noErrorLogging = noErrorLogging
   }
 
+  makeProxyHandler (packetContext) {
+    return {
+      get: this.proxyGetter.bind(packetContext)
+    }
+  }
+
+  proxyGetter (target, key, receiver) {
+    if (key === '_isProxy') return true
+    if (this.fullPacketData !== null) {
+      return Reflect.get(recursiveGet(this.fullPacketData, this.path, receiver), key, receiver)
+    }
+    if (!(key in target)) {
+      this.fullPacketData = this.parser.proto.parsePacketBuffer(this.parser.mainType, this.buffer).data
+      return Reflect.get(recursiveGet(this.fullPacketData, this.path, receiver), key, receiver)
+    }
+
+    let prop = Reflect.get(...arguments)
+    if (typeof prop === 'object' && !prop._isProxy) {
+      prop = new Proxy(prop, this.parser.makeProxyHandler({
+        ...this,
+        path: [...this.path, key]
+      }))
+      Reflect.set(target, key, prop, receiver)
+    }
+    return prop
+  }
+
   parsePacketBuffer (buffer) {
     let shallowPacketData
     try {
@@ -112,32 +139,16 @@ class LazyPacketParser extends Transform {
       return this.proto.parsePacketBuffer(this.mainType, buffer)
     }
 
-    const self = this
-    let fullPacketData = null
-    function makeProxyHandler (path) {
-      return {
-        get: function (target, key, receiver) {
-          if (key === '_isProxy') return true
-          if (fullPacketData !== null) {
-            return Reflect.get(recursiveGet(fullPacketData, path, receiver), key, receiver)
-          }
-          if (!(key in target)) {
-            fullPacketData = self.proto.parsePacketBuffer(self.mainType, buffer).data
-            return Reflect.get(recursiveGet(fullPacketData, path, receiver), key, receiver)
-          }
-
-          let prop = Reflect.get(...arguments)
-          if (typeof prop === 'object' && !prop._isProxy) {
-            prop = new Proxy(prop, makeProxyHandler([...path, key]))
-            Reflect.set(target, key, prop, receiver)
-          }
-          return prop
-        }
-      }
+    const packetContext = {
+      shallowPacketData,
+      buffer,
+      fullPacketData: null,
+      parser: this,
+      path: []
     }
 
     let packet = {
-      data: new Proxy(shallowPacketData, makeProxyHandler([])),
+      data: new Proxy(shallowPacketData, this.makeProxyHandler(packetContext)),
       metadata: { size: buffer.length },
       buffer
     }
