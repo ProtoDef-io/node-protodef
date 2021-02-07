@@ -6,8 +6,8 @@ class BigIntExtended extends Array {
     const upper = BigInt.asIntN(32, arg >> 32n)
     const lower = BigInt.asIntN(32, arg)
     super(Number(upper), Number(lower))
-    this.valueOf = () => arg
   }
+  valueOf () { return BigInt.asIntN(64, BigInt(this[0]) << 32n) | BigInt.asUintN(32, BigInt(this[1])) }
 }
 
 function readI64 (buffer, offset) {
