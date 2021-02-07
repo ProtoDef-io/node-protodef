@@ -1,12 +1,6 @@
 const { PartialReadError } = require('../utils')
 
 class BigIntExtended extends Array {
-  constructor (arg) {
-    if (typeof arg === 'number') arg = BigInt(arg)
-    const upper = BigInt.asIntN(32, arg >> 32n)
-    const lower = BigInt.asIntN(32, arg)
-    super(Number(upper), Number(lower))
-  }
   valueOf () { return BigInt.asIntN(64, BigInt(this[0]) << 32n) | BigInt.asUintN(32, BigInt(this[1])) }
 }
 
@@ -14,7 +8,7 @@ function readI64 (buffer, offset) {
   if (offset + 8 > buffer.length) { throw new PartialReadError() }
   const val = buffer.readBigInt64BE(offset)
   return {
-    value: new BigIntExtended(val),
+    value: new BigIntExtended(buffer.readInt32BE(offset), buffer.readInt32BE(offset + 4)),
     size: 8
   }
 }
@@ -33,7 +27,7 @@ function readLI64 (buffer, offset) {
   if (offset + 8 > buffer.length) { throw new PartialReadError() }
   const val = buffer.readBigInt64LE(offset)
   return {
-    value: new BigIntExtended(val),
+    value: new BigIntExtended(buffer.readInt32LE(offset + 4), buffer.readInt32LE(offset)),
     size: 8
   }
 }
@@ -52,7 +46,7 @@ function readU64 (buffer, offset) {
   if (offset + 8 > buffer.length) { throw new PartialReadError() }
   const val = buffer.readBigUInt64BE(offset)
   return {
-    value: new BigIntExtended(val),
+    value: new BigIntExtended(buffer.readUInt32BE(offset), buffer.readUInt32BE(offset + 4)),
     size: 8
   }
 }
@@ -71,7 +65,7 @@ function readLU64 (buffer, offset) {
   if (offset + 8 > buffer.length) { throw new PartialReadError() }
   const val = buffer.readBigUInt64LE(offset)
   return {
-    value: new BigIntExtended(val),
+    value: new BigIntExtended(buffer.readUInt32LE(offset + 4), buffer.readUInt32LE(offset)),
     size: 8
   }
 }
