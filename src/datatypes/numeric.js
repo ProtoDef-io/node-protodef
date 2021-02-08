@@ -14,7 +14,7 @@ function readI64 (buffer, offset) {
 }
 
 function writeI64 (value, buffer, offset) {
-  if (value instanceof BigInt) {
+  if (typeof value === 'bigint') {
     buffer.writeBigInt64BE(value, offset)
   } else {
     buffer.writeInt32BE(value[0], offset)
@@ -33,7 +33,7 @@ function readLI64 (buffer, offset) {
 }
 
 function writeLI64 (value, buffer, offset) {
-  if (value instanceof BigInt) {
+  if (typeof value === 'bigint') {
     buffer.writeBigInt64LE(value, offset)
   } else {
     buffer.writeInt32LE(value[0], offset + 4)
@@ -52,7 +52,7 @@ function readU64 (buffer, offset) {
 }
 
 function writeU64 (value, buffer, offset) {
-  if (value instanceof BigInt) {
+  if (typeof value === 'bigint') {
     buffer.writeBigUInt64BE(value, offset)
   } else {
     buffer.writeUInt32BE(value[0], offset)
@@ -71,7 +71,7 @@ function readLU64 (buffer, offset) {
 }
 
 function writeLU64 (value, buffer, offset) {
-  if (value instanceof BigInt) {
+  if (typeof value === 'bigint') {
     buffer.writeBigUInt64LE(value, offset)
   } else {
     buffer.writeUInt32LE(value[0], offset + 4)
@@ -90,7 +90,7 @@ function generateFunctions (bufferReader, bufferWriter, size, schema) {
     }
   }
   const writer = (value, buffer, offset) => {
-    if (value instanceof BigInt) value = Number(value)
+    if (typeof value === 'bigint') value = Number(value)
     buffer[bufferWriter](value, offset)
     return offset + size
   }
