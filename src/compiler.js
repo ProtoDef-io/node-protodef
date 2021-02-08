@@ -95,8 +95,8 @@ class CompiledProtodef {
     return buffer
   }
 
-  parsePacketBuffer (type, buffer) {
-    const { value, size } = tryCatch(() => this.read(buffer, 0, type),
+  parsePacketBuffer (type, buffer, offset = 0) {
+    const { value, size } = tryCatch(() => this.read(buffer, offset, type),
       (e) => {
         e.message = `Read error for ${e.field} : ${e.message}`
         throw e

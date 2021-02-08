@@ -42,9 +42,9 @@ Size of the packet `value` defined by `_fieldInfo` with context `rootNode`
 
 Returns a buffer of the `packet` for `type`.
 
-### ProtoDef.parsePacketBuffer(type,buffer)
+### ProtoDef.parsePacketBuffer(type,buffer,offset = 0)
 
-Returns a parsed packet of `buffer` for `type`.
+Returns a parsed packet of `buffer` for `type` starting at `offset`.
 
 ## Serializer(proto,mainType)
 

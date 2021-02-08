@@ -1,58 +1,78 @@
 const { PartialReadError } = require('../utils')
 
+class BigIntExtended extends Array {
+  valueOf () { return BigInt.asIntN(64, BigInt(this[0]) << 32n) | BigInt.asUintN(32, BigInt(this[1])) }
+}
+
 function readI64 (buffer, offset) {
   if (offset + 8 > buffer.length) { throw new PartialReadError() }
   return {
-    value: [buffer.readInt32BE(offset), buffer.readInt32BE(offset + 4)],
+    value: new BigIntExtended(buffer.readInt32BE(offset), buffer.readInt32BE(offset + 4)),
     size: 8
   }
 }
 
 function writeI64 (value, buffer, offset) {
-  buffer.writeInt32BE(value[0], offset)
-  buffer.writeInt32BE(value[1], offset + 4)
+  if (typeof value === 'bigint') {
+    buffer.writeBigInt64BE(value, offset)
+  } else {
+    buffer.writeInt32BE(value[0], offset)
+    buffer.writeInt32BE(value[1], offset + 4)
+  }
   return offset + 8
 }
 
 function readLI64 (buffer, offset) {
   if (offset + 8 > buffer.length) { throw new PartialReadError() }
   return {
-    value: [buffer.readInt32LE(offset + 4), buffer.readInt32LE(offset)],
+    value: new BigIntExtended(buffer.readInt32LE(offset + 4), buffer.readInt32LE(offset)),
     size: 8
   }
 }
 
 function writeLI64 (value, buffer, offset) {
-  buffer.writeInt32LE(value[0], offset + 4)
-  buffer.writeInt32LE(value[1], offset)
+  if (typeof value === 'bigint') {
+    buffer.writeBigInt64LE(value, offset)
+  } else {
+    buffer.writeInt32LE(value[0], offset + 4)
+    buffer.writeInt32LE(value[1], offset)
+  }
   return offset + 8
 }
 
 function readU64 (buffer, offset) {
   if (offset + 8 > buffer.length) { throw new PartialReadError() }
   return {
-    value: [buffer.readUInt32BE(offset), buffer.readUInt32BE(offset + 4)],
+    value: new BigIntExtended(buffer.readUInt32BE(offset), buffer.readUInt32BE(offset + 4)),
     size: 8
   }
 }
 
 function writeU64 (value, buffer, offset) {
-  buffer.writeUInt32BE(value[0], offset)
-  buffer.writeUInt32BE(value[1], offset + 4)
+  if (typeof value === 'bigint') {
+    buffer.writeBigUInt64BE(value, offset)
+  } else {
+    buffer.writeUInt32BE(value[0], offset)
+    buffer.writeUInt32BE(value[1], offset + 4)
+  }
   return offset + 8
 }
 
 function readLU64 (buffer, offset) {
   if (offset + 8 > buffer.length) { throw new PartialReadError() }
   return {
-    value: [buffer.readUInt32LE(offset + 4), buffer.readUInt32LE(offset)],
+    value: new BigIntExtended(buffer.readUInt32LE(offset + 4), buffer.readUInt32LE(offset)),
     size: 8
   }
 }
 
 function writeLU64 (value, buffer, offset) {
-  buffer.writeUInt32LE(value[0], offset + 4)
-  buffer.writeUInt32LE(value[1], offset)
+  if (typeof value === 'bigint') {
+    buffer.writeBigUInt64LE(value, offset)
+  } else {
+    buffer.writeUInt32LE(value[0], offset + 4)
+    buffer.writeUInt32LE(value[1], offset)
+  }
   return offset + 8
 }
 

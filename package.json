@@ -21,7 +21,7 @@
     "readable-stream": "^3.0.3"
   },
   "engines": {
-    "node": ">=6"
+    "node": ">=10.4"
   },
   "bugs": {
     "url": "https://github.com/ProtoDef-io/node-protodef/issues"
@@ -30,6 +30,11 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/ProtoDef-io/node-protodef.git"
+  },
+  "standard": {
+    "ignore": [
+      "src/datatypes/numeric.js"
+    ]
   },
   "devDependencies": {
     "benchmark": "^2.1.4",
