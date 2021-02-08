@@ -6,7 +6,6 @@ class BigIntExtended extends Array {
 
 function readI64 (buffer, offset) {
   if (offset + 8 > buffer.length) { throw new PartialReadError() }
-  const val = buffer.readBigInt64BE(offset)
   return {
     value: new BigIntExtended(buffer.readInt32BE(offset), buffer.readInt32BE(offset + 4)),
     size: 8
@@ -25,7 +24,6 @@ function writeI64 (value, buffer, offset) {
 
 function readLI64 (buffer, offset) {
   if (offset + 8 > buffer.length) { throw new PartialReadError() }
-  const val = buffer.readBigInt64LE(offset)
   return {
     value: new BigIntExtended(buffer.readInt32LE(offset + 4), buffer.readInt32LE(offset)),
     size: 8
@@ -44,7 +42,6 @@ function writeLI64 (value, buffer, offset) {
 
 function readU64 (buffer, offset) {
   if (offset + 8 > buffer.length) { throw new PartialReadError() }
-  const val = buffer.readBigUInt64BE(offset)
   return {
     value: new BigIntExtended(buffer.readUInt32BE(offset), buffer.readUInt32BE(offset + 4)),
     size: 8
@@ -63,7 +60,6 @@ function writeU64 (value, buffer, offset) {
 
 function readLU64 (buffer, offset) {
   if (offset + 8 > buffer.length) { throw new PartialReadError() }
-  const val = buffer.readBigUInt64LE(offset)
   return {
     value: new BigIntExtended(buffer.readUInt32LE(offset + 4), buffer.readUInt32LE(offset)),
     size: 8
@@ -90,7 +86,6 @@ function generateFunctions (bufferReader, bufferWriter, size, schema) {
     }
   }
   const writer = (value, buffer, offset) => {
-    if (typeof value === 'bigint') value = Number(value)
     buffer[bufferWriter](value, offset)
     return offset + size
   }

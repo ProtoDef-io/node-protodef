@@ -58,9 +58,9 @@ Returns a buffer of the `packet`.
 
 Create a parser of `mainType` defined in `proto`. This is a Transform stream.
 
-### Parser.parsePacketBuffer(buffer, offset = 0)
+### Parser.parsePacketBuffer(buffer)
 
-Returns a parsed packet of `buffer` starting at `offset`.
+Returns a parsed packet of `buffer`.
 
 ## types
 
