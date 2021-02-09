@@ -1,8 +1,8 @@
 module.exports = {
   Read: {
-    'switch': ['parametrizable', (compiler, struct) => {
+    switch: ['parametrizable', (compiler, struct) => {
       let compare = struct.compareTo ? struct.compareTo : struct.compareToValue
-      let args = []
+      const args = []
       if (compare.startsWith('$')) args.push(compare)
       else if (struct.compareTo) {
         compare = compiler.getField(compare)
@@ -14,10 +14,10 @@ module.exports = {
         code += compiler.indent(`case ${val}: return ` + compiler.callType(struct.fields[key])) + '\n'
       }
       code += compiler.indent('default: return ' + compiler.callType(struct.default ? struct.default : 'void')) + '\n'
-      code += `}`
+      code += '}'
       return compiler.wrapCode(code, args)
     }],
-    'option': ['parametrizable', (compiler, type) => {
+    option: ['parametrizable', (compiler, type) => {
       let code = 'const {value} = ctx.bool(buffer, offset)\n'
       code += 'if (value) {\n'
       code += '  const { value, size } = ' + compiler.callType(type, 'offset + 1') + '\n'
@@ -29,9 +29,9 @@ module.exports = {
   },
 
   Write: {
-    'switch': ['parametrizable', (compiler, struct) => {
+    switch: ['parametrizable', (compiler, struct) => {
       let compare = struct.compareTo ? struct.compareTo : struct.compareToValue
-      let args = []
+      const args = []
       if (compare.startsWith('$')) args.push(compare)
       else if (struct.compareTo) {
         compare = compiler.getField(compare)
@@ -43,10 +43,10 @@ module.exports = {
         code += compiler.indent(`case ${val}: return ` + compiler.callType('value', struct.fields[key])) + '\n'
       }
       code += compiler.indent('default: return ' + compiler.callType('value', struct.default ? struct.default : 'void')) + '\n'
-      code += `}`
+      code += '}'
       return compiler.wrapCode(code, args)
     }],
-    'option': ['parametrizable', (compiler, type) => {
+    option: ['parametrizable', (compiler, type) => {
       let code = 'if (value != null) {\n'
       code += '  offset = ctx.bool(1, buffer, offset)\n'
       code += '  offset = ' + compiler.callType('value', type) + '\n'
@@ -59,9 +59,9 @@ module.exports = {
   },
 
   SizeOf: {
-    'switch': ['parametrizable', (compiler, struct) => {
+    switch: ['parametrizable', (compiler, struct) => {
       let compare = struct.compareTo ? struct.compareTo : struct.compareToValue
-      let args = []
+      const args = []
       if (compare.startsWith('$')) args.push(compare)
       else if (struct.compareTo) {
         compare = compiler.getField(compare)
@@ -73,10 +73,10 @@ module.exports = {
         code += compiler.indent(`case ${val}: return ` + compiler.callType('value', struct.fields[key])) + '\n'
       }
       code += compiler.indent('default: return ' + compiler.callType('value', struct.default ? struct.default : 'void')) + '\n'
-      code += `}`
+      code += '}'
       return compiler.wrapCode(code, args)
     }],
-    'option': ['parametrizable', (compiler, type) => {
+    option: ['parametrizable', (compiler, type) => {
       let code = 'if (value != null) {\n'
       code += '  return 1 + ' + compiler.callType('value', type) + '\n'
       code += '}\n'

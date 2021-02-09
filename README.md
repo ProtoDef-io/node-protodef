@@ -3,7 +3,7 @@
 [![Discord](https://img.shields.io/badge/chat-on%20discord-brightgreen.svg)](https://discord.gg/GsEFRM8)
 [![Gitter](https://img.shields.io/badge/chat-on%20gitter-brightgreen.svg)](https://gitter.im/PrismarineJS/general)
 [![Irc](https://img.shields.io/badge/chat-on%20irc-brightgreen.svg)](https://irc.gitter.im/)
-[![Build Status](https://img.shields.io/circleci/project/github/ProtoDef-io/node-protodef/master.svg)](https://circleci.com/gh/ProtoDef-io/node-protodef)
+[![Build Status](https://github.com/ProtoDef-io/node-protodef/workflows/CI/badge.svg)](https://github.com/ProtoDef-io/node-protodef/actions?query=workflow%3A%22CI%22)
 [![Tonic](https://img.shields.io/badge/tonic-try%20it-blue.svg)](https://tonicdev.com/npm/protodef)
 [![Try it on gitpod](https://img.shields.io/badge/try-on%20gitpod-brightgreen.svg)](https://gitpod.io/#https://github.com/ProtoDef-io/node-protodef)
 

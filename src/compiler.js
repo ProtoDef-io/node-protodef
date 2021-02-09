@@ -183,12 +183,12 @@ class Compiler {
   }
 
   getField (name) {
-    let path = name.split('/')
+    const path = name.split('/')
     let i = this.scopeStack.length - 1
-    const reserved = { 'value': true, 'enum': true }
+    const reserved = { value: true, enum: true }
     while (path.length) {
-      let scope = this.scopeStack[i]
-      let field = path.shift()
+      const scope = this.scopeStack[i]
+      const field = path.shift()
       if (field === '..') {
         i--
         continue
@@ -212,7 +212,7 @@ class Compiler {
 
   generate () {
     this.scopeStack = [{}]
-    let functions = []
+    const functions = []
     for (const type in this.context) {
       functions[type] = this.context[type]
     }

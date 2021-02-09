@@ -10,7 +10,7 @@ function isFieldInfo (type) {
 }
 
 function findArgs (acc, v, k) {
-  if (typeof v === 'string' && v.charAt(0) === '$') { acc.push({ 'path': k, 'val': v.substr(1) }) } else if (Array.isArray(v) || typeof v === 'object') { acc = acc.concat(reduce(v, findArgs, []).map((v) => ({ 'path': k + '.' + v.path, 'val': v.val }))) }
+  if (typeof v === 'string' && v.charAt(0) === '$') { acc.push({ path: k, val: v.substr(1) }) } else if (Array.isArray(v) || typeof v === 'object') { acc = acc.concat(reduce(v, findArgs, []).map((v) => ({ path: k + '.' + v.path, val: v.val }))) }
   return acc
 }
 
@@ -79,7 +79,7 @@ class ProtoDef {
         this.validator.addType(name)
       }
 
-      let { type, typeArgs } = getFieldInfo(functions)
+      const { type, typeArgs } = getFieldInfo(functions)
       this.types[name] = typeArgs ? extendType(this.types[type], typeArgs) : this.types[type]
     } else {
       if (this.validator) {
@@ -104,21 +104,21 @@ class ProtoDef {
   }
 
   read (buffer, cursor, _fieldInfo, rootNodes) {
-    let { type, typeArgs } = getFieldInfo(_fieldInfo)
+    const { type, typeArgs } = getFieldInfo(_fieldInfo)
     const typeFunctions = this.types[type]
     if (!typeFunctions) { throw new Error('missing data type: ' + type) }
     return typeFunctions[0].call(this, buffer, cursor, typeArgs, rootNodes)
   }
 
   write (value, buffer, offset, _fieldInfo, rootNode) {
-    let { type, typeArgs } = getFieldInfo(_fieldInfo)
+    const { type, typeArgs } = getFieldInfo(_fieldInfo)
     const typeFunctions = this.types[type]
     if (!typeFunctions) { throw new Error('missing data type: ' + type) }
     return typeFunctions[1].call(this, value, buffer, offset, typeArgs, rootNode)
   }
 
   sizeOf (value, _fieldInfo, rootNode) {
-    let { type, typeArgs } = getFieldInfo(_fieldInfo)
+    const { type, typeArgs } = getFieldInfo(_fieldInfo)
     const typeFunctions = this.types[type]
     if (!typeFunctions) {
       throw new Error('missing data type: ' + type)

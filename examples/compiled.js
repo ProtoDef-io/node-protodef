@@ -7,11 +7,11 @@ const mainType = 'packet'
 const packetData = {
   name: 'entity_look',
   params: {
-    'entityId': 1,
-    'yaw': 1,
-    'pitch': 1,
-    'onGround': true,
-    'position': {
+    entityId: 1,
+    yaw: 1,
+    pitch: 1,
+    onGround: true,
+    position: {
       x: 42,
       y: 255,
       z: -1337
@@ -40,7 +40,7 @@ const packetData = {
 
   start = performance.now()
   for (let i = 0; i < nbTests; i++) {
-    let result = compiledProto.parsePacketBuffer(mainType, buffer).data
+    const result = compiledProto.parsePacketBuffer(mainType, buffer).data
     compiledProto.createPacketBuffer(mainType, result)
   }
   time = performance.now() - start

@@ -21,7 +21,7 @@ testData.forEach(tests => {
             .on('cycle', function (event) {
               console.log(String(event.target))
             })
-            .run({ 'async': false })
+            .run({ async: false })
         })
 
         it('writes', function () {
@@ -36,7 +36,7 @@ testData.forEach(tests => {
             .on('cycle', function (event) {
               console.log(String(event.target))
             })
-            .run({ 'async': false })
+            .run({ async: false })
         })
 
         it('reads (compiled)', function () {
@@ -51,7 +51,7 @@ testData.forEach(tests => {
             .on('cycle', function (event) {
               console.log(String(event.target))
             })
-            .run({ 'async': false })
+            .run({ async: false })
         })
 
         it('writes (compiled)', function () {
@@ -66,7 +66,7 @@ testData.forEach(tests => {
             .on('cycle', function (event) {
               console.log(String(event.target))
             })
-            .run({ 'async': false })
+            .run({ async: false })
         })
       })
     })

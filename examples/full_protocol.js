@@ -12,8 +12,8 @@ const serializer = new Serializer(proto, 'packet')
 serializer.write({
   name: 'success',
   params: {
-    'uuid': 'some uuid',
-    'username': 'some name'
+    uuid: 'some uuid',
+    username: 'some name'
   }
 })
 

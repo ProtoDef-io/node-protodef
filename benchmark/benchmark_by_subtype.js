@@ -14,7 +14,7 @@ function testType (type, values) {
       .on('cycle', function (event) {
         console.log(String(event.target))
       })
-      .run({ 'async': false })
+      .run({ async: false })
   })
 
   it('writes', function () {
@@ -27,7 +27,7 @@ function testType (type, values) {
       .on('cycle', function (event) {
         console.log(String(event.target))
       })
-      .run({ 'async': false })
+      .run({ async: false })
   })
 
   it('reads (compiled)', function () {
@@ -40,7 +40,7 @@ function testType (type, values) {
       .on('cycle', function (event) {
         console.log(String(event.target))
       })
-      .run({ 'async': false })
+      .run({ async: false })
   })
 
   it('writes (compiled)', function () {
@@ -53,7 +53,7 @@ function testType (type, values) {
       .on('cycle', function (event) {
         console.log(String(event.target))
       })
-      .run({ 'async': false })
+      .run({ async: false })
   })
 }
 

@@ -12,10 +12,10 @@ const serializer = new Serializer(proto, 'packet')
 serializer.write({
   name: 'entity_look',
   params: {
-    'entityId': 1,
-    'yaw': 1,
-    'pitch': 1,
-    'onGround': true
+    entityId: 1,
+    yaw: 1,
+    pitch: 1,
+    onGround: true
   }
 })
 

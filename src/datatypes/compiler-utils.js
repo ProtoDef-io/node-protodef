@@ -1,6 +1,6 @@
 module.exports = {
   Read: {
-    'pstring': ['parametrizable', (compiler, string) => {
+    pstring: ['parametrizable', (compiler, string) => {
       let code = ''
       if (string.countType) {
         code += 'const { value: count, size: countSize } = ' + compiler.callType(string.countType) + '\n'
@@ -17,7 +17,7 @@ module.exports = {
       code += 'return { value: buffer.toString(\'utf8\', offset, offset + count), size: count + countSize }'
       return compiler.wrapCode(code)
     }],
-    'buffer': ['parametrizable', (compiler, buffer) => {
+    buffer: ['parametrizable', (compiler, buffer) => {
       let code = ''
       if (buffer.countType) {
         code += 'const { value: count, size: countSize } = ' + compiler.callType(buffer.countType) + '\n'
@@ -34,12 +34,12 @@ module.exports = {
       code += 'return { value: buffer.slice(offset, offset + count), size: count + countSize }'
       return compiler.wrapCode(code)
     }],
-    'bitfield': ['parametrizable', (compiler, values) => {
+    bitfield: ['parametrizable', (compiler, values) => {
       let code = ''
       const totalBytes = Math.ceil(values.reduce((acc, { size }) => acc + size, 0) / 8)
       code += `if ( offset + ${totalBytes} > buffer.length) { throw new PartialReadError() }\n`
 
-      let names = []
+      const names = []
       let totalSize = 8
       code += 'let bits = buffer[offset++]\n'
       for (const i in values) {
@@ -47,7 +47,7 @@ module.exports = {
         const trueName = compiler.getField(name)
         while (totalSize < size) {
           totalSize += 8
-          code += `bits = (bits << 8) | buffer[offset++]\n`
+          code += 'bits = (bits << 8) | buffer[offset++]\n'
         }
         code += `let ${trueName} = (bits >> ` + (totalSize - size) + ') & 0x' + ((1 << size) - 1).toString(16) + '\n'
         if (signed) code += `${trueName} -= (${trueName} & 0x` + (1 << (size - 1)).toString(16) + ') << 1\n'
@@ -58,7 +58,7 @@ module.exports = {
       code += 'return { value: { ' + names.join(', ') + ` }, size: ${totalBytes} }`
       return compiler.wrapCode(code)
     }],
-    'mapper': ['parametrizable', (compiler, mapper) => {
+    mapper: ['parametrizable', (compiler, mapper) => {
       let code = 'const { value, size } = ' + compiler.callType(mapper.type) + '\n'
       code += 'return { value: ' + JSON.stringify(sanitizeMappings(mapper.mappings)) + '[value], size }'
       return compiler.wrapCode(code)
@@ -66,7 +66,7 @@ module.exports = {
   },
 
   Write: {
-    'pstring': ['parametrizable', (compiler, string) => {
+    pstring: ['parametrizable', (compiler, string) => {
       let code = 'const length = Buffer.byteLength(value, \'utf8\')\n'
       if (string.countType) {
         code += 'offset = ' + compiler.callType('length', string.countType) + '\n'
@@ -77,7 +77,7 @@ module.exports = {
       code += 'return offset + length'
       return compiler.wrapCode(code)
     }],
-    'buffer': ['parametrizable', (compiler, buffer) => {
+    buffer: ['parametrizable', (compiler, buffer) => {
       let code = ''
       if (buffer.countType) {
         code += 'offset = ' + compiler.callType('value.length', buffer.countType) + '\n'
@@ -88,7 +88,7 @@ module.exports = {
       code += 'return offset + value.length'
       return compiler.wrapCode(code)
     }],
-    'bitfield': ['parametrizable', (compiler, values) => {
+    bitfield: ['parametrizable', (compiler, values) => {
       let toWrite = ''
       let bits = 0
       let code = ''
@@ -116,7 +116,7 @@ module.exports = {
       code += 'return offset'
       return compiler.wrapCode(code)
     }],
-    'mapper': ['parametrizable', (compiler, mapper) => {
+    mapper: ['parametrizable', (compiler, mapper) => {
       const mappings = JSON.stringify(swapMappings(mapper.mappings))
       const code = 'return ' + compiler.callType(`${mappings}[value]`, mapper.type)
       return compiler.wrapCode(code)
@@ -124,7 +124,7 @@ module.exports = {
   },
 
   SizeOf: {
-    'pstring': ['parametrizable', (compiler, string) => {
+    pstring: ['parametrizable', (compiler, string) => {
       let code = 'let size = Buffer.byteLength(value, \'utf8\')\n'
       if (string.countType) {
         code += 'size += ' + compiler.callType('size', string.countType) + '\n'
@@ -134,7 +134,7 @@ module.exports = {
       code += 'return size'
       return compiler.wrapCode(code)
     }],
-    'buffer': ['parametrizable', (compiler, buffer) => {
+    buffer: ['parametrizable', (compiler, buffer) => {
       let code = 'let size = value.length\n'
       if (buffer.countType) {
         code += 'size += ' + compiler.callType('size', buffer.countType) + '\n'
@@ -144,11 +144,11 @@ module.exports = {
       code += 'return size'
       return compiler.wrapCode(code)
     }],
-    'bitfield': ['parametrizable', (compiler, values) => {
+    bitfield: ['parametrizable', (compiler, values) => {
       const totalBytes = Math.ceil(values.reduce((acc, { size }) => acc + size, 0) / 8)
       return `${totalBytes}`
     }],
-    'mapper': ['parametrizable', (compiler, mapper) => {
+    mapper: ['parametrizable', (compiler, mapper) => {
       const mappings = JSON.stringify(swapMappings(mapper.mappings))
       const code = 'return ' + compiler.callType(`${mappings}[value]`, mapper.type)
       return compiler.wrapCode(code)
@@ -160,7 +160,7 @@ module.exports = {
 function sanitizeMappings (json) {
   const ret = {}
   for (let key in json) {
-    let val = json[key]
+    const val = json[key]
     key = hex2dec(key)
     ret[key] = val
   }
@@ -170,7 +170,7 @@ function sanitizeMappings (json) {
 function swapMappings (json) {
   const ret = {}
   for (let key in json) {
-    let val = json[key]
+    const val = json[key]
     key = hex2dec(key)
     ret[val] = (isNaN(key)) ? key : parseInt(key, 10)
   }

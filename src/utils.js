@@ -2,7 +2,7 @@ function getField (countField, context) {
   const countFieldArr = countField.split('/')
   let i = 0
   if (countFieldArr[i] === '') {
-    while (context.hasOwnProperty('..')) { context = context['..'] }
+    while (context['..'] !== undefined) { context = context['..'] }
     i++
   }
   for (; i < countFieldArr.length; i++) { context = context[countFieldArr[i]] }

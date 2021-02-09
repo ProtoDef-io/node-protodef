@@ -4,55 +4,55 @@ const Parser = require('protodef').Parser
 
 // the protocol can be in a separate json file
 const exampleProtocol = {
-  'container': 'native',
-  'varint': 'native',
-  'byte': 'native',
-  'bool': 'native',
-  'switch': 'native',
-  'entity_look': [
+  container: 'native',
+  varint: 'native',
+  byte: 'native',
+  bool: 'native',
+  switch: 'native',
+  entity_look: [
     'container',
     [
       {
-        'name': 'entityId',
-        'type': 'varint'
+        name: 'entityId',
+        type: 'varint'
       },
       {
-        'name': 'yaw',
-        'type': 'i8'
+        name: 'yaw',
+        type: 'i8'
       },
       {
-        'name': 'pitch',
-        'type': 'i8'
+        name: 'pitch',
+        type: 'i8'
       },
       {
-        'name': 'onGround',
-        'type': 'bool'
+        name: 'onGround',
+        type: 'bool'
       }
     ]
   ],
-  'packet': [
+  packet: [
     'container',
     [
       {
-        'name': 'name',
-        'type': [
+        name: 'name',
+        type: [
           'mapper',
           {
-            'type': 'varint',
-            'mappings': {
-              '22': 'entity_look'
+            type: 'varint',
+            mappings: {
+              22: 'entity_look'
             }
           }
         ]
       },
       {
-        'name': 'params',
-        'type': [
+        name: 'params',
+        type: [
           'switch',
           {
-            'compareTo': 'name',
-            'fields': {
-              'entity_look': 'entity_look'
+            compareTo: 'name',
+            fields: {
+              entity_look: 'entity_look'
             }
           }
         ]
@@ -69,10 +69,10 @@ const serializer = new Serializer(proto, 'packet')
 serializer.write({
   name: 'entity_look',
   params: {
-    'entityId': 1,
-    'yaw': 1,
-    'pitch': 1,
-    'onGround': true
+    entityId: 1,
+    yaw: 1,
+    pitch: 1,
+    onGround: true
   }
 })
 serializer.pipe(parser)

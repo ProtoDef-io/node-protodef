@@ -3,14 +3,14 @@ const assert = require('assert')
 const { getCount, sendCount, calcCount, PartialReadError } = require('../utils')
 
 module.exports = {
-  'varint': [readVarInt, writeVarInt, sizeOfVarInt, require('../../ProtoDef/schemas/utils.json')['varint']],
-  'bool': [readBool, writeBool, 1, require('../../ProtoDef/schemas/utils.json')['bool']],
-  'pstring': [readPString, writePString, sizeOfPString, require('../../ProtoDef/schemas/utils.json')['pstring']],
-  'buffer': [readBuffer, writeBuffer, sizeOfBuffer, require('../../ProtoDef/schemas/utils.json')['buffer']],
-  'void': [readVoid, writeVoid, 0, require('../../ProtoDef/schemas/utils.json')['void']],
-  'bitfield': [readBitField, writeBitField, sizeOfBitField, require('../../ProtoDef/schemas/utils.json')['bitfield']],
-  'cstring': [readCString, writeCString, sizeOfCString, require('../../ProtoDef/schemas/utils.json')['cstring']],
-  'mapper': [readMapper, writeMapper, sizeOfMapper, require('../../ProtoDef/schemas/utils.json')['mapper']]
+  varint: [readVarInt, writeVarInt, sizeOfVarInt, require('../../ProtoDef/schemas/utils.json').varint],
+  bool: [readBool, writeBool, 1, require('../../ProtoDef/schemas/utils.json').bool],
+  pstring: [readPString, writePString, sizeOfPString, require('../../ProtoDef/schemas/utils.json').pstring],
+  buffer: [readBuffer, writeBuffer, sizeOfBuffer, require('../../ProtoDef/schemas/utils.json').buffer],
+  void: [readVoid, writeVoid, 0, require('../../ProtoDef/schemas/utils.json').void],
+  bitfield: [readBitField, writeBitField, sizeOfBitField, require('../../ProtoDef/schemas/utils.json').bitfield],
+  cstring: [readCString, writeCString, sizeOfCString, require('../../ProtoDef/schemas/utils.json').cstring],
+  mapper: [readMapper, writeMapper, sizeOfMapper, require('../../ProtoDef/schemas/utils.json').mapper]
 }
 
 function mapperEquality (a, b) {

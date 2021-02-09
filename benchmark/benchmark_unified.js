@@ -21,7 +21,7 @@ it('read/write', function () {
     .on('cycle', function (event) {
       console.log(String(event.target))
     })
-    .run({ 'async': false })
+    .run({ async: false })
 })
 
 it('read/write (compiled)', function () {
@@ -42,5 +42,5 @@ it('read/write (compiled)', function () {
     .on('cycle', function (event) {
       console.log(String(event.target))
     })
-    .run({ 'async': false })
+    .run({ async: false })
 })

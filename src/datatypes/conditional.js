@@ -1,11 +1,11 @@
 const { getField, getFieldInfo, tryDoc, PartialReadError } = require('../utils')
 
 module.exports = {
-  'switch': [readSwitch, writeSwitch, sizeOfSwitch, require('../../ProtoDef/schemas/conditional.json')['switch']],
-  'option': [readOption, writeOption, sizeOfOption, require('../../ProtoDef/schemas/conditional.json')['option']]
+  switch: [readSwitch, writeSwitch, sizeOfSwitch, require('../../ProtoDef/schemas/conditional.json').switch],
+  option: [readOption, writeOption, sizeOfOption, require('../../ProtoDef/schemas/conditional.json').option]
 }
 
-function readSwitch (buffer, offset, { compareTo, fields, compareToValue, 'default': defVal }, rootNode) {
+function readSwitch (buffer, offset, { compareTo, fields, compareToValue, default: defVal }, rootNode) {
   compareTo = compareToValue !== undefined ? compareToValue : getField(compareTo, rootNode)
   if (typeof fields[compareTo] === 'undefined' && typeof defVal === 'undefined') { throw new Error(compareTo + ' has no associated fieldInfo in switch') }
 
@@ -15,7 +15,7 @@ function readSwitch (buffer, offset, { compareTo, fields, compareToValue, 'defau
   return tryDoc(() => this.read(buffer, offset, fieldInfo, rootNode), caseDefault ? 'default' : compareTo)
 }
 
-function writeSwitch (value, buffer, offset, { compareTo, fields, compareToValue, 'default': defVal }, rootNode) {
+function writeSwitch (value, buffer, offset, { compareTo, fields, compareToValue, default: defVal }, rootNode) {
   compareTo = compareToValue !== undefined ? compareToValue : getField(compareTo, rootNode)
   if (typeof fields[compareTo] === 'undefined' && typeof defVal === 'undefined') { throw new Error(compareTo + ' has no associated fieldInfo in switch') }
 
@@ -24,7 +24,7 @@ function writeSwitch (value, buffer, offset, { compareTo, fields, compareToValue
   return tryDoc(() => this.write(value, buffer, offset, fieldInfo, rootNode), caseDefault ? 'default' : compareTo)
 }
 
-function sizeOfSwitch (value, { compareTo, fields, compareToValue, 'default': defVal }, rootNode) {
+function sizeOfSwitch (value, { compareTo, fields, compareToValue, default: defVal }, rootNode) {
   compareTo = compareToValue !== undefined ? compareToValue : getField(compareTo, rootNode)
   if (typeof fields[compareTo] === 'undefined' && typeof defVal === 'undefined') { throw new Error(compareTo + ' has no associated fieldInfo in switch') }
 

@@ -6,20 +6,20 @@ const compiler = new ProtoDefCompiler()
 
 const testData = [
   {
-    'kind': 'conditional',
-    'data': require('../../ProtoDef/test/conditional.json')
+    kind: 'conditional',
+    data: require('../../ProtoDef/test/conditional.json')
   },
   {
-    'kind': 'numeric',
-    'data': require('../../ProtoDef/test/numeric.json')
+    kind: 'numeric',
+    data: require('../../ProtoDef/test/numeric.json')
   },
   {
-    'kind': 'structures',
-    'data': require('../../ProtoDef/test/structures.json')
+    kind: 'structures',
+    data: require('../../ProtoDef/test/structures.json')
   },
   {
-    'kind': 'utils',
-    'data': require('../../ProtoDef/test/utils.json')
+    kind: 'utils',
+    data: require('../../ProtoDef/test/utils.json')
   }
 ]
 
@@ -43,7 +43,7 @@ testData.forEach(tests => {
       test.subtypes.forEach((subtype, i) => {
         const type = test.type + '_' + i
         proto.addType(type, subtype.type)
-        let types = {}
+        const types = {}
         types[type] = subtype.type
         compiler.addTypesToCompile(types)
 

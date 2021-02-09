@@ -68,7 +68,7 @@ testData.forEach(tests => {
       const schema = require('../../ProtoDef/test/datatype_tests_schema.json')
       v.addSchema(require('../../ProtoDef/schemas/datatype'), 'dataType')
       const result = v.validate(tests.originalData, schema)
-      assert.strictEqual(result.errors.length, 0, require('util').inspect(result.errors, { 'depth': null }))
+      assert.strictEqual(result.errors.length, 0, require('util').inspect(result.errors, { depth: null }))
     })
 
     tests.data.forEach(test => {

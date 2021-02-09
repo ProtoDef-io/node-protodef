@@ -20,7 +20,7 @@ it('reads', function () {
     .on('cycle', function (event) {
       console.log(String(event.target))
     })
-    .run({ 'async': false })
+    .run({ async: false })
 })
 
 it('writes', function () {
@@ -40,7 +40,7 @@ it('writes', function () {
     .on('cycle', function (event) {
       console.log(String(event.target))
     })
-    .run({ 'async': false })
+    .run({ async: false })
 })
 
 it('reads (compiled)', function () {
@@ -60,7 +60,7 @@ it('reads (compiled)', function () {
     .on('cycle', function (event) {
       console.log(String(event.target))
     })
-    .run({ 'async': false })
+    .run({ async: false })
 })
 
 it('writes (compiled)', function () {
@@ -80,5 +80,5 @@ it('writes (compiled)', function () {
     .on('cycle', function (event) {
       console.log(String(event.target))
     })
-    .run({ 'async': false })
+    .run({ async: false })
 })

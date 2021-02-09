@@ -21,7 +21,7 @@
     "readable-stream": "^3.0.3"
   },
   "engines": {
-    "node": ">=10.4"
+    "node": ">=14"
   },
   "bugs": {
     "url": "https://github.com/ProtoDef-io/node-protodef/issues"
@@ -31,17 +31,12 @@
     "type": "git",
     "url": "https://github.com/ProtoDef-io/node-protodef.git"
   },
-  "standard": {
-    "ignore": [
-      "src/datatypes/numeric.js"
-    ]
-  },
   "devDependencies": {
     "benchmark": "^2.1.4",
     "chai": "^4.1.2",
     "jsonschema": "^1.2.4",
     "mocha": "^5.2.0",
-    "require-self": "^0.1.0",
-    "standard": "^12.0.1"
+    "protodef": "file:.",
+    "standard": "^16.0.3"
   }
 }

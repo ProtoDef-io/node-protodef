@@ -12,7 +12,7 @@ function testValue (type, value, buffer) {
       .on('cycle', function (event) {
         console.log(String(event.target))
       })
-      .run({ 'async': false })
+      .run({ async: false })
   })
   it('reads', function () {
     const suite = new Benchmark.Suite()
@@ -22,7 +22,7 @@ function testValue (type, value, buffer) {
       .on('cycle', function (event) {
         console.log(String(event.target))
       })
-      .run({ 'async': false })
+      .run({ async: false })
   })
 
   it('writes (compiled)', function () {
@@ -33,7 +33,7 @@ function testValue (type, value, buffer) {
       .on('cycle', function (event) {
         console.log(String(event.target))
       })
-      .run({ 'async': false })
+      .run({ async: false })
   })
   it('reads (compiled)', function () {
     const suite = new Benchmark.Suite()
@@ -43,7 +43,7 @@ function testValue (type, value, buffer) {
       .on('cycle', function (event) {
         console.log(String(event.target))
       })
-      .run({ 'async': false })
+      .run({ async: false })
   })
 }
 
