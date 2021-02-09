@@ -5,7 +5,6 @@
   "main": "index.js",
   "author": "roblabla <robinlambertz.dev@gmail.com>",
   "scripts": {
-    "prepare": "require-self",
     "lint": "standard",
     "fix": "standard --fix",
     "unit-test": "mocha --recursive --reporter spec",
