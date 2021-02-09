@@ -1,5 +1,10 @@
 # History
 
+## 1.9.0
+
+* compiler: Don't read abnormally large arrays (@extremeheat)
+* BigInt writing support, and support reading from buffer offset (@extremeheat)
+
 ## 1.8.3
 
 * in full packet parser don't error out in case of missing bytes
