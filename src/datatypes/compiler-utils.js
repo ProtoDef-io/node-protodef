@@ -160,8 +160,11 @@ module.exports = {
 function sanitizeMappings (json) {
   const ret = {}
   for (let key in json) {
-    const val = json[key]
+    let val = json[key]
     key = hex2dec(key)
+    if (!isNaN(val)) val = Number(val)
+    if (val === 'true') val = true
+    if (val === 'false') val = false
     ret[key] = val
   }
   return ret
