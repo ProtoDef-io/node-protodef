@@ -418,5 +418,6 @@ module.exports = {
   ReadCompiler,
   WriteCompiler,
   SizeOfCompiler,
-  ProtoDefCompiler
+  ProtoDefCompiler,
+  CompiledProtodef
 }
