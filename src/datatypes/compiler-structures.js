@@ -51,7 +51,7 @@ module.exports = {
           if (name === trueName) names.push(name)
           else names.push(`${name}: ${trueName}`)
         }
-        code += `const { value: ${trueName}, size: ${sizeName} } = ` + compiler.callType(type, offsetExpr) + '\n'
+        code += `let { value: ${trueName}, size: ${sizeName} } = ` + compiler.callType(type, offsetExpr) + '\n'
         offsetExpr += ` + ${sizeName}`
       }
       const sizes = offsetExpr.split(' + ')
@@ -97,7 +97,7 @@ module.exports = {
           trueName = '{' + names.join(', ') + '}'
         } else {
           trueName = compiler.getField(name)
-          code += `const ${trueName} = value.${name}\n`
+          code += `let ${trueName} = value.${name}\n`
         }
         code += 'offset = ' + compiler.callType(trueName, type) + '\n'
       }
@@ -147,7 +147,7 @@ module.exports = {
           trueName = '{' + names.join(', ') + '}'
         } else {
           trueName = compiler.getField(name)
-          code += `const ${trueName} = value.${name}\n`
+          code += `let ${trueName} = value.${name}\n`
         }
         code += 'size += ' + compiler.callType(trueName, type) + '\n'
       }
