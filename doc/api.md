@@ -84,6 +84,16 @@ The `path` is an array of namespace keys which select a path of namespaces to be
 
 Compile and return a `ProtoDef` object, optionaly print the generated javascript code.
 
+## CompiledProtodef
+
+The class of which an instance is returned by compileProtoDefSync
+
+It follows the same interface as ProtoDef : read, write, sizeOf, createPacketBuffer, parsePacketBuffer
+Its constructor is CompiledProtodef(sizeOfCtx, writeCtx, readCtx). 
+sizeOfCtx, writeCtx and readCtx are the compiled version of sizeOf, write and read. They are produced by Compiler.compile
+
+It can be used directly for easier debugging/using already compiled js.
+
 ## utils
 
 Some functions that can be useful to build new datatypes reader and writer.
