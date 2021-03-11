@@ -1,5 +1,9 @@
 # History
 
+## 1.10.0
+
+* exposed CompiledProtodef
+
 ## 1.9.0
 
 * compiler: Don't read abnormally large arrays (@extremeheat)
