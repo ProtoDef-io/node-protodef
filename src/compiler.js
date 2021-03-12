@@ -185,7 +185,7 @@ class Compiler {
   getField (name) {
     const path = name.split('/')
     let i = this.scopeStack.length - 1
-    const reserved = { value: true, enum: true }
+    const reserved = ['value', 'enum', 'default', 'size']
     while (path.length) {
       const scope = this.scopeStack[i]
       const field = path.shift()
@@ -200,7 +200,7 @@ class Compiler {
       }
       // Count how many collision occured in the scope
       let count = 0
-      if (reserved[field]) count++
+      if (reserved.includes(field)) count++
       for (let j = 0; j < i; j++) {
         if (this.scopeStack[j][field]) count++
       }
@@ -269,7 +269,7 @@ class ReadCompiler extends Compiler {
       if (this.types[type[0]] && this.types[type[0]] !== 'native') {
         return this.wrapCode('return ' + this.callType(type[0], 'offset', Object.values(type[1])))
       }
-      throw new Error('Unknown parametrizable type: ' + type[0])
+      throw new Error('Unknown parametrizable type: ' + JSON.stringify(type[0]))
     } else { // Primitive type
       if (type === 'native') return 'null'
       if (this.types[type]) { return 'ctx.' + type }
