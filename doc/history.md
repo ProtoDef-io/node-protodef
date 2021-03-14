@@ -1,5 +1,9 @@
 # History
 
+## 1.11.0
+
+* compiler: add some more reserved keywords (@extremeheat)
+
 ## 1.10.0
 
 * exposed CompiledProtodef
