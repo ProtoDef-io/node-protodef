@@ -1,5 +1,9 @@
 # History
 
+## 1.12.0
+
+* Fix issue with anon bitfield in compiler
+
 ## 1.11.0
 
 * compiler: add some more reserved keywords (@extremeheat)
