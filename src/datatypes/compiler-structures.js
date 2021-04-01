@@ -39,9 +39,13 @@ module.exports = {
           const subnames = []
           for (const { name } of type[1]) {
             const trueName = compiler.getField(name)
-            subnames.push(trueName)
-            if (name === trueName) names.push(name)
-            else names.push(`${name}: ${trueName}`)
+            if (name === trueName) {
+              names.push(name)
+              subnames.push(name)
+            } else {
+              names.push(`${name}: ${trueName}`)
+              subnames.push(`${name}: ${trueName}`)
+            }
           }
           trueName = '{' + subnames.join(', ') + '}'
           sizeName = `anon${i}Size`
