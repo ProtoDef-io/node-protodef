@@ -1,5 +1,9 @@
 # History
 
+## 1.12.1
+
+* update to protodef 1.0.0
+
 ## 1.12.0
 
 * Fix issue with anon bitfield in compiler
