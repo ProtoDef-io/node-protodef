@@ -104,7 +104,8 @@ class CompiledProtodef {
     return {
       data: value,
       metadata: { size },
-      buffer: buffer.slice(0, size)
+      buffer: buffer.slice(0, size),
+      fullBuffer: buffer
     }
   }
 }

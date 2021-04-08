@@ -156,7 +156,8 @@ class ProtoDef {
       metadata: {
         size: size
       },
-      buffer: buffer.slice(0, size)
+      buffer: buffer.slice(0, size),
+      fullBuffer: buffer
     }
   }
 }
