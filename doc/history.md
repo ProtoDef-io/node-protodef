@@ -1,5 +1,9 @@
 # History
 
+## 1.13.0
+
+* add fullBuffer to parsePacketBuffer return
+
 ## 1.12.1
 
 * update to protodef 1.0.0
