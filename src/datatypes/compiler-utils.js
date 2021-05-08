@@ -78,7 +78,7 @@ module.exports = {
       return compiler.wrapCode(code)
     }],
     buffer: ['parametrizable', (compiler, buffer) => {
-      let code = ''
+      let code = 'if (!(value instanceof Buffer)) value = Buffer.from(value)\n'
       if (buffer.countType) {
         code += 'offset = ' + compiler.callType('value.length', buffer.countType) + '\n'
       } else if (buffer.count === null) {
@@ -135,7 +135,7 @@ module.exports = {
       return compiler.wrapCode(code)
     }],
     buffer: ['parametrizable', (compiler, buffer) => {
-      let code = 'let size = value.length\n'
+      let code = 'let size = value instanceof Buffer ? value.length : Buffer.from(value).length\n'
       if (buffer.countType) {
         code += 'size += ' + compiler.callType('size', buffer.countType) + '\n'
       } else if (buffer.count === null) {
