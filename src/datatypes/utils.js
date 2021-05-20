@@ -154,12 +154,14 @@ function readBuffer (buffer, offset, typeArgs, rootNode) {
 }
 
 function writeBuffer (value, buffer, offset, typeArgs, rootNode) {
+  if (!(value instanceof Buffer)) value = Buffer.from(value)
   offset = sendCount.call(this, value.length, buffer, offset, typeArgs, rootNode)
   value.copy(buffer, offset)
   return offset + value.length
 }
 
 function sizeOfBuffer (value, typeArgs, rootNode) {
+  if (!(value instanceof Buffer)) value = Buffer.from(value)
   const size = calcCount.call(this, value.length, typeArgs, rootNode)
   return size + value.length
 }
