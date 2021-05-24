@@ -10,7 +10,8 @@ module.exports = {
       let code = `switch (${compare}) {\n`
       for (const key in struct.fields) {
         let val = key
-        if (isNaN(val) && val !== 'true' && val !== 'false') val = `"${val}"`
+        if (val.startsWith('/')) val = 'ctx.' + val.slice(1) // Root context variable
+        else if (isNaN(val) && val !== 'true' && val !== 'false') val = `"${val}"`
         code += compiler.indent(`case ${val}: return ` + compiler.callType(struct.fields[key])) + '\n'
       }
       code += compiler.indent('default: return ' + compiler.callType(struct.default ? struct.default : 'void')) + '\n'
@@ -39,7 +40,8 @@ module.exports = {
       let code = `switch (${compare}) {\n`
       for (const key in struct.fields) {
         let val = key
-        if (isNaN(val) && val !== 'true' && val !== 'false') val = `"${val}"`
+        if (val.startsWith('/')) val = 'ctx.' + val.slice(1) // Root context variable
+        else if (isNaN(val) && val !== 'true' && val !== 'false') val = `"${val}"`
         code += compiler.indent(`case ${val}: return ` + compiler.callType('value', struct.fields[key])) + '\n'
       }
       code += compiler.indent('default: return ' + compiler.callType('value', struct.default ? struct.default : 'void')) + '\n'
@@ -69,7 +71,8 @@ module.exports = {
       let code = `switch (${compare}) {\n`
       for (const key in struct.fields) {
         let val = key
-        if (isNaN(val) && val !== 'true' && val !== 'false') val = `"${val}"`
+        if (val.startsWith('/')) val = 'ctx.' + val.slice(1) // Root context variable
+        else if (isNaN(val) && val !== 'true' && val !== 'false') val = `"${val}"`
         code += compiler.indent(`case ${val}: return ` + compiler.callType('value', struct.fields[key])) + '\n'
       }
       code += compiler.indent('default: return ' + compiler.callType('value', struct.default ? struct.default : 'void')) + '\n'
