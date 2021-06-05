@@ -28,11 +28,22 @@ function arrayToBuffer (arr) {
 }
 
 function transformValues (type, values) {
-  return values.map(value => ({
-    buffer: arrayToBuffer(value.buffer),
-    value: type.indexOf('buffer') === 0 ? arrayToBuffer(value.value) : value.value,
-    description: value.description
-  }))
+  return values.map(val => {
+    let value = val.value
+    if (type.indexOf('buffer') === 0) {
+      value = arrayToBuffer(value)
+    } else if (value) {
+      // we cannot use undefined type in JSON so need to convert it here to pass strictEquals test
+      for (const key in value) {
+        if (value[key] === 'undefined') value[key] = undefined
+      }
+    }
+    return {
+      buffer: arrayToBuffer(val.buffer),
+      value,
+      description: val.description
+    }
+  })
 }
 
 testData.forEach(tests => {
@@ -47,6 +58,7 @@ testData.forEach(tests => {
         types[type] = subtype.type
         compiler.addTypesToCompile(types)
 
+        subtype.vars?.forEach(([k, v]) => { proto.setVariable(k, v); compiler.addVariable(k, v) })
         subtype.values = transformValues(test.type, subtype.values)
         subtype.type = type
         subTypes.push(subtype)
