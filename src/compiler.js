@@ -32,6 +32,12 @@ class ProtoDefCompiler {
     this.sizeOfCompiler.addProtocol(protocolData, path)
   }
 
+  addVariable (key, val) {
+    this.readCompiler.addContextType(key, val)
+    this.writeCompiler.addContextType(key, val)
+    this.sizeOfCompiler.addContextType(key, val)
+  }
+
   compileProtoDefSync (options = { printCode: false }) {
     const sizeOfCode = this.sizeOfCompiler.generate()
     const writeCode = this.writeCompiler.generate()
@@ -68,6 +74,12 @@ class CompiledProtodef {
     const writeFn = this.writeCtx[type]
     if (!writeFn) { throw new Error('missing data type: ' + type) }
     return writeFn(value, buffer, cursor)
+  }
+
+  setVariable (key, val) {
+    this.sizeOfCtx[key] = val
+    this.readCtx[key] = val
+    this.writeCtx[key] = val
   }
 
   sizeOf (value, type) {
@@ -186,7 +198,7 @@ class Compiler {
   getField (name) {
     const path = name.split('/')
     let i = this.scopeStack.length - 1
-    const reserved = ['value', 'enum', 'default', 'size']
+    const reserved = ['value', 'enum', 'default', 'size', 'offset']
     while (path.length) {
       const scope = this.scopeStack[i]
       const field = path.shift()

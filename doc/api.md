@@ -26,6 +26,10 @@ The `path` is an array of namespace keys which select a path of namespaces to be
 
 See full_protocol.js for an example of usage.
 
+### ProtoDef.setVariable(name, value)
+
+Sets a primitive variable type for the specified `name`, which can be dynamically updated. Can be refrenced in switch statements with the "/" prefix.
+
 ### ProtoDef.read(buffer, cursor, _fieldInfo, rootNodes)
 
 Read the packet defined by `_fieldInfo` in `buffer` starting from `cursor` using the context `rootNodes`.
@@ -80,6 +84,10 @@ Add types in `protocol` recursively. The protocol object is an object with keys 
 
 The `path` is an array of namespace keys which select a path of namespaces to be added to the protodef object.
 
+### ProtoDefCompiler.addVariable(name, value)
+
+Adds a primitive variable type for the specified `name`, which can be dynamically updated. Can be refrenced in switch statements with the "/" prefix.
+
 ### ProtoDefCompiler.compileProtoDefSync(options = { printCode: false })
 
 Compile and return a `ProtoDef` object, optionaly print the generated javascript code.
@@ -93,6 +101,11 @@ Its constructor is CompiledProtodef(sizeOfCtx, writeCtx, readCtx).
 sizeOfCtx, writeCtx and readCtx are the compiled version of sizeOf, write and read. They are produced by Compiler.compile
 
 It can be used directly for easier debugging/using already compiled js.
+
+### CompiledProtodef.setVariable(name, value)
+
+Sets a primitive variable type for the specified `name`, which can be dynamically updated. Can be refrenced in switch statements with the "/" prefix.
+
 
 ## utils
 

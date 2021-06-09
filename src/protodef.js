@@ -103,6 +103,10 @@ class ProtoDef {
     }
   }
 
+  setVariable (key, val) {
+    this.types[key] = val
+  }
+
   read (buffer, cursor, _fieldInfo, rootNodes) {
     const { type, typeArgs } = getFieldInfo(_fieldInfo)
     const typeFunctions = this.types[type]
