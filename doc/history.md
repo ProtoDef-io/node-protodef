@@ -1,5 +1,10 @@
 # History
 
+## 1.14.0
+
+* Allow JSON stringified buffers to be converted to Buffer when serializing (@extremeheat)
+* Add primitive variables (@extremeheat)
+
 ## 1.13.0
 
 * add fullBuffer to parsePacketBuffer return
