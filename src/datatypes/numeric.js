@@ -2,6 +2,7 @@ const { PartialReadError } = require('../utils')
 
 class BigIntExtended extends Array {
   valueOf () { return BigInt.asIntN(64, BigInt(this[0]) << 32n) | BigInt.asUintN(32, BigInt(this[1])) }
+  [Symbol.for('nodejs.util.inspect.custom')] () { return this.valueOf() } 
 }
 
 function readI64 (buffer, offset) {
