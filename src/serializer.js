@@ -13,12 +13,7 @@ class Serializer extends Transform {
   }
 
   _transform (chunk, enc, cb) {
-    let buf
-    try {
-      buf = this.createPacketBuffer(chunk)
-    } catch (e) {
-      return cb(e)
-    }
+    let buf = this.createPacketBuffer(chunk)
     this.push(buf)
     return cb()
   }
