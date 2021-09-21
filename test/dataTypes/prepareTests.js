@@ -24,7 +24,7 @@ const testData = [
 ]
 
 function arrayToBuffer (arr) {
-  return Buffer.from(arr.map(e => parseInt(e)))
+  return Array.isArray(arr) ? Buffer.from(arr) : Buffer.from(arr, "hex")
 }
 
 function transformValues (type, values) {
