@@ -3,6 +3,7 @@
   "version": "1.14.0",
   "description": "A simple yet powerful way to define binary protocols",
   "main": "index.js",
+  "types": "index.d.ts",
   "author": "roblabla <robinlambertz.dev@gmail.com>",
   "sideEffects": false,
   "scripts": {
