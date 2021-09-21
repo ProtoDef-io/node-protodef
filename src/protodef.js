@@ -15,7 +15,7 @@ function findArgs (acc, v, k) {
   } else if (Array.isArray(v) || typeof v === 'object') {
     acc = acc.concat(
       reduce(v, findArgs, [])
-      .map((v) => ({ path: k + '.' + v.path, val: v.val }))
+        .map((v) => ({ path: k + '.' + v.path, val: v.val }))
     )
   }
   return acc
@@ -31,16 +31,14 @@ function setField (path, val, into) {
 
 let deepSerialize = JSON.stringify
 let deepDeserialize = JSON.parse
-{
-  // Try something better&faster&stronger than JSON.parse(JSON.stringify)
-  if (typeof globalThis !== 'undefined' && 'structuredClone' in globalThis) {
-    deepSerialize = obj => obj
-    deepDeserialize = globalThis.structuredClone
-  } else if (typeof require === 'function' && typeof process === 'function') {
-    const v8 = require('v8')
-    deepSerialize = v8.serialize
-    deepDeserialize = v8.deserialize
-  }
+// Try something better&faster&stronger than JSON.parse(JSON.stringify)
+if (typeof globalThis !== 'undefined' && 'structuredClone' in globalThis) {
+  deepSerialize = obj => obj
+  deepDeserialize = globalThis.structuredClone
+} else if (typeof require === 'function' && typeof process === 'function') {
+  const v8 = require('v8')
+  deepSerialize = v8.serialize
+  deepDeserialize = v8.deserialize
 }
 
 function extendType (functions, defaultTypeArgs) {

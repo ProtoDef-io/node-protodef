@@ -53,9 +53,9 @@ function readContainer (buffer, offset, typeArgs, context) {
       }
       continue
     }
-    results[k] = value
+    results[name] = value
   }
-  delete results.value[ParentSymbol]
+  delete results[ParentSymbol]
   return {
     value: results,
     size: offset - offsetStart
