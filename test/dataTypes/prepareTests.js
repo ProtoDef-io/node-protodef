@@ -31,7 +31,7 @@ function transformValues (type, values) {
   return values.map(val => {
     let value = val.value
     if (type.indexOf('buffer') === 0) {
-      value = arrayToBuffer(value)
+      value = Buffer.from(value, 'hex')
     } else if (value) {
       // we cannot use undefined type in JSON so need to convert it here to pass strictEquals test
       for (const key in value) {
@@ -39,7 +39,7 @@ function transformValues (type, values) {
       }
     }
     return {
-      buffer: arrayToBuffer(val.buffer),
+      buffer: Buffer.from(val.buffer, 'hex'),
       value,
       description: val.description
     }
