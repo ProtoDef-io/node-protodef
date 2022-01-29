@@ -14,7 +14,7 @@ module.exports = {
       code += 'if (offset + count > buffer.length) {\n'
       code += '  throw new PartialReadError("Missing characters in string, found size is " + buffer.length + " expected size was " + (offset + count))\n'
       code += '}\n'
-      code += 'return { value: buffer.toString(\'utf8\', offset, offset + count), size: count + countSize }'
+      code += `return { value: buffer.toString("${string.encoding || 'utf8'}", offset, offset + count), size: count + countSize }`
       return compiler.wrapCode(code)
     }],
     buffer: ['parametrizable', (compiler, buffer) => {
@@ -67,13 +67,13 @@ module.exports = {
 
   Write: {
     pstring: ['parametrizable', (compiler, string) => {
-      let code = 'const length = Buffer.byteLength(value, \'utf8\')\n'
+      let code = `const length = Buffer.byteLength(value, "${string.encoding || 'utf8'}")\n`
       if (string.countType) {
         code += 'offset = ' + compiler.callType('length', string.countType) + '\n'
       } else if (string.count === null) {
         throw new Error('pstring must contain either count or countType')
       }
-      code += 'buffer.write(value, offset, length, \'utf8\')\n'
+      code += `buffer.write(value, offset, length, "${string.encoding || 'utf8'}")\n`
       code += 'return offset + length'
       return compiler.wrapCode(code)
     }],
@@ -125,7 +125,7 @@ module.exports = {
 
   SizeOf: {
     pstring: ['parametrizable', (compiler, string) => {
-      let code = 'let size = Buffer.byteLength(value, \'utf8\')\n'
+      let code = `let size = Buffer.byteLength(value, "${string.encoding || 'utf8'}")\n`
       if (string.countType) {
         code += 'size += ' + compiler.callType('size', string.countType) + '\n'
       } else if (string.count === null) {
