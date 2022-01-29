@@ -111,7 +111,7 @@ function readPString (buffer, offset, typeArgs, rootNode) {
   }
 
   return {
-    value: buffer.toString('utf8', cursor, strEnd),
+    value: buffer.toString(typeArgs.encoding || 'utf8', cursor, strEnd),
     size: strEnd - offset
   }
 }
@@ -119,12 +119,12 @@ function readPString (buffer, offset, typeArgs, rootNode) {
 function writePString (value, buffer, offset, typeArgs, rootNode) {
   const length = Buffer.byteLength(value, 'utf8')
   offset = sendCount.call(this, length, buffer, offset, typeArgs, rootNode)
-  buffer.write(value, offset, length, 'utf8')
+  buffer.write(value, offset, length, typeArgs.encoding || 'utf8')
   return offset + length
 }
 
 function sizeOfPString (value, typeArgs, rootNode) {
-  const length = Buffer.byteLength(value, 'utf8')
+  const length = Buffer.byteLength(value, typeArgs.encoding || 'utf8')
   const size = calcCount.call(this, length, typeArgs, rootNode)
   return size + length
 }
@@ -237,20 +237,20 @@ function sizeOfBitField (value, typeArgs) {
   }, 0) / 8)
 }
 
-function readCString (buffer, offset) {
+function readCString (buffer, offset, typeArgs) {
   let size = 0
   while (offset + size < buffer.length && buffer[offset + size] !== 0x00) { size++ }
   if (buffer.length < offset + size + 1) { throw new PartialReadError() }
 
   return {
-    value: buffer.toString('utf8', offset, offset + size),
+    value: buffer.toString(typeArgs.encoding || 'utf8', offset, offset + size),
     size: size + 1
   }
 }
 
-function writeCString (value, buffer, offset) {
-  const length = Buffer.byteLength(value, 'utf8')
-  buffer.write(value, offset, length, 'utf8')
+function writeCString (value, buffer, offset, typeArgs) {
+  const length = Buffer.byteLength(value, typeArgs.encoding || 'utf8')
+  buffer.write(value, offset, length, typeArgs.encoding || 'utf8')
   offset += length
   buffer.writeInt8(0x00, offset)
   return offset + 1
