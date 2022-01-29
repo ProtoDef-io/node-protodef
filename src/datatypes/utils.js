@@ -243,14 +243,14 @@ function readCString (buffer, offset, typeArgs) {
   if (buffer.length < offset + size + 1) { throw new PartialReadError() }
 
   return {
-    value: buffer.toString(typeArgs.encoding || 'utf8', offset, offset + size),
+    value: buffer.toString(typeArgs?.encoding || 'utf8', offset, offset + size),
     size: size + 1
   }
 }
 
 function writeCString (value, buffer, offset, typeArgs) {
-  const length = Buffer.byteLength(value, typeArgs.encoding || 'utf8')
-  buffer.write(value, offset, length, typeArgs.encoding || 'utf8')
+  const length = Buffer.byteLength(value, typeArgs?.encoding || 'utf8')
+  buffer.write(value, offset, length, typeArgs?.encoding || 'utf8')
   offset += length
   buffer.writeInt8(0x00, offset)
   return offset + 1
