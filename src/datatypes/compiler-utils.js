@@ -14,7 +14,7 @@ module.exports = {
       code += 'if (offset + count > buffer.length) {\n'
       code += '  throw new PartialReadError("Missing characters in string, found size is " + buffer.length + " expected size was " + (offset + count))\n'
       code += '}\n'
-      code += 'return { value: buffer.toString(\'utf8\', offset, offset + count), size: count + countSize }'
+      code += `return { value: buffer.toString('${string.encoding || 'utf8'}', offset, offset + count), size: count + countSize }`
       return compiler.wrapCode(code)
     }],
     buffer: ['parametrizable', (compiler, buffer) => {
