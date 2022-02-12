@@ -24,6 +24,17 @@ function testValue (type, value, buffer) {
     if (value === null) { assert.ok(actualResult.data === undefined) } else { expect(actualResult.data).to.deep.equal(value) }
     expect(actualResult.metadata.size).to.deep.equal(buffer.length)
   })
+
+  if (type === 'i64' || type === 'u64') {
+    it('reads bigint correctly ' + type, function () {
+      const [top, lower] = value.map(BigInt)
+      const joined = type === 'i64' ? BigInt.asIntN(64, (top << 32n) | lower) : BigInt.asUintN(64, (top << 32n) | lower)
+      // read
+      const actualResult = proto.parsePacketBuffer(type, buffer)
+      expect(actualResult.data.valueOf() === joined)
+      expect(actualResult.metadata.size).to.deep.equal(buffer.length)
+    })
+  }
 }
 
 function testType (type, values) {
