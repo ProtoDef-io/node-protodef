@@ -1,14 +1,21 @@
 const { PartialReadError } = require('../utils')
 
-class BigIntExtended extends Array {
+class SignedBigInt extends Array {
   valueOf () { return BigInt.asIntN(64, BigInt(this[0]) << 32n) | BigInt.asUintN(32, BigInt(this[1])) }
+  toString () { return this.valueOf().toString() }
+  [Symbol.for('nodejs.util.inspect.custom')] () { return this.valueOf() }
+}
+
+class UnsignedBigInt extends Array {
+  valueOf () { return BigInt.asUintN(64, BigInt(this[0]) << 32n) | BigInt.asUintN(32, BigInt(this[1])) }
+  toString () { return this.valueOf().toString() }
   [Symbol.for('nodejs.util.inspect.custom')] () { return this.valueOf() }
 }
 
 function readI64 (buffer, offset) {
   if (offset + 8 > buffer.length) { throw new PartialReadError() }
   return {
-    value: new BigIntExtended(buffer.readInt32BE(offset), buffer.readInt32BE(offset + 4)),
+    value: new SignedBigInt(buffer.readInt32BE(offset), buffer.readInt32BE(offset + 4)),
     size: 8
   }
 }
@@ -26,7 +33,7 @@ function writeI64 (value, buffer, offset) {
 function readLI64 (buffer, offset) {
   if (offset + 8 > buffer.length) { throw new PartialReadError() }
   return {
-    value: new BigIntExtended(buffer.readInt32LE(offset + 4), buffer.readInt32LE(offset)),
+    value: new SignedBigInt(buffer.readInt32LE(offset + 4), buffer.readInt32LE(offset)),
     size: 8
   }
 }
@@ -44,7 +51,7 @@ function writeLI64 (value, buffer, offset) {
 function readU64 (buffer, offset) {
   if (offset + 8 > buffer.length) { throw new PartialReadError() }
   return {
-    value: new BigIntExtended(buffer.readUInt32BE(offset), buffer.readUInt32BE(offset + 4)),
+    value: new UnsignedBigInt(buffer.readUInt32BE(offset), buffer.readUInt32BE(offset + 4)),
     size: 8
   }
 }
@@ -62,7 +69,7 @@ function writeU64 (value, buffer, offset) {
 function readLU64 (buffer, offset) {
   if (offset + 8 > buffer.length) { throw new PartialReadError() }
   return {
-    value: new BigIntExtended(buffer.readUInt32LE(offset + 4), buffer.readUInt32LE(offset)),
+    value: new UnsignedBigInt(buffer.readUInt32LE(offset + 4), buffer.readUInt32LE(offset)),
     size: 8
   }
 }
