@@ -2,6 +2,7 @@
 
 ## 1.15.0
 
+* Fix 64-bit BigInt sign handling (@extremeheat)
 * Add string encoding option (@extremeheat)
 * Show BigInt instead of BigIntExtended when using console.log (@extremeheat)
 
