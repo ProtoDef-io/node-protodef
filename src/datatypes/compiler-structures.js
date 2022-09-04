@@ -35,7 +35,7 @@ module.exports = {
         const { type, name, anon } = values[i]
         let trueName
         let sizeName
-        if (type instanceof Array && type[0] === 'bitfield' && anon) {
+        if (type instanceof Array && (type[0] === 'bitfield' || type[0] === 'container') && anon) {
           const subnames = []
           for (const { name } of type[1]) {
             const trueName = compiler.getField(name)
@@ -90,7 +90,7 @@ module.exports = {
       for (const i in values) {
         const { type, name, anon } = values[i]
         let trueName
-        if (type instanceof Array && type[0] === 'bitfield' && anon) {
+        if (type instanceof Array && (type[0] === 'bitfield' || type[0] === 'container') && anon) {
           const names = []
           for (const { name } of type[1]) {
             const trueName = compiler.getField(name)
@@ -140,7 +140,7 @@ module.exports = {
       for (const i in values) {
         const { type, name, anon } = values[i]
         let trueName
-        if (type instanceof Array && type[0] === 'bitfield' && anon) {
+        if (type instanceof Array && (type[0] === 'bitfield' || type[0] === 'container') && anon) {
           const names = []
           for (const { name } of type[1]) {
             const trueName = compiler.getField(name)
@@ -166,7 +166,7 @@ function containerInlining (values) {
   const newValues = []
   for (const i in values) {
     const { type, anon } = values[i]
-    if (anon && !(type instanceof Array && type[0] === 'bitfield')) {
+    if (anon && !(type instanceof Array && (type[0] === 'bitfield' || type[0] === 'container'))) {
       if (type instanceof Array && type[0] === 'container') {
         for (const j in type[1]) newValues.push(type[1][j])
       } else if (type instanceof Array && type[0] === 'switch') {
