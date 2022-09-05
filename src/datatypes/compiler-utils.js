@@ -21,8 +21,8 @@ module.exports = {
       let code = ''
       if (buffer.countType) {
         code += 'const { value: count, size: countSize } = ' + compiler.callType(buffer.countType) + '\n'
-      } else if (buffer.count) {
-        code += 'const count = ' + buffer.count + '\n'
+      } else if (buffer.count || buffer.rest) {
+        code += 'const count = ' + buffer.rest ? 'buffer.length - offset' : buffer.count + '\n'
         code += 'const countSize = 0\n'
       } else {
         throw new Error('buffer must contain either count or countType')
