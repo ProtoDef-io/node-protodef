@@ -81,7 +81,7 @@ module.exports = {
       let code = 'if (!(value instanceof Buffer)) value = Buffer.from(value)\n'
       if (buffer.countType) {
         code += 'offset = ' + compiler.callType('value.length', buffer.countType) + '\n'
-      } else if (buffer.count === null) {
+      } else if (buffer.count === null && !buffer.rest) {
         throw new Error('buffer must contain either count or countType')
       }
       code += 'value.copy(buffer, offset)\n'
@@ -138,7 +138,7 @@ module.exports = {
       let code = 'let size = value instanceof Buffer ? value.length : Buffer.from(value).length\n'
       if (buffer.countType) {
         code += 'size += ' + compiler.callType('size', buffer.countType) + '\n'
-      } else if (buffer.count === null) {
+      } else if (buffer.count === null && !buffer.rest) {
         throw new Error('buffer must contain either count or countType')
       }
       code += 'return size'
