@@ -1,11 +1,9 @@
-const numeric = require('./datatypes/numeric')
-const utils = require('./datatypes/utils')
-
-const conditionalDatatypes = require('./datatypes/compiler-conditional')
-const structuresDatatypes = require('./datatypes/compiler-structures')
-const utilsDatatypes = require('./datatypes/compiler-utils')
-
-const { tryCatch } = require('./utils')
+import numeric from './datatypes/numeric.js'
+import utils from './datatypes/utils.js'
+import conditionalDatatypes from './datatypes/compiler-conditional.js'
+import structuresDatatypes from './datatypes/compiler-structures.js'
+import utilsDatatypes from './datatypes/compiler-utils.js'
+import { tryCatch } from './utils.js'
 
 class ProtoDefCompiler {
   constructor () {
@@ -254,7 +252,7 @@ class Compiler {
   compile (code) {
     // Local variable to provide some context to eval()
     const native = this.native // eslint-disable-line
-    const { PartialReadError } = require('./utils') // eslint-disable-line
+    const { PartialReadError } = import('./utils') // eslint-disable-line
     return eval(code)() // eslint-disable-line
   }
 }
@@ -427,7 +425,7 @@ class SizeOfCompiler extends Compiler {
   }
 }
 
-module.exports = {
+export default {
   ReadCompiler,
   WriteCompiler,
   SizeOfCompiler,

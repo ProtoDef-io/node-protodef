@@ -7,12 +7,13 @@ The ProtoDef compiler can convert your protocol JSON into javascript code that c
 Let's take a simple ProtoDef definition and convert it to use the ProtoDef compiler:
 
 ProtoDef:
-```javascript
-const ProtoDef = require('protodef').ProtoDef
+```js
+
+import { ProtoDef } from 'protodef'
 
 // Create a ProtoDef instance
 const proto = new ProtoDef()
-proto.addTypes(require('./protocol.json'))
+proto.addTypes(import('./protocol.json'))
 
 // Encode and decode a message
 const buffer = proto.createPacketBuffer('mainType', result)
@@ -20,12 +21,12 @@ const result = proto.parsePacketBuffer('mainType', buffer)
 ```
 
 ProtoDef Compiler:
-```javascript
-const { ProtoDefCompiler } = require('protodef').Compiler
+```js
+import { ProtoDef } from 'protodef'
 
 // Create a ProtoDefCompiler instance
 const compiler = new ProtoDefCompiler()
-compiler.addTypesToCompile(require('./protocol.json'))
+compiler.addTypesToCompile(import('./protocol.json'))
 
 // Compile a ProtoDef instance
 const compiledProto = await compiler.compileProtoDef()
@@ -39,7 +40,7 @@ const result = compiledProto.parsePacketBuffer('mainType', buffer)
 
 Like the ProtoDef interpreter, the ProtoDef compiler can be extended with custom datatypes. To register a custom type, use the `addTypes(types)` method of the ProtoDef compiler. The `types` parameter is an object with the following structure:
 
-```javascript
+```js
 {
   Read: {
     'type1': ['native', /* implementation */],
@@ -71,8 +72,8 @@ The types can be divided into 3 categories:
 A native type is a type read or written by a function that will be called in its original context. Use this when you need access to external definitions.
 
 Example:
-```javascript
-const UUID = require('uuid-1345')
+```js
+import UUID from 'uuid-1345'
 
 {
   Read: {
@@ -103,8 +104,9 @@ The native types implementations are compatible with the native functions of the
 A context type is a type that will be called in the protocol's context. It can refer to registred native types using `native.{type}()` or context types (provided and generated) using `ctx.{type}()`, but cannot access its original context.
 
 Example:
-```javascript
-const originalContextDefinition = require('something')
+```js
+import originalContextDefinition from 'something'
+
 /* global ctx */
 {
   Read: {
@@ -168,7 +170,7 @@ const originalContextDefinition = require('something')
 A parametrizable type is a function that will be generated at compile time using the provided maker function.
 
 Example:
-```javascript
+```js
 {
   Read: {
     'option': ['parametrizable', (compiler, type) => {

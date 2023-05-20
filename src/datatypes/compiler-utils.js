@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   Read: {
     pstring: ['parametrizable', (compiler, string) => {
       let code = ''

@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 
-const { testData, proto, compiledProto } = require('../test/dataTypes/prepareTests')
-const Benchmark = require('benchmark')
+import Benchmark from 'benchmark'
+import { testData, proto, compiledProto } from '../test/dataTypes/prepareTests.js'
 
 testData.forEach(tests => {
   describe(tests.kind, function () {

@@ -1,8 +1,5 @@
-const ProtoDef = require('protodef').ProtoDef
-const Serializer = require('protodef').Serializer
-const Parser = require('protodef').Parser
-
-const exampleProtocol = require('./full_protocol_example.json')
+import { ProtoDef, Serializer, Parser } from 'protodef'
+import exampleProtocol from './example_protocol.json'
 
 const proto = new ProtoDef()
 proto.addProtocol(exampleProtocol, ['login', 'toClient'])

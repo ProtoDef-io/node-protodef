@@ -1,6 +1,4 @@
-const ProtoDef = require('protodef').ProtoDef
-const Serializer = require('protodef').Serializer
-const Parser = require('protodef').Parser
+import { ProtoDef, Serializer, Parser } from 'protodef'
 
 // the protocol can be in a separate json file
 const exampleProtocol = {

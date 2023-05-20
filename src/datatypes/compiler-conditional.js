@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   Read: {
     switch: ['parametrizable', (compiler, struct) => {
       let compare = struct.compareTo ? struct.compareTo : struct.compareToValue

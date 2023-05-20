@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   Read: {
     array: ['parametrizable', (compiler, array) => {
       let code = ''

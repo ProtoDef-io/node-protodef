@@ -1,25 +1,24 @@
-const ProtoDef = require('protodef').ProtoDef
-const { ProtoDefCompiler } = require('protodef').Compiler
+import { ProtoDef, Compiler } from 'protodef'
 
 const proto = new ProtoDef()
-const compiler = new ProtoDefCompiler()
+const compiler = new Compiler.ProtoDefCompiler()
 
 const testData = [
   {
     kind: 'conditional',
-    data: require('../../ProtoDef/test/conditional.json')
+    data: import('../../ProtoDef/test/conditional.json')
   },
   {
     kind: 'numeric',
-    data: require('../../ProtoDef/test/numeric.json')
+    data: import('../../ProtoDef/test/numeric.json')
   },
   {
     kind: 'structures',
-    data: require('../../ProtoDef/test/structures.json')
+    data: import('../../ProtoDef/test/structures.json')
   },
   {
     kind: 'utils',
-    data: require('../../ProtoDef/test/utils.json')
+    data: import('../../ProtoDef/test/utils.json')
   }
 ]
 
@@ -71,7 +70,7 @@ testData.forEach(tests => {
   })
 })
 
-module.exports = {
+export default {
   testData,
   proto,
   compiledProto: compiler.compileProtoDefSync()

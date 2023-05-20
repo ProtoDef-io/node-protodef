@@ -1,5 +1,5 @@
-const { ProtoDef } = require('protodef')
-const assert = require('assert')
+import assert from 'assert'
+import { ProtoDef } from 'protodef'
 
 // Create a protocol where DrawText is sent with a "opacity" field at the end only if the color isn't transparent.
 const protocol = {

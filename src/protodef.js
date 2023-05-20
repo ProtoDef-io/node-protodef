@@ -1,7 +1,7 @@
-const { getFieldInfo, tryCatch } = require('./utils')
-const reduce = require('lodash.reduce')
-const get = require('lodash.get')
-const Validator = require('protodef-validator')
+import reduce from 'lodash.reduce'
+import get from 'lodash.get'
+import Validator from 'protodef-validator'
+import { tryCatch, getFieldInfo } from './utils.js'
 
 function isFieldInfo (type) {
   return typeof type === 'string' ||
@@ -49,10 +49,10 @@ class ProtoDef {
   }
 
   addDefaultTypes () {
-    this.addTypes(require('./datatypes/numeric'))
-    this.addTypes(require('./datatypes/utils'))
-    this.addTypes(require('./datatypes/structures'))
-    this.addTypes(require('./datatypes/conditional'))
+    this.addTypes(import('./datatypes/numeric'))
+    this.addTypes(import('./datatypes/utils'))
+    this.addTypes(import('./datatypes/structures'))
+    this.addTypes(import('./datatypes/conditional'))
   }
 
   addProtocol (protocolData, path) {
@@ -166,4 +166,4 @@ class ProtoDef {
   }
 }
 
-module.exports = ProtoDef
+export default ProtoDef

@@ -1,8 +1,7 @@
-const ProtoDef = require('protodef').ProtoDef
-const { performance } = require('perf_hooks')
-const { ProtoDefCompiler } = require('protodef').Compiler
+import { ProtoDef, ProtoDefCompiler } from 'protodef'
+import { performance } from 'perf_hooks'
+import exampleProtocol from './example_protocol.json'
 
-const exampleProtocol = require('./example_protocol.json')
 const mainType = 'packet'
 const packetData = {
   name: 'entity_look',
