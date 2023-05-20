@@ -158,7 +158,7 @@ class ProtoDef {
     return {
       data: value,
       metadata: {
-        size: size
+        size
       },
       buffer: buffer.slice(0, size),
       fullBuffer: buffer
