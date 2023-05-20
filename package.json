@@ -36,6 +36,6 @@
     "jsonschema": "^1.2.4",
     "mocha": "^5.2.0",
     "protodef": "file:.",
-    "standard": "^16.0.3"
+    "standard": "^17.0.0"
   }
 }
