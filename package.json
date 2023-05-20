@@ -34,7 +34,7 @@
     "benchmark": "^2.1.4",
     "chai": "^4.1.2",
     "jsonschema": "^1.2.4",
-    "mocha": "^5.2.0",
+    "mocha": "^10.2.0",
     "protodef": "file:.",
     "standard": "^16.0.3"
   }
