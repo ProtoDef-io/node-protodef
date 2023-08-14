@@ -58,7 +58,7 @@ declare abstract class ProtodefBaseCompiler {
   addContextType(type: string, fn: CallableFunction): void
   addParametrizableType(type: string, maker: CallableFunction): void
   addTypes(types: { [key: string]: [TypeDefKind, CallableFunction] }): void
-  addProtocol(protocolData: Protocol, path: string): void
+  addProtocol(protocolData: Protocol, path: string[]): void
   protected addTypesToCompile(types: any): void
   protected indent(code: string, indent: string): string
   protected getField(name: string): any
@@ -85,7 +85,7 @@ declare class ProtodefCompiler {
   writeCompiler: ProtodefWriteCompiler
   sizeOfCompiler: ProtodefSizeOfCompiler
   addTypes(types: { [key: string]: [TypeDefKind, CallableFunction] }): void
-  addProtocol(protocolData: Protocol, path: string): void
+  addProtocol(protocolData: Protocol, path: string[]): void
   protected addTypesToCompile(types: any): void
   addVariable(key: string, val: any): void
   compileProtoDefSync(options?: { printCode?: boolean }): CompiledProtoDef
