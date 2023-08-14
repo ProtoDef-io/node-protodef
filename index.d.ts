@@ -136,11 +136,11 @@ declare module 'protodef' {
     parsePacketBuffer(packet: any): Buffer
   }
   export const Compiler: {
-    ReadCompiler: ProtodefReadCompiler
-    WriteCompiler: ProtodefWriteCompiler
-    SizeOfCompiler: ProtodefSizeOfCompiler
-    ProtoDefCompiler: ProtodefCompiler
-    CompiledProtodef: CompiledProtodef
+    ReadCompiler: typeof ProtodefReadCompiler
+    WriteCompiler: typeof ProtodefWriteCompiler
+    SizeOfCompiler: typeof ProtodefSizeOfCompiler
+    ProtoDefCompiler: typeof ProtodefCompiler
+    CompiledProtodef: typeof CompiledProtodef
   }
   export const utils: {
     getField(countField: string, context: object): any | undefined
