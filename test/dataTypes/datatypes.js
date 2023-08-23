@@ -1,9 +1,9 @@
 /* eslint-env mocha */
 
+const assert = require('assert')
 const expect = require('chai').expect
 const Validator = require('jsonschema').Validator
 const v = new Validator()
-const assert = require('assert')
 
 const { testData, proto, compiledProto } = require('./prepareTests')
 
