@@ -8,7 +8,10 @@ Let's take a simple ProtoDef definition and convert it to use the ProtoDef compi
 
 ProtoDef:
 ```javascript
+// cjs
 const ProtoDef = require('protodef').ProtoDef
+// esm
+import { ProtoDef } from './src/index.mjs'
 
 // Create a ProtoDef instance
 const proto = new ProtoDef()
@@ -21,7 +24,11 @@ const result = proto.parsePacketBuffer('mainType', buffer)
 
 ProtoDef Compiler:
 ```javascript
+// CJS
 const { ProtoDefCompiler } = require('protodef').Compiler
+// esm
+import pkg from 'protodef'
+const { ProtoDefCompiler } = pkg.Compiler
 
 // Create a ProtoDefCompiler instance
 const compiler = new ProtoDefCompiler()
