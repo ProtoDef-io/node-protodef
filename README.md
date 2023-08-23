@@ -19,7 +19,8 @@ npm install ProtoDef
 
 ## Usage
 
-See [example](example.js)
+* See [example](example.js) using CommonJS syntax.
+* See [example-es6](example.mjs) using ES6 syntax.
 
 ## Documentation
 

@@ -29,7 +29,7 @@ function readMapper (buffer, offset, { type, mappings }, rootNode) {
   }
   if (mappedValue == null) throw new Error(value + ' is not in the mappings value')
   return {
-    size: size,
+    size,
     value: mappedValue
   }
 }

@@ -2,9 +2,11 @@
   "name": "protodef",
   "version": "1.15.0",
   "description": "A simple yet powerful way to define binary protocols",
-  "main": "index.js",
+  "main": "src/index.js",
+  "module": "src/index.mjs",
   "types": "index.d.ts",
   "author": "roblabla <robinlambertz.dev@gmail.com>",
+  "contributors": ["AugustinMauroy"],
   "scripts": {
     "lint": "standard",
     "fix": "standard --fix",
