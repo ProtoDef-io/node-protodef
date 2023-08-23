@@ -21,7 +21,7 @@
     "readable-stream": "^4.4.0"
   },
   "engines": {
-    "node": ">=14"
+    "node": ">=18"
   },
   "bugs": {
     "url": "https://github.com/ProtoDef-io/node-protodef/issues"
