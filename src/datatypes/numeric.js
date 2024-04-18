@@ -89,8 +89,8 @@ function generateFunctions (bufferReader, bufferWriter, size, schema) {
     if (offset + size > buffer.length) { throw new PartialReadError() }
     const value = buffer[bufferReader](offset)
     return {
-      value: value,
-      size: size
+      value,
+      size
     }
   }
   const writer = (value, buffer, offset) => {
