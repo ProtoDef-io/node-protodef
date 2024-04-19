@@ -10,7 +10,9 @@ module.exports = {
       } else {
         throw new Error('Array must contain either count or countType')
       }
-      code += 'if (count > 0xffffff) throw new Error("array size is abnormally large, not reading: " + count)\n'
+      if (!compiler.skipChecks) {
+        code += 'if (count > 0xffffff) throw new Error("array size is abnormally large, not reading: " + count)\n'
+      }
       code += 'const data = []\n'
       code += 'let size = countSize\n'
       code += 'for (let i = 0; i < count; i++) {\n'
