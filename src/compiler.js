@@ -9,7 +9,7 @@ const { tryCatch } = require('./utils')
 
 class ProtoDefCompiler {
   constructor (options) {
-    this.readCompiler = new ReadCompiler()
+    this.readCompiler = new ReadCompiler(options)
     this.writeCompiler = new WriteCompiler()
     this.sizeOfCompiler = new SizeOfCompiler()
     this.skipChecks = options?.skipChecks || false
@@ -261,12 +261,14 @@ class Compiler {
 }
 
 class ReadCompiler extends Compiler {
-  constructor () {
+  constructor (options) {
     super()
 
     this.addTypes(conditionalDatatypes.Read)
     this.addTypes(structuresDatatypes.Read)
     this.addTypes(utilsDatatypes.Read)
+
+    this.skipChecks = options?.skipChecks || false
 
     // Add default types
     for (const key in numeric) {
