@@ -47,7 +47,8 @@ function addErrorField (e, field) {
 }
 
 function tryCatch (tryfn, catchfn) {
-  try { return tryfn() } catch (e) { catchfn(e) }
+  Error.stackTraceLimit = 40
+  try { return tryfn() } catch (e) { catchfn(e) } finally { Error.stackTraceLimit = 10 }
 }
 
 function tryDoc (tryfn, field) {

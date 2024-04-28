@@ -101,7 +101,9 @@ class CompiledProtodef {
     const buffer = Buffer.allocUnsafe(length)
     tryCatch(() => this.write(packet, buffer, 0, type),
       (e) => {
-        e.message = `Write error for ${e.field} : ${e.message}`
+        let packetStr = ''
+        try { packetStr = JSON.stringify(packet) } catch (err) { try { packetStr = packet } catch (err) {} }
+        e.message = `Write error for ${e.field} in ${packetStr} : ${e.message}`
         throw e
       })
     return buffer
