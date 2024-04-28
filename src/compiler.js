@@ -102,7 +102,7 @@ class CompiledProtodef {
     tryCatch(() => this.write(packet, buffer, 0, type),
       (e) => {
         let packetStr = ''
-        try { packetStr = JSON.stringify(packet) } catch (err) { try { packetStr = packet } catch (err) {} }
+        try { packetStr = JSON.stringify(packet) } catch (err) { try { packetStr = String(packet) } catch (err) {} }
         e.message = `Write error for ${e.field} in ${packetStr} : ${e.message}`
         throw e
       })
