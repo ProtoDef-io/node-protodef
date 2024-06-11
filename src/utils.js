@@ -73,13 +73,13 @@ class PartialReadError extends ExtendableError {
 }
 
 module.exports = {
-  getField: getField,
-  getFieldInfo: getFieldInfo,
-  addErrorField: addErrorField,
-  getCount: getCount,
-  sendCount: sendCount,
-  calcCount: calcCount,
-  tryCatch: tryCatch,
-  tryDoc: tryDoc,
-  PartialReadError: PartialReadError
+  getField,
+  getFieldInfo,
+  addErrorField,
+  getCount,
+  sendCount,
+  calcCount,
+  tryCatch,
+  tryDoc,
+  PartialReadError
 }

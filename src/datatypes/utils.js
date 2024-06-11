@@ -1,5 +1,3 @@
-const assert = require('assert')
-
 const { getCount, sendCount, calcCount, PartialReadError } = require('../utils')
 
 module.exports = {
@@ -29,7 +27,7 @@ function readMapper (buffer, offset, { type, mappings }, rootNode) {
   }
   if (mappedValue == null) throw new Error(value + ' is not in the mappings value')
   return {
-    size: size,
+    size,
     value: mappedValue
   }
 }
@@ -77,7 +75,7 @@ function readVarInt (buffer, offset) {
       }
     }
     shift += 7 // we only have 7 bits, MSB being the return-trigger
-    assert.ok(shift < 64, 'varint is too big') // Make sure our shift don't overflow.
+    if (shift > 64) throw new PartialReadError(`varint is too big: ${shift}`) // Make sure our shift don't overflow.
   }
 }
 
