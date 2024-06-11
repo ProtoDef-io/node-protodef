@@ -205,3 +205,24 @@ Example:
     }]
   }
 ```
+
+### Skip Checks (optional)
+
+ProtoDef Compiler allows an optional `skipChecks` parameter to be passed to the constructor. By default this value is `false`.
+
+If set to `true`, the compiler will skip checks that applies safety limits to avoid out of memory crashes. Sometimes these checks can be too restrictive, and the `skipChecks` parameter allows you to disable them.
+
+```javascript
+const { ProtoDefCompiler } = require('protodef').Compiler
+
+// Create a ProtoDefCompiler instance that skips checks
+const compiler = new ProtoDefCompiler({ skipChecks: true })
+compiler.addTypesToCompile(require('./protocol.json'))
+
+// Compile a ProtoDef instance
+const compiledProto = await compiler.compileProtoDef()
+
+// Use it as if it were a normal ProtoDef
+const buffer = compiledProto.createPacketBuffer('mainType', result)
+const result = compiledProto.parsePacketBuffer('mainType', buffer)
+```
