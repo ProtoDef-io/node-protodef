@@ -84,6 +84,7 @@ declare class ProtodefCompiler {
   readCompiler: ProtodefReadCompiler
   writeCompiler: ProtodefWriteCompiler
   sizeOfCompiler: ProtodefSizeOfCompiler
+  skipChecks?: boolean
   addTypes(types: { [key: string]: [TypeDefKind, CallableFunction] }): void
   addProtocol(protocolData: Protocol, path: string[]): void
   protected addTypesToCompile(types: any): void
