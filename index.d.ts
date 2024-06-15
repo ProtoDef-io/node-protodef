@@ -69,6 +69,9 @@ declare abstract class ProtodefBaseCompiler {
 }
 
 declare class ProtodefReadCompiler extends ProtodefBaseCompiler {
+  constructor();
+  constructor(options: CompilerOptions);
+
   private callType(value: string, type: string | any[], offsetExpr: string, args: string[]): string
 }
 
@@ -80,7 +83,14 @@ declare class ProtodefSizeOfCompiler extends ProtodefBaseCompiler {
   private callType(value: string, type: string | any[], args: string[]): string
 }
 
+interface CompilerOptions {
+  skipChecks?: boolean;
+}
+
 declare class ProtodefCompiler {
+  constructor();
+  constructor(options: CompilerOptions);
+
   readCompiler: ProtodefReadCompiler
   writeCompiler: ProtodefWriteCompiler
   sizeOfCompiler: ProtodefSizeOfCompiler
