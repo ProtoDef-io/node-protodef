@@ -4,7 +4,7 @@ module.exports = {
       let compare = struct.compareTo ? struct.compareTo : struct.compareToValue
       const args = []
       if (compare.startsWith('$')) args.push(compare)
-      else if (struct.compareTo) {
+      else if (struct.compareTo && compare.includes('.')) {
         compare = compiler.getField(compare)
       }
       let code = `switch (${compare}) {\n`
@@ -34,7 +34,7 @@ module.exports = {
       let compare = struct.compareTo ? struct.compareTo : struct.compareToValue
       const args = []
       if (compare.startsWith('$')) args.push(compare)
-      else if (struct.compareTo) {
+      else if (struct.compareTo && compare.includes('.')) {
         compare = compiler.getField(compare)
       }
       let code = `switch (${compare}) {\n`
@@ -65,7 +65,7 @@ module.exports = {
       let compare = struct.compareTo ? struct.compareTo : struct.compareToValue
       const args = []
       if (compare.startsWith('$')) args.push(compare)
-      else if (struct.compareTo) {
+      else if (struct.compareTo && compare.includes('.')) {
         compare = compiler.getField(compare)
       }
       let code = `switch (${compare}) {\n`
