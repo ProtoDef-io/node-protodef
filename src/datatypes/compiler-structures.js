@@ -182,63 +182,6 @@ function containerInlining (values) {
           _shouldBeInlined: true,
           type
         })
-        // const theSwitch = type[1]
-        // const valueSet = new Set()
-        // // search for containers and build a set of possible values
-        // for (const field in theSwitch.fields) {
-        //   if (theSwitch.fields[field] instanceof Array && theSwitch.fields[field][0] === 'container') {
-        //     for (const j in theSwitch.fields[field][1]) {
-        //       const item = theSwitch.fields[field][1][j]
-        //       valueSet.add(item.name)
-        //     }
-        //   }
-        // }
-        // if (theSwitch.default instanceof Array && theSwitch.default[0] === 'container') {
-        //   for (const j in theSwitch.default[1]) {
-        //     const item = theSwitch.default[1][j]
-        //     valueSet.add(item.name)
-        //   }
-        // }
-        // // For each value create a switch
-        // for (const name of valueSet.keys()) {
-        //   const fields = {}
-        //   let theDefault = theSwitch.default
-
-        //   if (theDefault instanceof Array && theDefault[0] === 'container') {
-        //     for (const j in theDefault[1]) {
-        //       const item = theDefault[1][j]
-        //       if (item.name === name) {
-        //         theDefault = item.type
-        //         break
-        //       }
-        //     }
-        //   }
-        //   for (const field in theSwitch.fields) {
-        //     if (theSwitch.fields[field] instanceof Array && theSwitch.fields[field][0] === 'container') {
-        //       for (const j in theSwitch.fields[field][1]) {
-        //         const item = theSwitch.fields[field][1][j]
-        //         if (item.name === name) {
-        //           fields[field] = theSwitch.fields[field][1][j].type
-        //           break
-        //         }
-        //       }
-        //     } else {
-        //       fields[field] = theSwitch.fields[field]
-        //     }
-        //   }
-        //   if (!theDefault) {
-        //     theDefault = 'void'
-        //   }
-        //   newValues.push({
-        //     name,
-        //     type: ['switch', {
-        //       compareTo: theSwitch.compareTo,
-        //       compareToValue: theSwitch.compareToValue,
-        //       default: theDefault,
-        //       fields
-        //     }]
-        //   })
-        // }
       } else {
         throw new Error('Cannot inline anonymous type: ' + type)
       }
