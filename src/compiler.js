@@ -217,7 +217,7 @@ class Compiler {
       for (let j = 0; j < i; j++) {
         if (this.scopeStack[j][field]) count++
       }
-      if (noAssign) { // referencing a variable, inherit from parent scope 
+      if (noAssign) { // referencing a variable, inherit from parent scope
         scope[field] = field
       } else { // creating a new variable in this scope
         scope[field] = field + (count || '') // If the name is already used, add a number
