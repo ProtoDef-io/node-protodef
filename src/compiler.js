@@ -9,10 +9,9 @@ const { tryCatch } = require('./utils')
 
 class ProtoDefCompiler {
   constructor (options) {
-    this.readCompiler = new ReadCompiler(options)
+    this.readCompiler = new ReadCompiler()
     this.writeCompiler = new WriteCompiler()
     this.sizeOfCompiler = new SizeOfCompiler()
-    this.skipChecks = options?.skipChecks || false
   }
 
   addTypes (types) {
@@ -199,7 +198,7 @@ class Compiler {
   getField (name) {
     const path = name.split('/')
     let i = this.scopeStack.length - 1
-    const reserved = ['value', 'enum', 'default', 'size', 'offset']
+    const reserved = ['value', 'enum', 'default', 'size', 'offset', 'skipChecks']
     while (path.length) {
       const scope = this.scopeStack[i]
       const field = path.shift()
@@ -261,14 +260,12 @@ class Compiler {
 }
 
 class ReadCompiler extends Compiler {
-  constructor (options) {
+  constructor () {
     super()
 
     this.addTypes(conditionalDatatypes.Read)
     this.addTypes(structuresDatatypes.Read)
     this.addTypes(utilsDatatypes.Read)
-
-    this.skipChecks = options?.skipChecks || false
 
     // Add default types
     for (const key in numeric) {

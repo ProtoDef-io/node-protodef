@@ -83,18 +83,10 @@ declare class ProtodefSizeOfCompiler extends ProtodefBaseCompiler {
   private callType(value: string, type: string | any[], args: string[]): string
 }
 
-interface CompilerOptions {
-  skipChecks?: boolean;
-}
-
 declare class ProtodefCompiler {
-  constructor();
-  constructor(options: CompilerOptions);
-
   readCompiler: ProtodefReadCompiler
   writeCompiler: ProtodefWriteCompiler
   sizeOfCompiler: ProtodefSizeOfCompiler
-  skipChecks?: boolean
   addTypes(types: { [key: string]: [TypeDefKind, CallableFunction] }): void
   addProtocol(protocolData: Protocol, path: string[]): void
   protected addTypesToCompile(types: any): void
