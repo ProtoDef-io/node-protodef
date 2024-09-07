@@ -8,7 +8,7 @@ const utilsDatatypes = require('./datatypes/compiler-utils')
 const { tryCatch } = require('./utils')
 
 class ProtoDefCompiler {
-  constructor (options) {
+  constructor () {
     this.readCompiler = new ReadCompiler()
     this.writeCompiler = new WriteCompiler()
     this.sizeOfCompiler = new SizeOfCompiler()

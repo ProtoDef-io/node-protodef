@@ -69,9 +69,6 @@ declare abstract class ProtodefBaseCompiler {
 }
 
 declare class ProtodefReadCompiler extends ProtodefBaseCompiler {
-  constructor();
-  constructor(options: CompilerOptions);
-
   private callType(value: string, type: string | any[], offsetExpr: string, args: string[]): string
 }
 
