@@ -198,7 +198,7 @@ class Compiler {
   getField (name) {
     const path = name.split('/')
     let i = this.scopeStack.length - 1
-    const reserved = ['value', 'enum', 'default', 'size', 'offset', 'skipChecks']
+    const reserved = ['value', 'enum', 'default', 'size', 'offset']
     while (path.length) {
       const scope = this.scopeStack[i]
       const field = path.shift()

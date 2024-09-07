@@ -10,7 +10,7 @@ module.exports = {
       } else {
         throw new Error('Array must contain either count or countType')
       }
-      if (!compiler.getField('skipChecks')) {
+      if (!compiler.readCtx.skipChecks) {
         code += 'if (count > 0xffffff) throw new Error("array size is abnormally large, not reading: " + count)\n'
       }
       code += 'const data = []\n'
