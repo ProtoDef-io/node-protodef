@@ -1,5 +1,10 @@
 # History
 
+## 1.16.0
+
+* update protodef definitions
+* Replace varint assert with exception
+
 ## 1.15.0
 
 * Fix 64-bit BigInt sign handling (@extremeheat)
