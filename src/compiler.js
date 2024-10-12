@@ -195,7 +195,7 @@ class Compiler {
     return code.split('\n').map((line) => indent + line).join('\n')
   }
 
-  getField (name) {
+  getField (name, noAssign) {
     const path = name.split('/')
     let i = this.scopeStack.length - 1
     const reserved = ['value', 'enum', 'default', 'size', 'offset']
@@ -217,7 +217,11 @@ class Compiler {
       for (let j = 0; j < i; j++) {
         if (this.scopeStack[j][field]) count++
       }
-      scope[field] = field + (count || '') // If the name is already used, add a number
+      if (noAssign) { // referencing a variable, inherit from parent scope
+        scope[field] = field
+      } else { // creating a new variable in this scope
+        scope[field] = field + (count || '') // If the name is already used, add a number
+      }
       return scope[field]
     }
     throw new Error('Unknown field ' + path)

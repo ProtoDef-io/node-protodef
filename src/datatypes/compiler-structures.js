@@ -32,7 +32,7 @@ module.exports = {
       let offsetExpr = 'offset'
       const names = []
       for (const i in values) {
-        const { type, name, anon } = values[i]
+        const { type, name, anon, _shouldBeInlined } = values[i]
         let trueName
         let sizeName
         if (type instanceof Array && type[0] === 'bitfield' && anon) {
@@ -52,7 +52,8 @@ module.exports = {
         } else {
           trueName = compiler.getField(name)
           sizeName = `${trueName}Size`
-          if (name === trueName) names.push(name)
+          if (_shouldBeInlined) names.push('...' + name)
+          else if (name === trueName) names.push(name)
           else names.push(`${name}: ${trueName}`)
         }
         code += `let { value: ${trueName}, size: ${sizeName} } = ` + compiler.callType(type, offsetExpr) + '\n'
@@ -88,7 +89,7 @@ module.exports = {
       values = containerInlining(values)
       let code = ''
       for (const i in values) {
-        const { type, name, anon } = values[i]
+        const { type, name, anon, _shouldBeInlined } = values[i]
         let trueName
         if (type instanceof Array && type[0] === 'bitfield' && anon) {
           const names = []
@@ -101,7 +102,8 @@ module.exports = {
           trueName = '{' + names.join(', ') + '}'
         } else {
           trueName = compiler.getField(name)
-          code += `let ${trueName} = value.${name}\n`
+          if (_shouldBeInlined) code += `let ${name} = value\n`
+          else code += `let ${trueName} = value.${name}\n`
         }
         code += 'offset = ' + compiler.callType(trueName, type) + '\n'
       }
@@ -138,7 +140,7 @@ module.exports = {
       values = containerInlining(values)
       let code = 'let size = 0\n'
       for (const i in values) {
-        const { type, name, anon } = values[i]
+        const { type, name, anon, _shouldBeInlined } = values[i]
         let trueName
         if (type instanceof Array && type[0] === 'bitfield' && anon) {
           const names = []
@@ -151,7 +153,8 @@ module.exports = {
           trueName = '{' + names.join(', ') + '}'
         } else {
           trueName = compiler.getField(name)
-          code += `let ${trueName} = value.${name}\n`
+          if (_shouldBeInlined) code += `let ${name} = value\n`
+          else code += `let ${trueName} = value.${name}\n`
         }
         code += 'size += ' + compiler.callType(trueName, type) + '\n'
       }
@@ -159,6 +162,10 @@ module.exports = {
       return compiler.wrapCode(code)
     }]
   }
+}
+
+function uniqueId () {
+  return '_' + Math.random().toString(36).substr(2, 9)
 }
 
 function containerInlining (values) {
@@ -170,63 +177,11 @@ function containerInlining (values) {
       if (type instanceof Array && type[0] === 'container') {
         for (const j in type[1]) newValues.push(type[1][j])
       } else if (type instanceof Array && type[0] === 'switch') {
-        const theSwitch = type[1]
-        const valueSet = new Set()
-        // search for containers and build a set of possible values
-        for (const field in theSwitch.fields) {
-          if (theSwitch.fields[field] instanceof Array && theSwitch.fields[field][0] === 'container') {
-            for (const j in theSwitch.fields[field][1]) {
-              const item = theSwitch.fields[field][1][j]
-              valueSet.add(item.name)
-            }
-          }
-        }
-        if (theSwitch.default instanceof Array && theSwitch.default[0] === 'container') {
-          for (const j in theSwitch.default[1]) {
-            const item = theSwitch.default[1][j]
-            valueSet.add(item.name)
-          }
-        }
-        // For each value create a switch
-        for (const name of valueSet.keys()) {
-          const fields = {}
-          let theDefault = theSwitch.default
-
-          if (theDefault instanceof Array && theDefault[0] === 'container') {
-            for (const j in theDefault[1]) {
-              const item = theDefault[1][j]
-              if (item.name === name) {
-                theDefault = item.type
-                break
-              }
-            }
-          }
-          for (const field in theSwitch.fields) {
-            if (theSwitch.fields[field] instanceof Array && theSwitch.fields[field][0] === 'container') {
-              for (const j in theSwitch.fields[field][1]) {
-                const item = theSwitch.fields[field][1][j]
-                if (item.name === name) {
-                  fields[field] = theSwitch.fields[field][1][j].type
-                  break
-                }
-              }
-            } else {
-              fields[field] = theSwitch.fields[field]
-            }
-          }
-          if (!theDefault) {
-            theDefault = 'void'
-          }
-          newValues.push({
-            name,
-            type: ['switch', {
-              compareTo: theSwitch.compareTo,
-              compareToValue: theSwitch.compareToValue,
-              default: theDefault,
-              fields
-            }]
-          })
-        }
+        newValues.push({
+          name: uniqueId(),
+          _shouldBeInlined: true,
+          type
+        })
       } else {
         throw new Error('Cannot inline anonymous type: ' + type)
       }
