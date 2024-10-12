@@ -1,5 +1,9 @@
 # History
 
+## 1.17.0
+
+* Fix anon containers
+
 ## 1.16.0
 
 * update protodef definitions
