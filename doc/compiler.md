@@ -205,3 +205,27 @@ Example:
     }]
   }
 ```
+
+### Skip Checks (optional)
+
+ProtoDef Compiler allows an optional `noArraySizeCheck` to be set. By default this value is `false`.
+
+If set to `true`, the compiler will skip array checks that appliy safety limits to avoid out of memory crashes. Sometimes these checks can be too restrictive, and the `noArraySizeCheck` parameter allows you to disable them.
+
+```javascript
+const { ProtoDefCompiler } = require('protodef').Compiler
+
+// Create a ProtoDefCompiler instance
+const compiler = new ProtoDefCompiler()
+compiler.addTypesToCompile(require('./protocol.json'))
+
+// Compile a ProtoDef instance
+const compiledProto = await compiler.compileProtoDef()
+
+// Set the `noArraySizeCheck` variable to skip array checks.
+compiledProto.setVariable('noArraySizeCheck', true);
+
+// Use it as if it were a normal ProtoDef
+const buffer = compiledProto.createPacketBuffer('mainType', result)
+const result = compiledProto.parsePacketBuffer('mainType', buffer)
+```
