@@ -82,7 +82,7 @@ function readVarLong128 (buffer, offset) {
       return { value: result, size: cursor - offset }
     }
     shift += 7n
-    if (shift > 128n) throw new Error(`varint is too big: ${shift}`)
+    if (shift > 127n) throw new Error(`varint is too big: ${shift}`)
   }
 }
 
