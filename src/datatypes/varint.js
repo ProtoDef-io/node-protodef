@@ -3,6 +3,7 @@ const { PartialReadError } = require('../utils')
 module.exports = {
   varint: [readVarInt, writeVarInt, sizeOfVarInt, require('../../ProtoDef/schemas/utils.json').varint],
   varint64: [readVarLong, writeVarLong, sizeOfVarLong, require('../../ProtoDef/schemas/utils.json').varint],
+  varint128: [readVarLong128, writeVarLong, sizeOfVarLong, require('../../ProtoDef/schemas/utils.json').varint],
   zigzag32: [readSignedVarInt, writeSignedVarInt, sizeOfSignedVarInt, require('../../ProtoDef/schemas/utils.json').varint],
   zigzag64: [readSignedVarLong, writeSignedVarLong, sizeOfSignedVarLong, require('../../ProtoDef/schemas/utils.json').varint]
 }
@@ -64,6 +65,24 @@ function readVarLong (buffer, offset) {
     }
     shift += 7n
     if (shift > 63n) throw new Error(`varint is too big: ${shift}`)
+  }
+}
+
+function readVarLong128 (buffer, offset) {
+  let result = 0n
+  let shift = 0n
+  let cursor = offset
+
+  while (true) {
+    if (cursor >= buffer.length) throw new Error('Unexpected buffer end while reading VarLong')
+    const byte = buffer.readUInt8(cursor)
+    result |= (BigInt(byte) & 0x7Fn) << shift // Add the bits, excluding the MSB
+    cursor++
+    if (!(byte & 0x80)) { // If MSB is not set, return result
+      return { value: result, size: cursor - offset }
+    }
+    shift += 7n
+    if (shift > 128n) throw new Error(`varint is too big: ${shift}`)
   }
 }
 

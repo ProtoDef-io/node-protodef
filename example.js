@@ -32,18 +32,10 @@ const exampleProtocol = {
         name: 'onGround',
         type: 'bool'
       },
-      {
-        name: 'longId',
-        type: 'varint64'
-      },
-      {
-        name: 'zigzagId',
-        type: 'zigzag32'
-      },
-      {
-        name: 'zigzagBig',
-        type: 'zigzag64'
-      }
+      { name: 'longId', type: 'varint64' },
+      { name: 'longerId', type: 'varint128' },
+      { name: 'zigzagId', type: 'zigzag32' },
+      { name: 'zigzagBig', type: 'zigzag64' }
     ]
   ],
   packet: [
@@ -89,8 +81,9 @@ serializer.write({
     yaw: 1,
     pitch: 1,
     onGround: true,
-    longId: 22n,
-    zigzagId: 66,
+    longId: 13n,
+    longerId: 2n ** 68n, // 9 bytes integer, 10 over wire
+    zigzagId: -3,
     zigzagBig: 4294967296n
   }
 })
