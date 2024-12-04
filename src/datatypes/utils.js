@@ -1,14 +1,14 @@
 const { getCount, sendCount, calcCount, PartialReadError } = require('../utils')
 
 module.exports = {
-  varint: [readVarInt, writeVarInt, sizeOfVarInt, require('../../ProtoDef/schemas/utils.json').varint],
   bool: [readBool, writeBool, 1, require('../../ProtoDef/schemas/utils.json').bool],
   pstring: [readPString, writePString, sizeOfPString, require('../../ProtoDef/schemas/utils.json').pstring],
   buffer: [readBuffer, writeBuffer, sizeOfBuffer, require('../../ProtoDef/schemas/utils.json').buffer],
   void: [readVoid, writeVoid, 0, require('../../ProtoDef/schemas/utils.json').void],
   bitfield: [readBitField, writeBitField, sizeOfBitField, require('../../ProtoDef/schemas/utils.json').bitfield],
   cstring: [readCString, writeCString, sizeOfCString, require('../../ProtoDef/schemas/utils.json').cstring],
-  mapper: [readMapper, writeMapper, sizeOfMapper, require('../../ProtoDef/schemas/utils.json').mapper]
+  mapper: [readMapper, writeMapper, sizeOfMapper, require('../../ProtoDef/schemas/utils.json').mapper],
+  ...require('./varint')
 }
 
 function mapperEquality (a, b) {
@@ -56,47 +56,6 @@ function sizeOfMapper (value, { type, mappings }, rootNode) {
   }
   if (mappedValue == null) throw new Error(value + ' is not in the mappings value')
   return this.sizeOf(mappedValue, type, rootNode)
-}
-
-function readVarInt (buffer, offset) {
-  let result = 0
-  let shift = 0
-  let cursor = offset
-
-  while (true) {
-    if (cursor + 1 > buffer.length) { throw new PartialReadError() }
-    const b = buffer.readUInt8(cursor)
-    result |= ((b & 0x7f) << shift) // Add the bits to our number, except MSB
-    cursor++
-    if (!(b & 0x80)) { // If the MSB is not set, we return the number
-      return {
-        value: result,
-        size: cursor - offset
-      }
-    }
-    shift += 7 // we only have 7 bits, MSB being the return-trigger
-    if (shift > 64) throw new PartialReadError(`varint is too big: ${shift}`) // Make sure our shift don't overflow.
-  }
-}
-
-function sizeOfVarInt (value) {
-  let cursor = 0
-  while (value & ~0x7F) {
-    value >>>= 7
-    cursor++
-  }
-  return cursor + 1
-}
-
-function writeVarInt (value, buffer, offset) {
-  let cursor = 0
-  while (value & ~0x7F) {
-    buffer.writeUInt8((value & 0xFF) | 0x80, offset + cursor)
-    cursor++
-    value >>>= 7
-  }
-  buffer.writeUInt8(value, offset + cursor)
-  return offset + cursor + 1
 }
 
 function readPString (buffer, offset, typeArgs, rootNode) {
