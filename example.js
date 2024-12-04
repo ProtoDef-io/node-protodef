@@ -2,6 +2,10 @@ const ProtoDef = require('protodef').ProtoDef
 const Serializer = require('protodef').Serializer
 const Parser = require('protodef').Parser
 
+BigInt.prototype.toJSON = function () { // eslint-disable-line -- Allow serializing BigIntegers
+  return this.toString()
+}
+
 // the protocol can be in a separate json file
 const exampleProtocol = {
   container: 'native',
@@ -27,6 +31,18 @@ const exampleProtocol = {
       {
         name: 'onGround',
         type: 'bool'
+      },
+      {
+        name: 'longId',
+        type: 'varint64'
+      },
+      {
+        name: 'zigzagId',
+        type: 'zigzag32'
+      },
+      {
+        name: 'zigzagBig',
+        type: 'zigzag64'
       }
     ]
   ],
@@ -72,7 +88,10 @@ serializer.write({
     entityId: 1,
     yaw: 1,
     pitch: 1,
-    onGround: true
+    onGround: true,
+    longId: 22n,
+    zigzagId: 66,
+    zigzagBig: 4294967296n
   }
 })
 serializer.pipe(parser)

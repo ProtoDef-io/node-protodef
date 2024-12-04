@@ -15,17 +15,14 @@ function readVarInt (buffer, offset) {
   let cursor = offset
 
   while (true) {
-    if (cursor + 1 > buffer.length) { throw new PartialReadError() }
-    const b = buffer.readUInt8(cursor)
-    result |= ((b & 0x7f) << shift) // Add the bits to our number, except MSB
+    if (cursor >= buffer.length) throw new PartialReadError('Unexpected buffer end while reading VarInt')
+    const byte = buffer.readUInt8(cursor)
+    result |= (byte & 0x7F) << shift // Add the bits, excluding the MSB
     cursor++
-    if (!(b & 0x80)) { // If the MSB is not set, we return the number
-      return {
-        value: result,
-        size: cursor - offset
-      }
+    if (!(byte & 0x80)) { // If MSB is not set, return result
+      return { value: result, size: cursor - offset }
     }
-    shift += 7 // we only have 7 bits, MSB being the return-trigger
+    shift += 7
     if (shift > 64) throw new PartialReadError(`varint is too big: ${shift}`) // Make sure our shift don't overflow.
   }
 }
@@ -52,172 +49,71 @@ function writeVarInt (value, buffer, offset) {
 
 // u64
 
-function sizeOfVarLong (value) {
-  if (typeof value.valueOf() === 'object') {
-    value = (BigInt(value[0]) << 32n) | BigInt(value[1])
-  } else if (typeof value !== 'bigint') value = BigInt(value)
-
-  let cursor = 0
-  while (value > 127n) {
-    value >>= 7n
-    cursor++
-  }
-  return cursor + 1
-}
-
 function readVarLong (buffer, offset) {
-  let result = BigInt(0)
+  let result = 0n
   let shift = 0n
   let cursor = offset
-  let size = 0
 
   while (true) {
-    if (cursor + 1 > buffer.length) { throw new Error('unexpected buffer end') }
-    const b = buffer.readUInt8(cursor)
-    result |= (BigInt(b) & 0x7fn) << shift // Add the bits to our number, except MSB
+    if (cursor >= buffer.length) throw new Error('Unexpected buffer end while reading VarLong')
+    const byte = buffer.readUInt8(cursor)
+    result |= (BigInt(byte) & 0x7Fn) << shift // Add the bits, excluding the MSB
     cursor++
-    if (!(b & 0x80)) { // If the MSB is not set, we return the number
-      size = cursor - offset
-      break
+    if (!(byte & 0x80)) { // If MSB is not set, return result
+      return { value: result, size: cursor - offset }
     }
-    shift += 7n // we only have 7 bits, MSB being the return-trigger
+    shift += 7n
     if (shift > 63n) throw new Error(`varint is too big: ${shift}`)
   }
+}
 
-  return { value: result, size }
+function sizeOfVarLong (value) {
+  value = BigInt(value)
+  let size = 0
+  do {
+    value >>= 7n
+    size++
+  } while (value !== 0n)
+  return size
 }
 
 function writeVarLong (value, buffer, offset) {
-  // if an array, turn it into a BigInt
-  if (typeof value.valueOf() === 'object') {
-    value = BigInt.asIntN(64, (BigInt(value[0]) << 32n)) | BigInt(value[1])
-  } else if (typeof value !== 'bigint') value = BigInt(value)
-
-  let cursor = 0
-  while (value > 127n) { // keep writing in 7 bit slices
-    const num = Number(value & 0xFFn)
-    buffer.writeUInt8(num | 0x80, offset + cursor)
-    cursor++
+  value = BigInt(value)
+  let cursor = offset
+  do {
+    const byte = value & 0x7Fn
     value >>= 7n
-  }
-  buffer.writeUInt8(Number(value), offset + cursor)
-  return offset + cursor + 1
+    buffer.writeUInt8(Number(byte) | (value ? 0x80 : 0), cursor++)
+  } while (value)
+  return cursor
 }
 
-// zs32
+// Zigzag 32
+
+function readSignedVarInt (buffer, offset) {
+  const { value, size } = readVarInt(buffer, offset)
+  return { value: (value >>> 1) ^ -(value & 1), size }
+}
+
 function sizeOfSignedVarInt (value) {
-  value = (value << 1) ^ (value >> 63)
-  let cursor = 0
-  while (value & ~0x7F) {
-    value >>>= 7
-    cursor++
-  }
-  return cursor + 1
+  return sizeOfVarInt((value << 1) ^ (value >> 31))
+}
+
+function writeSignedVarInt (value, buffer, offset) {
+  return writeVarInt((value << 1) ^ (value >> 31), buffer, offset)
+}
+
+// Zigzag 64
+
+function readSignedVarLong (buffer, offset) {
+  const { value, size } = readVarLong(buffer, offset)
+  return { value: (value >> 1n) ^ -(value & 1n), size }
 }
 
 function sizeOfSignedVarLong (value) {
-  if (typeof value.valueOf() === 'object') {
-    value = (BigInt(value[0]) << 32n) | BigInt(value[1])
-  } else if (typeof value !== 'bigint') value = BigInt(value)
-
-  value = (value << 1n) ^ (value >> 63n)
-  let cursor = 0
-  while (value > 127n) {
-    value >>= 7n
-    cursor++
-  }
-  return cursor + 1
+  return sizeOfVarLong((BigInt(value) << 1n) ^ (BigInt(value) >> 63n))
 }
 
-/**
- * Reads a zigzag encoded 64-bit VarInt as a BigInt
- */
-function readSignedVarLong (buffer, offset) {
-  let result = BigInt(0)
-  let shift = 0n
-  let cursor = offset
-  let size = 0
-
-  while (true) {
-    if (cursor + 1 > buffer.length) { throw new Error('unexpected buffer end') }
-    const b = buffer.readUInt8(cursor)
-    result |= (BigInt(b) & 0x7fn) << shift // Add the bits to our number, except MSB
-    cursor++
-    if (!(b & 0x80)) { // If the MSB is not set, we return the number
-      size = cursor - offset
-      break
-    }
-    shift += 7n // we only have 7 bits, MSB being the return-trigger
-    if (shift > 63n) throw new Error(`varint is too big: ${shift}`)
-  }
-
-  // in zigzag encoding, the sign bit is the LSB of the value - remove the bit,
-  // if 1, then flip the rest of the bits (xor) and set to negative
-  // Note: bigint has no sign bit; instead if we XOR -0 we get no-op, XOR -1 flips and sets negative
-  const zigzag = (result >> 1n) ^ -(result & 1n)
-  return { value: zigzag, size }
-}
-
-/**
- * Writes a zigzag encoded 64-bit VarInt as a BigInt
- */
 function writeSignedVarLong (value, buffer, offset) {
-  // if an array, turn it into a BigInt
-  if (typeof value.valueOf() === 'object') {
-    value = BigInt.asIntN(64, (BigInt(value[0]) << 32n)) | BigInt(value[1])
-  } else if (typeof value !== 'bigint') value = BigInt(value)
-
-  // shift value left and flip if negative (no sign bit, but right shifting beyond value will always be -0b1)
-  value = (value << 1n) ^ (value >> 63n)
-  let cursor = 0
-  while (value > 127n) { // keep writing in 7 bit slices
-    const num = Number(value & 0xFFn)
-    buffer.writeUInt8(num | 0x80, offset + cursor)
-    cursor++
-    value >>= 7n
-  }
-  buffer.writeUInt8(Number(value), offset + cursor)
-  return offset + cursor + 1
-}
-
-/**
- * Reads a 32-bit zigzag encoded varint as a Number
- */
-function readSignedVarInt (buffer, offset) {
-  let result = 0
-  let shift = 0
-  let cursor = offset
-  let size = 0
-
-  while (true) {
-    if (cursor + 1 > buffer.length) { throw new Error('unexpected buffer end') }
-    const b = buffer.readUInt8(cursor)
-    result |= ((b & 0x7f) << shift) // Add the bits to our number, except MSB
-    cursor++
-    if (!(b & 0x80)) { // If the MSB is not set, we return the number
-      size = cursor - offset
-      break
-    }
-    shift += 7 // we only have 7 bits, MSB being the return-trigger
-    if (shift > 63) throw new Error(`varint is too big: ${shift}`)
-  }
-
-  const zigzag = ((((result << 63) >> 63) ^ result) >> 1) ^ (result & (1 << 63))
-  return { value: zigzag, size }
-}
-
-/**
- * Writes a 32-bit zigzag encoded varint
- */
-function writeSignedVarInt (value, buffer, offset) {
-  value = (value << 1) ^ (value >> 31)
-  let cursor = 0
-  while (value & ~0x7F) {
-    const num = Number((value & 0xFF) | 0x80)
-    buffer.writeUInt8(num, offset + cursor)
-    cursor++
-    value >>>= 7
-  }
-  buffer.writeUInt8(value, offset + cursor)
-  return offset + cursor + 1
+  return writeVarLong((BigInt(value) << 1n) ^ (BigInt(value) >> 63n), buffer, offset)
 }
