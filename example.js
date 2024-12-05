@@ -91,6 +91,6 @@ serializer.write({
 serializer.pipe(parser)
 
 parser.on('data', function (chunk) {
-  console.log(chunk)
+  console.dir(chunk, { depth: null })
   assert.deepEqual([...chunk.buffer], [22, 1, 1, 6, 1, 13, 128, 128, 128, 128, 128, 128, 128, 128, 128, 32, 5, 128, 128, 128, 128, 32])
 })
