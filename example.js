@@ -1,3 +1,4 @@
+const assert = require('assert')
 const ProtoDef = require('protodef').ProtoDef
 const Serializer = require('protodef').Serializer
 const Parser = require('protodef').Parser
@@ -13,6 +14,7 @@ const exampleProtocol = {
   byte: 'native',
   bool: 'native',
   switch: 'native',
+  bitflags: 'native',
   entity_look: [
     'container',
     [
@@ -28,10 +30,7 @@ const exampleProtocol = {
         name: 'pitch',
         type: 'i8'
       },
-      {
-        name: 'onGround',
-        type: 'bool'
-      },
+      { name: 'flags', type: ['bitflags', { type: 'u8', flags: ['onGround'] }] },
       { name: 'longId', type: 'varint64' },
       { name: 'longerId', type: 'varint128' },
       { name: 'zigzagId', type: 'zigzag32' },
@@ -79,8 +78,10 @@ serializer.write({
   params: {
     entityId: 1,
     yaw: 1,
-    pitch: 1,
-    onGround: true,
+    pitch: 6,
+    flags: {
+      onGround: true
+    },
     longId: 13n,
     longerId: 2n ** 68n, // 9 bytes integer, 10 over wire
     zigzagId: -3,
@@ -90,5 +91,6 @@ serializer.write({
 serializer.pipe(parser)
 
 parser.on('data', function (chunk) {
-  console.log(JSON.stringify(chunk, null, 2))
+  console.log(chunk)
+  assert.deepEqual([...chunk.buffer], [22, 1, 1, 6, 1, 13, 128, 128, 128, 128, 128, 128, 128, 128, 128, 32, 5, 128, 128, 128, 128, 32])
 })

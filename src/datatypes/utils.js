@@ -6,6 +6,7 @@ module.exports = {
   buffer: [readBuffer, writeBuffer, sizeOfBuffer, require('../../ProtoDef/schemas/utils.json').buffer],
   void: [readVoid, writeVoid, 0, require('../../ProtoDef/schemas/utils.json').void],
   bitfield: [readBitField, writeBitField, sizeOfBitField, require('../../ProtoDef/schemas/utils.json').bitfield],
+  bitflags: [readBitflags, writeBitflags, sizeOfBitflags, require('../../ProtoDef/schemas/utils.json').bitflags],
   cstring: [readCString, writeCString, sizeOfCString, require('../../ProtoDef/schemas/utils.json').cstring],
   mapper: [readMapper, writeMapper, sizeOfMapper, require('../../ProtoDef/schemas/utils.json').mapper],
   ...require('./varint')
@@ -216,4 +217,66 @@ function writeCString (value, buffer, offset, typeArgs) {
 function sizeOfCString (value) {
   const length = Buffer.byteLength(value, 'utf8')
   return length + 1
+}
+
+function readBitflags (buffer, offset, { type, flags, shift, big }, rootNode) {
+  const { size, value } = this.read(buffer, offset, type, rootNode)
+  let f = {}
+  if (Array.isArray(flags)) {
+    for (const [k, v] of Object.entries(flags)) {
+      f[v] = big ? (1n << BigInt(k)) : (1 << k)
+    }
+  } else if (shift) {
+    for (const k in flags) {
+      f[k] = (big ? 1n : 1) << flags[k]
+    }
+  } else {
+    f = flags
+  }
+  const result = { _value: value }
+  for (const key in f) {
+    result[key] = (value & f[key]) === f[key]
+  }
+  return { value: result, size }
+}
+
+function writeBitflags (value, buffer, offset, { type, flags, shift, big }, rootNode) {
+  let f = {}
+  if (Array.isArray(flags)) {
+    for (const [k, v] of Object.entries(flags)) {
+      f[v] = big ? (1n << BigInt(k)) : (1 << k)
+    }
+  } else if (shift) {
+    for (const k in flags) {
+      f[k] = (big ? 1n : 1) << flags[k]
+    }
+  } else {
+    f = flags
+  }
+  let val = value._value || (big ? 0n : 0)
+  for (const key in f) {
+    if (value[key]) val |= f[key]
+  }
+  return this.write(val, buffer, offset, type, rootNode)
+}
+
+function sizeOfBitflags (value, { type, flags, shift, big }, rootNode) {
+  if (!value) throw new Error('Missing field')
+  let f = {}
+  if (Array.isArray(flags)) {
+    for (const [k, v] of Object.entries(flags)) {
+      f[v] = big ? (1n << BigInt(k)) : (1 << k)
+    }
+  } else if (shift) {
+    for (const k in flags) {
+      f[k] = (big ? 1n : 1) << flags[k]
+    }
+  } else {
+    f = flags
+  }
+  let mappedValue = value._value || (big ? 0n : 0)
+  for (const key in f) {
+    if (value[key]) mappedValue |= f[key]
+  }
+  return this.sizeOf(mappedValue, type, rootNode)
 }
