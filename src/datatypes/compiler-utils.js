@@ -66,7 +66,7 @@ module.exports = {
         fstr += '}'
       } else if (shift) {
         fstr = '{'
-        for (const key in flags) fstr += `"${key}": ${1 << flags[key]},`
+        for (const key in flags) fstr += `"${key}": ${1 << flags[key]}${big ? 'n,' : ','}`
         fstr += '}'
       }
       return compiler.wrapCode(`
@@ -145,7 +145,7 @@ return { value, size }
         fstr += '}'
       } else if (shift) {
         fstr = '{'
-        for (const key in flags) fstr += `"${key}": ${1 << flags[key]},`
+        for (const key in flags) fstr += `"${key}": ${1 << flags[key]}${big ? 'n,' : ','}`
         fstr += '}'
       }
       return compiler.wrapCode(`
@@ -197,7 +197,7 @@ return (ctx.${type})(val, buffer, offset)
         fstr += '}'
       } else if (shift) {
         fstr = '{'
-        for (const key in flags) fstr += `"${key}": ${1 << flags[key]},`
+        for (const key in flags) fstr += `"${key}": ${1 << flags[key]}${big ? 'n,' : ','}`
         fstr += '}'
       }
       return compiler.wrapCode(`

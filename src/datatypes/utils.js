@@ -228,7 +228,7 @@ function readBitflags (buffer, offset, { type, flags, shift, big }, rootNode) {
     }
   } else if (shift) {
     for (const k in flags) {
-      f[k] = (big ? 1n : 1) << flags[k]
+      f[k] = big ? (1n << BigInt(flags[k])) : (1 << flags[k])
     }
   } else {
     f = flags
@@ -248,7 +248,7 @@ function writeBitflags (value, buffer, offset, { type, flags, shift, big }, root
     }
   } else if (shift) {
     for (const k in flags) {
-      f[k] = (big ? 1n : 1) << flags[k]
+      f[k] = big ? (1n << BigInt(flags[k])) : (1 << flags[k])
     }
   } else {
     f = flags
@@ -269,7 +269,7 @@ function sizeOfBitflags (value, { type, flags, shift, big }, rootNode) {
     }
   } else if (shift) {
     for (const k in flags) {
-      f[k] = (big ? 1n : 1) << flags[k]
+      f[k] = big ? (1n << BigInt(flags[k])) : (1 << flags[k])
     }
   } else {
     f = flags
