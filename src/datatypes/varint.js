@@ -56,7 +56,7 @@ function readVarLong (buffer, offset) {
   let cursor = offset
 
   while (true) {
-    if (cursor >= buffer.length) throw new Error('Unexpected buffer end while reading VarLong')
+    if (cursor >= buffer.length) throw new PartialReadError('Unexpected buffer end while reading VarLong')
     const byte = buffer.readUInt8(cursor)
     result |= (BigInt(byte) & 0x7Fn) << shift // Add the bits, excluding the MSB
     cursor++
@@ -74,7 +74,7 @@ function readVarLong128 (buffer, offset) {
   let cursor = offset
 
   while (true) {
-    if (cursor >= buffer.length) throw new Error('Unexpected buffer end while reading VarLong')
+    if (cursor >= buffer.length) throw new PartialReadError('Unexpected buffer end while reading VarLong')
     const byte = buffer.readUInt8(cursor)
     result |= (BigInt(byte) & 0x7Fn) << shift // Add the bits, excluding the MSB
     cursor++

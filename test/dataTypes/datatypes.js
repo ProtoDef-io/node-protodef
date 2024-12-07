@@ -13,7 +13,12 @@ function testValue (type, value, buffer) {
   })
   it('reads', function () {
     const actualResult = proto.parsePacketBuffer(type, buffer)
-    if (value === null) { assert.ok(actualResult.data === undefined) } else { expect(actualResult.data).to.deep.equal(value) }
+    if (typeof actualResult.data === 'bigint') value = BigInt(value)
+    if (value === null) {
+      assert.ok(actualResult.data === undefined)
+    } else {
+      expect(actualResult.data).to.deep.equal(value)
+    }
     expect(actualResult.metadata.size).to.deep.equal(buffer.length)
   })
   it('writes (compiled)', function () {
