@@ -6,7 +6,6 @@
   "types": "index.d.ts",
   "author": "roblabla <robinlambertz.dev@gmail.com>",
   "scripts": {
-    "prepare": "git submodule update --init",
     "lint": "standard",
     "fix": "standard --fix",
     "unit-test": "mocha --recursive --reporter spec",
