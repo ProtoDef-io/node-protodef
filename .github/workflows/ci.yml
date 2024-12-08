@@ -24,6 +24,5 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - run: npm install
-    - run: mv ProtoDef ProtoDef-old && git clone -b patch-2 https://github.com/extremeheat/ProtoDef
     - run: npm test
     - run: npm run benchmark

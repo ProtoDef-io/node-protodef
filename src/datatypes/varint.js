@@ -1,11 +1,11 @@
 const { PartialReadError } = require('../utils')
 
 module.exports = {
-  varint: [readVarInt, writeVarInt, sizeOfVarInt, require('../../ProtoDef/schemas/utils.json').varint],
-  varint64: [readVarLong, writeVarLong, sizeOfVarLong, require('../../ProtoDef/schemas/utils.json').varint],
-  varint128: [readVarLong128, writeVarLong, sizeOfVarLong, require('../../ProtoDef/schemas/utils.json').varint],
-  zigzag32: [readSignedVarInt, writeSignedVarInt, sizeOfSignedVarInt, require('../../ProtoDef/schemas/utils.json').varint],
-  zigzag64: [readSignedVarLong, writeSignedVarLong, sizeOfSignedVarLong, require('../../ProtoDef/schemas/utils.json').varint]
+  varint: [readVarInt, writeVarInt, sizeOfVarInt, require('../../ProtoDef/schemas/numeric.json').varint],
+  varint64: [readVarLong, writeVarLong, sizeOfVarLong, require('../../ProtoDef/schemas/numeric.json').varint64],
+  varint128: [readVarLong128, writeVarLong, sizeOfVarLong, require('../../ProtoDef/schemas/numeric.json').varint128],
+  zigzag32: [readSignedVarInt, writeSignedVarInt, sizeOfSignedVarInt, require('../../ProtoDef/schemas/numeric.json').zigzag32],
+  zigzag64: [readSignedVarLong, writeSignedVarLong, sizeOfSignedVarLong, require('../../ProtoDef/schemas/numeric.json').zigzag64]
 }
 
 // u32
