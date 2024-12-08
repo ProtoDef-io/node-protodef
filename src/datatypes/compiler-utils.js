@@ -58,6 +58,27 @@ module.exports = {
       code += 'return { value: { ' + names.join(', ') + ` }, size: ${totalBytes} }`
       return compiler.wrapCode(code)
     }],
+    bitflags: ['parametrizable', (compiler, { type, flags, shift, big }) => {
+      let fstr = JSON.stringify(flags)
+      if (Array.isArray(flags)) {
+        fstr = '{'
+        for (const [k, v] of Object.entries(flags)) fstr += `"${v}": ${big ? (1n << BigInt(k)) : (1 << k)}` + (big ? 'n,' : ',')
+        fstr += '}'
+      } else if (shift) {
+        fstr = '{'
+        for (const key in flags) fstr += `"${key}": ${1 << flags[key]}${big ? 'n,' : ','}`
+        fstr += '}'
+      }
+      return compiler.wrapCode(`
+const { value: _value, size } = ${compiler.callType(type, 'offset')}
+const value = { _value }
+const flags = ${fstr}
+for (const key in flags) {
+  value[key] = (_value & flags[key]) == flags[key]
+}
+return { value, size }
+      `.trim())
+    }],
     mapper: ['parametrizable', (compiler, mapper) => {
       let code = 'const { value, size } = ' + compiler.callType(mapper.type) + '\n'
       code += 'return { value: ' + JSON.stringify(sanitizeMappings(mapper.mappings)) + '[value] || value, size }'
@@ -116,6 +137,26 @@ module.exports = {
       code += 'return offset'
       return compiler.wrapCode(code)
     }],
+    bitflags: ['parametrizable', (compiler, { type, flags, shift, big }) => {
+      let fstr = JSON.stringify(flags)
+      if (Array.isArray(flags)) {
+        fstr = '{'
+        for (const [k, v] of Object.entries(flags)) fstr += `"${v}": ${big ? (1n << BigInt(k)) : (1 << k)}` + (big ? 'n,' : ',')
+        fstr += '}'
+      } else if (shift) {
+        fstr = '{'
+        for (const key in flags) fstr += `"${key}": ${1 << flags[key]}${big ? 'n,' : ','}`
+        fstr += '}'
+      }
+      return compiler.wrapCode(`
+const flags = ${fstr}
+let val = value._value ${big ? '|| 0n' : ''}
+for (const key in flags) {
+  if (value[key]) val |= flags[key]
+}
+return (ctx.${type})(val, buffer, offset)
+      `.trim())
+    }],
     mapper: ['parametrizable', (compiler, mapper) => {
       const mappings = JSON.stringify(swapMappings(mapper.mappings))
       const code = 'return ' + compiler.callType(`${mappings}[value] || value`, mapper.type)
@@ -147,6 +188,26 @@ module.exports = {
     bitfield: ['parametrizable', (compiler, values) => {
       const totalBytes = Math.ceil(values.reduce((acc, { size }) => acc + size, 0) / 8)
       return `${totalBytes}`
+    }],
+    bitflags: ['parametrizable', (compiler, { type, flags, shift, big }) => {
+      let fstr = JSON.stringify(flags)
+      if (Array.isArray(flags)) {
+        fstr = '{'
+        for (const [k, v] of Object.entries(flags)) fstr += `"${v}": ${big ? (1n << BigInt(k)) : (1 << k)}` + (big ? 'n,' : ',')
+        fstr += '}'
+      } else if (shift) {
+        fstr = '{'
+        for (const key in flags) fstr += `"${key}": ${1 << flags[key]}${big ? 'n,' : ','}`
+        fstr += '}'
+      }
+      return compiler.wrapCode(`
+const flags = ${fstr}
+let val = value._value ${big ? '|| 0n' : ''}
+for (const key in flags) {
+  if (value[key]) val |= flags[key]
+}
+return (ctx.${type})(val)
+      `.trim())
     }],
     mapper: ['parametrizable', (compiler, mapper) => {
       const mappings = JSON.stringify(swapMappings(mapper.mappings))

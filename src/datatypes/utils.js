@@ -1,14 +1,15 @@
 const { getCount, sendCount, calcCount, PartialReadError } = require('../utils')
 
 module.exports = {
-  varint: [readVarInt, writeVarInt, sizeOfVarInt, require('../../ProtoDef/schemas/utils.json').varint],
   bool: [readBool, writeBool, 1, require('../../ProtoDef/schemas/utils.json').bool],
   pstring: [readPString, writePString, sizeOfPString, require('../../ProtoDef/schemas/utils.json').pstring],
   buffer: [readBuffer, writeBuffer, sizeOfBuffer, require('../../ProtoDef/schemas/utils.json').buffer],
   void: [readVoid, writeVoid, 0, require('../../ProtoDef/schemas/utils.json').void],
   bitfield: [readBitField, writeBitField, sizeOfBitField, require('../../ProtoDef/schemas/utils.json').bitfield],
+  bitflags: [readBitflags, writeBitflags, sizeOfBitflags, require('../../ProtoDef/schemas/utils.json').bitflags],
   cstring: [readCString, writeCString, sizeOfCString, require('../../ProtoDef/schemas/utils.json').cstring],
-  mapper: [readMapper, writeMapper, sizeOfMapper, require('../../ProtoDef/schemas/utils.json').mapper]
+  mapper: [readMapper, writeMapper, sizeOfMapper, require('../../ProtoDef/schemas/utils.json').mapper],
+  ...require('./varint')
 }
 
 function mapperEquality (a, b) {
@@ -56,47 +57,6 @@ function sizeOfMapper (value, { type, mappings }, rootNode) {
   }
   if (mappedValue == null) throw new Error(value + ' is not in the mappings value')
   return this.sizeOf(mappedValue, type, rootNode)
-}
-
-function readVarInt (buffer, offset) {
-  let result = 0
-  let shift = 0
-  let cursor = offset
-
-  while (true) {
-    if (cursor + 1 > buffer.length) { throw new PartialReadError() }
-    const b = buffer.readUInt8(cursor)
-    result |= ((b & 0x7f) << shift) // Add the bits to our number, except MSB
-    cursor++
-    if (!(b & 0x80)) { // If the MSB is not set, we return the number
-      return {
-        value: result,
-        size: cursor - offset
-      }
-    }
-    shift += 7 // we only have 7 bits, MSB being the return-trigger
-    if (shift > 64) throw new PartialReadError(`varint is too big: ${shift}`) // Make sure our shift don't overflow.
-  }
-}
-
-function sizeOfVarInt (value) {
-  let cursor = 0
-  while (value & ~0x7F) {
-    value >>>= 7
-    cursor++
-  }
-  return cursor + 1
-}
-
-function writeVarInt (value, buffer, offset) {
-  let cursor = 0
-  while (value & ~0x7F) {
-    buffer.writeUInt8((value & 0xFF) | 0x80, offset + cursor)
-    cursor++
-    value >>>= 7
-  }
-  buffer.writeUInt8(value, offset + cursor)
-  return offset + cursor + 1
 }
 
 function readPString (buffer, offset, typeArgs, rootNode) {
@@ -257,4 +217,66 @@ function writeCString (value, buffer, offset, typeArgs) {
 function sizeOfCString (value) {
   const length = Buffer.byteLength(value, 'utf8')
   return length + 1
+}
+
+function readBitflags (buffer, offset, { type, flags, shift, big }, rootNode) {
+  const { size, value } = this.read(buffer, offset, type, rootNode)
+  let f = {}
+  if (Array.isArray(flags)) {
+    for (const [k, v] of Object.entries(flags)) {
+      f[v] = big ? (1n << BigInt(k)) : (1 << k)
+    }
+  } else if (shift) {
+    for (const k in flags) {
+      f[k] = big ? (1n << BigInt(flags[k])) : (1 << flags[k])
+    }
+  } else {
+    f = flags
+  }
+  const result = { _value: value }
+  for (const key in f) {
+    result[key] = (value & f[key]) === f[key]
+  }
+  return { value: result, size }
+}
+
+function writeBitflags (value, buffer, offset, { type, flags, shift, big }, rootNode) {
+  let f = {}
+  if (Array.isArray(flags)) {
+    for (const [k, v] of Object.entries(flags)) {
+      f[v] = big ? (1n << BigInt(k)) : (1 << k)
+    }
+  } else if (shift) {
+    for (const k in flags) {
+      f[k] = big ? (1n << BigInt(flags[k])) : (1 << flags[k])
+    }
+  } else {
+    f = flags
+  }
+  let val = value._value || (big ? 0n : 0)
+  for (const key in f) {
+    if (value[key]) val |= f[key]
+  }
+  return this.write(val, buffer, offset, type, rootNode)
+}
+
+function sizeOfBitflags (value, { type, flags, shift, big }, rootNode) {
+  if (!value) throw new Error('Missing field')
+  let f = {}
+  if (Array.isArray(flags)) {
+    for (const [k, v] of Object.entries(flags)) {
+      f[v] = big ? (1n << BigInt(k)) : (1 << k)
+    }
+  } else if (shift) {
+    for (const k in flags) {
+      f[k] = big ? (1n << BigInt(flags[k])) : (1 << flags[k])
+    }
+  } else {
+    f = flags
+  }
+  let mappedValue = value._value || (big ? 0n : 0)
+  for (const key in f) {
+    if (value[key]) mappedValue |= f[key]
+  }
+  return this.sizeOf(mappedValue, type, rootNode)
 }
