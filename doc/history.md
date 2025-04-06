@@ -1,5 +1,8 @@
 # History
 
+## 1.19.0
+* [Update protodef.js to remove lodash.get (#167)](https://github.com/ProtoDef-io/node-protodef/commit/98e64f8b940378f791df8b4d6fccdfc873acd3b2) (thanks @rom1504)
+
 ## 1.18.0
 * [Update commands.yml to use GITHUB_TOKEN (#164)](https://github.com/ProtoDef-io/node-protodef/commit/ed625528ef109c7443b56528447f2cd84194e23a) (thanks @extremeheat)
 * [Add additional varint types and bitflags (#163)](https://github.com/ProtoDef-io/node-protodef/commit/89c2588fdd26f6100c406f57e8ca42c11c57af84) (thanks @extremeheat)
