@@ -1,6 +1,5 @@
 const { getFieldInfo, tryCatch } = require('./utils')
 const reduce = require('lodash.reduce')
-const get = require('lodash.get')
 const Validator = require('protodef-validator')
 
 function isFieldInfo (type) {
@@ -60,7 +59,7 @@ class ProtoDef {
     function recursiveAddTypes (protocolData, path) {
       if (protocolData === undefined) { return }
       if (protocolData.types) { self.addTypes(protocolData.types) }
-      recursiveAddTypes(get(protocolData, path.shift()), path)
+      recursiveAddTypes(protocolData?.[path[0]], path.slice(1))
     }
 
     if (this.validator) { this.validator.validateProtocol(protocolData) }
