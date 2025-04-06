@@ -15,7 +15,6 @@
   "tonicExampleFilename": "example.js",
   "license": "MIT",
   "dependencies": {
-    "lodash.get": "^4.4.2",
     "lodash.reduce": "^4.6.0",
     "protodef-validator": "^1.3.0",
     "readable-stream": "^4.4.0"
