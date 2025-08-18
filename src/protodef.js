@@ -52,6 +52,7 @@ class ProtoDef {
     this.addTypes(require('./datatypes/utils'))
     this.addTypes(require('./datatypes/structures'))
     this.addTypes(require('./datatypes/conditional'))
+    this.addTypes(require('./datatypes/extras'))
   }
 
   addProtocol (protocolData, path) {
