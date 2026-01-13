@@ -43,6 +43,7 @@ class Parser extends Transform {
       try {
         packet = this.parsePacketBuffer(this.queue)
       } catch (e) {
+        console.log('EBuf', this.queue.toString('hex'))
         if (e.partialReadError) { return cb() } else {
           e.buffer = this.queue
           this.queue = Buffer.alloc(0)
@@ -69,24 +70,27 @@ class FullPacketParser extends Transform {
   }
 
   _transform (chunk, enc, cb) {
-    let packet
-    try {
-      packet = this.parsePacketBuffer(chunk)
-      if (packet.metadata.size !== chunk.length && !this.noErrorLogging) {
-        console.log('Chunk size is ' + chunk.length + ' but only ' + packet.metadata.size + ' was read ; partial packet : ' +
-          JSON.stringify(packet.data) + '; buffer :' + chunk.toString('hex'))
-      }
-    } catch (e) {
-      if (e.partialReadError) {
-        if (!this.noErrorLogging) {
-          console.log(e.stack)
+    let offset = 0
+
+    while (offset < chunk.length) {
+      let packet
+      try {
+        packet = this.parsePacketBuffer(chunk.slice(offset))
+      } catch (e) {
+        if (e.partialReadError) {
+          // Partial read errors can occur for packets in wrong protocol state or malformed data
+          // Drop the remainder of this chunk and continue
+          return cb()
+        } else {
+          console.log('EBuf', chunk.slice(offset).toString('hex'))
+          return cb(e)
         }
-        return cb()
-      } else {
-        return cb(e)
       }
+
+      this.push(packet)
+      offset += packet.metadata.size
     }
-    this.push(packet)
+
     cb()
   }
 }
