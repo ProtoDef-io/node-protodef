@@ -45,3 +45,31 @@ See the language independent [ProtoDef](https://github.com/ProtoDef-io/ProtoDef)
 * [diablo2-protocol](https://github.com/MephisTools/diablo2-protocol) Diablo 2 network protocol
 * [dofus-protocol](https://github.com/AstrubTools/dofus-protocol) Network protocol for dofus : create client and servers for dofus 1.30
 
+## Advanced Datatypes
+
+ProtoDef includes advanced datatypes for handling complex data patterns:
+
+### loop
+Reads a sequence of elements until a terminator or end of buffer:
+```javascript
+// Read numbers until encountering 0
+['loop', { type: 'i8', nt: 0 }]  // [1, 2, 3] from buffer [1, 2, 3, 0, ...]
+
+// Read until end of buffer  
+['loop', { type: 'i16', nt: null }]  // Read all remaining i16 values
+```
+
+### restBuffer
+Captures all remaining bytes as a Buffer:
+```javascript
+// Protocol with header and payload
+['container', [
+  { name: 'header', type: 'u8' },
+  { name: 'payload', type: 'restBuffer' }  // All remaining bytes
+]]
+```
+
+See [examples/extras_demo.js](examples/extras_demo.js) for comprehensive examples and [ProtoDef/doc/datatypes/extras.md](ProtoDef/doc/datatypes/extras.md) for detailed documentation.
+
+**Note:** When using the new `loop` and `restBuffer` types, you may need to disable schema validation by creating your ProtoDef instance with `new ProtoDef(false)` until the external validator is updated to recognize these types.
+
