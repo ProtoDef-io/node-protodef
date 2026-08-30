@@ -1,6 +1,5 @@
 const { getFieldInfo, tryCatch } = require('./utils')
 const reduce = require('lodash.reduce')
-const Validator = require('protodef-validator')
 
 function isFieldInfo (type) {
   return typeof type === 'string' ||
@@ -43,7 +42,9 @@ function extendType (functions, defaultTypeArgs) {
 class ProtoDef {
   constructor (validation = true) {
     this.types = {}
-    this.validator = validation ? new Validator() : null
+    // Required here, not at the top: the validator's schema stack (ajv)
+    // must not load when validation is disabled.
+    this.validator = validation ? new (require('protodef-validator'))() : null
     this.addDefaultTypes()
   }
 

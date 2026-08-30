@@ -1,5 +1,7 @@
 const ProtoDef = require('./protodef')
-const proto = new ProtoDef()
+// No validation: this instance only supplies the default types export, and
+// validation here would load the validator for every consumer of the package.
+const proto = new ProtoDef(false)
 
 module.exports = {
   ProtoDef,
