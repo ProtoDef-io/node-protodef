@@ -12,6 +12,8 @@ class ProtoDefCompiler {
     this.readCompiler = new ReadCompiler()
     this.writeCompiler = new WriteCompiler()
     this.sizeOfCompiler = new SizeOfCompiler()
+    this.writeCompiler.sizeOfCompiler = this.sizeOfCompiler
+    this.sizeOfCompiler.writeCompiler = this.writeCompiler
   }
 
   addTypes (types) {
@@ -62,6 +64,9 @@ class CompiledProtodef {
     this.sizeOfCtx = sizeOfCtx
     this.writeCtx = writeCtx
     this.readCtx = readCtx
+    // Code from callTypeSize / callTypeWrite runs against the other context
+    writeCtx.sizeOfCtx = sizeOfCtx
+    sizeOfCtx.writeCtx = writeCtx
   }
 
   read (buffer, cursor, type) {
@@ -174,6 +179,24 @@ class Compiler {
     }
   }
 
+  /**
+   * Generates code with another compiler inside this compiler's scope, so that
+   * field references resolve to the same variables, and binds it to that
+   * compiler's context. Natives are reachable through the context as well.
+   */
+  callTypeIn (other, ctxName, generate) {
+    if (!other) throw new Error(`${ctxName} is only available when compiling with ProtoDefCompiler`)
+    const scopeStack = other.scopeStack
+    other.scopeStack = this.scopeStack
+    try {
+      const code = generate(other)
+      if (!isNaN(code)) return code
+      return `((ctx, native) => ${code})(ctx.${ctxName}, ctx.${ctxName})`
+    } finally {
+      other.scopeStack = scopeStack
+    }
+  }
+
   addTypesToCompile (types) {
     for (const [type, json] of Object.entries(types)) {
       // Replace native type, otherwise first in wins
@@ -259,6 +282,7 @@ class Compiler {
     // Local variable to provide some context to eval()
     const native = this.native // eslint-disable-line
     const { PartialReadError } = require('./utils') // eslint-disable-line
+    const hashDigest = require('./hash').digest // eslint-disable-line
     return eval(code)() // eslint-disable-line
   }
 }
@@ -361,11 +385,20 @@ class WriteCompiler extends Compiler {
     if (args.length > 0) return '(' + code + `)(${value}, buffer, ${offsetExpr}, ` + args.map(name => this.getField(name)).join(', ') + ')'
     return '(' + code + `)(${value}, buffer, ${offsetExpr})`
   }
+
+  /**
+   * Code computing the size of `value` as `type`, for writers that need to
+   * serialize part of a value before they can write it
+   */
+  callTypeSize (value, type, args = []) {
+    return this.callTypeIn(this.sizeOfCompiler, 'sizeOfCtx', compiler => compiler.callType(value, type, args))
+  }
 }
 
 class SizeOfCompiler extends Compiler {
   constructor () {
     super()
+    this.constants = {}
 
     this.addTypes(conditionalDatatypes.SizeOf)
     this.addTypes(structuresDatatypes.SizeOf)
@@ -390,10 +423,20 @@ class SizeOfCompiler extends Compiler {
     this.primitiveTypes[type] = `native.${type}`
     if (!isNaN(fn)) {
       this.native[type] = (value) => { return fn }
+      this.constants[type] = fn
     } else {
       this.native[type] = fn
     }
     this.types[type] = 'native'
+  }
+
+  /**
+   * The size of `type` when it doesn't depend on the value, following
+   * aliases down to a fixed-size native; undefined otherwise
+   */
+  constantSize (type) {
+    while (typeof type === 'string' && typeof this.types[type] === 'string' && this.types[type] !== 'native') type = this.types[type]
+    return this.constants[type]
   }
 
   compileType (type) {
@@ -428,6 +471,14 @@ class SizeOfCompiler extends Compiler {
     if (!isNaN(code)) return code
     if (args.length > 0) return '(' + code + `)(${value}, ` + args.map(name => this.getField(name)).join(', ') + ')'
     return '(' + code + `)(${value})`
+  }
+
+  /**
+   * Code writing `value` as `type` into `buffer` at `offsetExpr`, for sizers
+   * whose result depends on the serialized form of a value
+   */
+  callTypeWrite (value, type, offsetExpr = 'offset', args = []) {
+    return this.callTypeIn(this.writeCompiler, 'writeCtx', compiler => compiler.callType(value, type, offsetExpr, args))
   }
 }
 

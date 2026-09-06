@@ -83,6 +83,9 @@ return { value, size }
       let code = 'const { value, size } = ' + compiler.callType(mapper.type) + '\n'
       code += 'return { value: ' + JSON.stringify(sanitizeMappings(mapper.mappings)) + '[value] || value, size }'
       return compiler.wrapCode(code)
+    }],
+    hash: ['parametrizable', (compiler, { type }) => {
+      return compiler.wrapCode('return ' + compiler.callType(type))
     }]
   },
 
@@ -167,6 +170,18 @@ return (ctx.${type})(val, buffer, offset)
       code += '}\n'
       code += 'return ' + compiler.callType('mapped', mapper.type)
       return compiler.wrapCode(code)
+    }],
+    hash: ['parametrizable', (compiler, { alg, type, body }) => {
+      let code = `const bodyBuffer = Buffer.alloc(${compiler.callTypeSize('value', body)})\n`
+      code += `;((buffer) => ${compiler.callType('value', body, '0')})(bodyBuffer)\n`
+      code += `const hash = hashDigest(${JSON.stringify(alg)}, bodyBuffer)\n`
+      code += 'try {\n'
+      code += '  return ' + compiler.callType('hash', type) + '\n'
+      code += '} catch (e) {\n'
+      code += '  if (!(e instanceof RangeError) || typeof hash !== "number") throw e\n'
+      code += '  return ' + compiler.callType('hash | 0', type) + '\n'
+      code += '}'
+      return compiler.wrapCode(code)
     }]
   },
 
@@ -224,6 +239,17 @@ return (ctx.${type})(val)
       code += '  mapped = value\n'
       code += '}\n'
       code += 'return ' + compiler.callType('mapped', mapper.type)
+      return compiler.wrapCode(code)
+    }],
+    hash: ['parametrizable', (compiler, { alg, type, body }) => {
+      const constant = compiler.constantSize(type)
+      if (constant !== undefined) return String(constant)
+      const size = compiler.callType('hash', type)
+      if (!isNaN(size)) return size
+      let code = `const bodyBuffer = Buffer.alloc(${compiler.callType('value', body)})\n`
+      code += `;((buffer) => ${compiler.callTypeWrite('value', body, '0')})(bodyBuffer)\n`
+      code += `const hash = hashDigest(${JSON.stringify(alg)}, bodyBuffer)\n`
+      code += 'return ' + size
       return compiler.wrapCode(code)
     }]
   }
