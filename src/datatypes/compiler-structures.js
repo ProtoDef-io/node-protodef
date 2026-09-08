@@ -96,7 +96,7 @@ module.exports = {
           for (const { name } of type[1]) {
             const trueName = compiler.getField(name)
             code += `const ${trueName} = value.${name}\n`
-            code += `if (${trueName} === undefined) throw new Error("Missing bitfield field '${trueName}'")\n`
+            code += `if (${trueName} === undefined) throw new Error("Missing bitfield field '${name}'")\n`
             if (name === trueName) names.push(name)
             else names.push(`${name}: ${trueName}`)
           }
@@ -105,7 +105,7 @@ module.exports = {
           trueName = compiler.getField(name)
           if (_shouldBeInlined) code += `let ${name} = value\n`
           else code += `let ${trueName} = value.${name}\n`
-          code += `if (${trueName} === undefined) throw new Error("Missing field '${trueName}'")\n`
+          if (requiresValue(compiler, type)) code += `if (${trueName} === undefined) throw new Error("Missing field '${name}'")\n`
         }
         code += 'offset = ' + compiler.callType(trueName, type) + '\n'
       }
@@ -164,6 +164,15 @@ module.exports = {
       return compiler.wrapCode(code)
     }]
   }
+}
+
+// Builtin types that cannot encode an absent value; a type the compiler does not
+// define may accept undefined, and void, switch and option do.
+const valueTypes = new Set([...Object.keys(require('./numeric')), 'varint', 'bool', 'pstring', 'cstring', 'buffer', 'bitfield', 'mapper', 'array', 'count', 'container'])
+
+function requiresValue (compiler, type) {
+  while (typeof type === 'string' && compiler.types[type] && compiler.types[type] !== 'native') type = compiler.types[type]
+  return valueTypes.has(Array.isArray(type) ? type[0] : type)
 }
 
 function uniqueId () {
