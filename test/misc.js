@@ -28,16 +28,13 @@ describe('mapper', () => {
 
 describe('hash', () => {
   const { digest } = require('../src/datatypes/hash')
-  const varintHash = ['hash', { alg: 'crc32c', type: 'varint', body: ['buffer', { count: 9 }] }]
+  const varintHash = ['hash', { alg: 'crc32c', type: 'varint', body: 'Body' }]
+  const inlineBody = ['hash', { alg: 'crc32c', type: 'u32', body: ['buffer', { count: 9 }] }]
   const types = {
-    crc32c: ['hash', { alg: 'crc32c', type: 'u32', body: ['buffer', { count: 9 }] }],
-    signed: ['hash', { alg: 'crc32c', type: 'HashCode', body: ['buffer', { count: 9 }] }],
+    Body: ['buffer', { count: 9 }],
+    crc32c: ['hash', { alg: 'crc32c', type: 'u32', body: 'Body' }],
+    signed: ['hash', { alg: 'crc32c', type: 'HashCode', body: 'Body' }],
     HashCode: 'i32',
-    // A field of the enclosing container selects the body's type
-    tagged: ['container', [
-      { name: 'kind', type: 'u8' },
-      { name: 'hash', type: ['hash', { alg: 'crc32c', type: 'u32', body: ['switch', { compareTo: 'kind', fields: { 0: 'u8', 1: 'u16' } }] }] }
-    ]],
     // A hash over a list of hashes
     entry: ['container', [{ name: 'key', type: ['pstring', { countType: 'u8' }] }, { name: 'value', type: 'li32' }]],
     list: ['array', { countType: 'u8', type: ['hash', { alg: 'crc32c', type: 'lu32', body: 'entry' }] }],
@@ -67,6 +64,13 @@ describe('hash', () => {
     }
   })
 
+  it('rejects a body that is not a named type', () => {
+    assert.throws(() => proto.write(check, Buffer.alloc(4), 0, inlineBody), /named type/)
+    const c = new ProtoDefCompiler()
+    c.addTypesToCompile({ withInlineBody: inlineBody })
+    assert.throws(() => c.compileProtoDefSync(), /named type/)
+  })
+
   it('rejects a hash written as a variable-size type', () => {
     assert.throws(() => proto.sizeOf(check, varintHash), /constant size/)
     const c = new ProtoDefCompiler()
@@ -89,12 +93,6 @@ describe('hash', () => {
       })
       it('sizes without hashing', () => {
         assert.strictEqual(p.sizeOf(check, 'signed'), 4)
-      })
-      it('resolves body fields against the enclosing container', () => {
-        assert.deepStrictEqual(p.createPacketBuffer('tagged', { kind: 1, hash: 300 }),
-          Buffer.concat([Buffer.from([1]), u32(digest('crc32c', Buffer.from([0x01, 0x2C])))]))
-        assert.deepStrictEqual(p.createPacketBuffer('tagged', { kind: 0, hash: 44 }),
-          Buffer.concat([Buffer.from([0]), u32(digest('crc32c', Buffer.from([44])))]))
       })
       it('nests hashes of hashes', () => {
         const value = [{ key: 'a', value: 1 }, { key: 'b', value: 2 }]

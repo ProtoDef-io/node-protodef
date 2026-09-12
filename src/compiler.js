@@ -177,24 +177,6 @@ class Compiler {
     }
   }
 
-  /**
-   * Generates code with another compiler inside this compiler's scope, so that
-   * field references resolve to the same variables, and binds it to that
-   * compiler's context. Natives are reachable through the context as well.
-   */
-  callTypeIn (other, ctxName, generate) {
-    if (!other) throw new Error(`${ctxName} is only available when compiling with ProtoDefCompiler`)
-    const scopeStack = other.scopeStack
-    other.scopeStack = this.scopeStack
-    try {
-      const code = generate(other)
-      if (!isNaN(code)) return code
-      return `((ctx, native) => ${code})(ctx.${ctxName}, ctx.${ctxName})`
-    } finally {
-      other.scopeStack = scopeStack
-    }
-  }
-
   addTypesToCompile (types) {
     for (const [type, json] of Object.entries(types)) {
       // Replace native type, otherwise first in wins
@@ -385,17 +367,16 @@ class WriteCompiler extends Compiler {
 
   /**
    * Code computing the size of `value` as `type`, for writers that need to
-   * serialize part of a value before they can write it. A named type is
-   * already a function in the sizeOf context and is called directly; an
-   * anonymous one has none, so its sizer is generated here instead.
+   * serialize part of a value before they can write it. The sizer is a
+   * function in the sizeOf context, which is generated first, so `type` has
+   * to be a named one for there to be a function to call.
    */
-  callTypeSize (value, type, args = []) {
+  callTypeSize (value, type) {
     if (!this.sizeOfCompiler) throw new Error('sizeOfCtx is only available when compiling with ProtoDefCompiler')
-    if (typeof type === 'string' && this.sizeOfCompiler.types[type] && this.sizeOfCompiler.types[type] !== 'native') {
-      const params = [value, ...args.map(name => this.getField(name))]
-      return `ctx.sizeOfCtx.${type}(${params.join(', ')})`
+    if (typeof type !== 'string' || !this.sizeOfCompiler.types[type]) {
+      throw new Error('cannot size ' + JSON.stringify(type) + ' from a writer, it is not a named type')
     }
-    return this.callTypeIn(this.sizeOfCompiler, 'sizeOfCtx', compiler => compiler.callType(value, type, args))
+    return `ctx.sizeOfCtx.${type}(${value})`
   }
 }
 
