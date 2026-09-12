@@ -37,6 +37,7 @@ function readHash (buffer, offset, { type }, rootNode) {
 
 // A CRC is unsigned; a signed `type` takes its two's complement.
 function writeHash (value, buffer, offset, { alg, type, body }, rootNode) {
+  if (typeof body !== 'string') throw new Error('hash body must be a named type, ' + JSON.stringify(body) + ' is not')
   const bodyBuffer = Buffer.alloc(this.sizeOf(value, body, rootNode))
   this.write(value, bodyBuffer, 0, body, rootNode)
   const hash = digest(alg, bodyBuffer)
