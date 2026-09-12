@@ -13,7 +13,6 @@ class ProtoDefCompiler {
     this.writeCompiler = new WriteCompiler()
     this.sizeOfCompiler = new SizeOfCompiler()
     this.writeCompiler.sizeOfCompiler = this.sizeOfCompiler
-    this.sizeOfCompiler.writeCompiler = this.writeCompiler
   }
 
   addTypes (types) {
@@ -64,9 +63,8 @@ class CompiledProtodef {
     this.sizeOfCtx = sizeOfCtx
     this.writeCtx = writeCtx
     this.readCtx = readCtx
-    // Code from callTypeSize / callTypeWrite runs against the other context
+    // Code from callTypeSize runs against the sizeOf context
     writeCtx.sizeOfCtx = sizeOfCtx
-    sizeOfCtx.writeCtx = writeCtx
   }
 
   read (buffer, cursor, type) {
@@ -282,7 +280,6 @@ class Compiler {
     // Local variable to provide some context to eval()
     const native = this.native // eslint-disable-line
     const { PartialReadError } = require('./utils') // eslint-disable-line
-    const hashDigest = require('./hash').digest // eslint-disable-line
     return eval(code)() // eslint-disable-line
   }
 }
@@ -388,9 +385,16 @@ class WriteCompiler extends Compiler {
 
   /**
    * Code computing the size of `value` as `type`, for writers that need to
-   * serialize part of a value before they can write it
+   * serialize part of a value before they can write it. A named type is
+   * already a function in the sizeOf context and is called directly; an
+   * anonymous one has none, so its sizer is generated here instead.
    */
   callTypeSize (value, type, args = []) {
+    if (!this.sizeOfCompiler) throw new Error('sizeOfCtx is only available when compiling with ProtoDefCompiler')
+    if (typeof type === 'string' && this.sizeOfCompiler.types[type] && this.sizeOfCompiler.types[type] !== 'native') {
+      const params = [value, ...args.map(name => this.getField(name))]
+      return `ctx.sizeOfCtx.${type}(${params.join(', ')})`
+    }
     return this.callTypeIn(this.sizeOfCompiler, 'sizeOfCtx', compiler => compiler.callType(value, type, args))
   }
 }
@@ -471,14 +475,6 @@ class SizeOfCompiler extends Compiler {
     if (!isNaN(code)) return code
     if (args.length > 0) return '(' + code + `)(${value}, ` + args.map(name => this.getField(name)).join(', ') + ')'
     return '(' + code + `)(${value})`
-  }
-
-  /**
-   * Code writing `value` as `type` into `buffer` at `offsetExpr`, for sizers
-   * whose result depends on the serialized form of a value
-   */
-  callTypeWrite (value, type, offsetExpr = 'offset', args = []) {
-    return this.callTypeIn(this.writeCompiler, 'writeCtx', compiler => compiler.callType(value, type, offsetExpr, args))
   }
 }
 
