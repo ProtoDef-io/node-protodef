@@ -229,3 +229,23 @@ compiledProto.setVariable('noArraySizeCheck', true);
 const buffer = compiledProto.createPacketBuffer('mainType', result)
 const result = compiledProto.parsePacketBuffer('mainType', buffer)
 ```
+### Sizing inside a writer
+
+A parametrizable type is compiled by one compiler at a time, so a writer normally has no way to know how large a nested value will be. When it must serialize part of the value before writing (a checksum of it, for example), `WriteCompiler.callTypeSize(value, type)` returns code calling the sizer for `type`, which the sizeOf context already holds since it is generated first. It is only available when the types are compiled through `ProtoDefCompiler`, and `type` has to be a named type, since an anonymous one has no function in that context to call.
+
+A datatype that needs a helper function in its generated code registers it as a context type, which copies the function's source into the compiled output, rather than reaching for something outside it. The `hash` datatype is built on both:
+
+```javascript
+Write: {
+  _crc32c: ['context', crc32c],
+  hash: ['parametrizable', (compiler, { alg, type, body }) => {
+    let code = `const bodyBuffer = Buffer.alloc(${compiler.callTypeSize('value', body)})\n`
+    code += `;((buffer) => ${compiler.callType('value', body, '0')})(bodyBuffer)\n`
+    code += `const hash = ctx._${alg}(bodyBuffer)\n`
+    code += 'return ' + compiler.callType('hash', type)
+    return compiler.wrapCode(code)
+  }]
+}
+```
+
+The context is shared with the protocol's own type names, and a context entry wins over a type of the same name, so a helper's name is underscored to keep it out of the way.

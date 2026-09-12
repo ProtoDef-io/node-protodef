@@ -9,6 +9,7 @@ module.exports = {
   bitflags: [readBitflags, writeBitflags, sizeOfBitflags, require('../../ProtoDef/schemas/utils.json').bitflags],
   cstring: [readCString, writeCString, sizeOfCString, require('../../ProtoDef/schemas/utils.json').cstring],
   mapper: [readMapper, writeMapper, sizeOfMapper, require('../../ProtoDef/schemas/utils.json').mapper],
+  hash: require('./hash').hash,
   ...require('./varint')
 }
 

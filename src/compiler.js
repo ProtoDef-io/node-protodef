@@ -12,6 +12,7 @@ class ProtoDefCompiler {
     this.readCompiler = new ReadCompiler()
     this.writeCompiler = new WriteCompiler()
     this.sizeOfCompiler = new SizeOfCompiler()
+    this.writeCompiler.sizeOfCompiler = this.sizeOfCompiler
   }
 
   addTypes (types) {
@@ -62,6 +63,8 @@ class CompiledProtodef {
     this.sizeOfCtx = sizeOfCtx
     this.writeCtx = writeCtx
     this.readCtx = readCtx
+    // Code from callTypeSize runs against the sizeOf context
+    writeCtx.sizeOfCtx = sizeOfCtx
   }
 
   read (buffer, cursor, type) {
@@ -361,11 +364,26 @@ class WriteCompiler extends Compiler {
     if (args.length > 0) return '(' + code + `)(${value}, buffer, ${offsetExpr}, ` + args.map(name => this.getField(name)).join(', ') + ')'
     return '(' + code + `)(${value}, buffer, ${offsetExpr})`
   }
+
+  /**
+   * Code computing the size of `value` as `type`, for writers that need to
+   * serialize part of a value before they can write it. The sizer is a
+   * function in the sizeOf context, which is generated first, so `type` has
+   * to be a named one for there to be a function to call.
+   */
+  callTypeSize (value, type) {
+    if (!this.sizeOfCompiler) throw new Error('sizeOfCtx is only available when compiling with ProtoDefCompiler')
+    if (typeof type !== 'string' || !this.sizeOfCompiler.types[type]) {
+      throw new Error('cannot size ' + JSON.stringify(type) + ' from a writer, it is not a named type')
+    }
+    return `ctx.sizeOfCtx.${type}(${value})`
+  }
 }
 
 class SizeOfCompiler extends Compiler {
   constructor () {
     super()
+    this.constants = {}
 
     this.addTypes(conditionalDatatypes.SizeOf)
     this.addTypes(structuresDatatypes.SizeOf)
@@ -390,10 +408,20 @@ class SizeOfCompiler extends Compiler {
     this.primitiveTypes[type] = `native.${type}`
     if (!isNaN(fn)) {
       this.native[type] = (value) => { return fn }
+      this.constants[type] = fn
     } else {
       this.native[type] = fn
     }
     this.types[type] = 'native'
+  }
+
+  /**
+   * The size of `type` when it doesn't depend on the value, following
+   * aliases down to a fixed-size native; undefined otherwise
+   */
+  constantSize (type) {
+    while (typeof type === 'string' && typeof this.types[type] === 'string' && this.types[type] !== 'native') type = this.types[type]
+    return this.constants[type]
   }
 
   compileType (type) {

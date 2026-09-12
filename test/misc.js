@@ -25,3 +25,81 @@ describe('mapper', () => {
     })
   }
 })
+
+describe('hash', () => {
+  const { digest } = require('../src/datatypes/hash')
+  const varintHash = ['hash', { alg: 'crc32c', type: 'varint', body: 'Body' }]
+  const inlineBody = ['hash', { alg: 'crc32c', type: 'u32', body: ['buffer', { count: 9 }] }]
+  const types = {
+    Body: ['buffer', { count: 9 }],
+    crc32c: ['hash', { alg: 'crc32c', type: 'u32', body: 'Body' }],
+    signed: ['hash', { alg: 'crc32c', type: 'HashCode', body: 'Body' }],
+    HashCode: 'i32',
+    // A hash over a list of hashes
+    entry: ['container', [{ name: 'key', type: ['pstring', { countType: 'u8' }] }, { name: 'value', type: 'li32' }]],
+    list: ['array', { countType: 'u8', type: ['hash', { alg: 'crc32c', type: 'lu32', body: 'entry' }] }],
+    nested: ['hash', { alg: 'crc32c', type: 'lu32', body: 'list' }]
+  }
+  const proto = new ProtoDef()
+  proto.addTypes(types)
+  const compiler = new ProtoDefCompiler()
+  compiler.addTypesToCompile(types)
+  const compiled = compiler.compileProtoDefSync()
+  const check = Buffer.from('123456789')
+  const u32 = n => { const b = Buffer.alloc(4); b.writeUInt32BE(n); return b }
+  const lu32 = n => { const b = Buffer.alloc(4); b.writeUInt32LE(n); return b }
+
+  it('crc32c matches its check value', () => {
+    assert.strictEqual(digest('crc32c', check), 0xE3069283)
+  })
+
+  it('rejects an algorithm the spec does not define', () => {
+    assert.throws(() => digest('sha256', check), /Unknown hash algorithm/)
+    const log = console.log // the validator dumps the type it rejected
+    console.log = () => {}
+    try {
+      assert.throws(() => new ProtoDef().addTypes({ bad: ['hash', { alg: 'sha256', type: 'u32', body: 'u8' }] }))
+    } finally {
+      console.log = log
+    }
+  })
+
+  it('rejects a body that is not a named type', () => {
+    assert.throws(() => proto.write(check, Buffer.alloc(4), 0, inlineBody), /named type/)
+    const c = new ProtoDefCompiler()
+    c.addTypesToCompile({ withInlineBody: inlineBody })
+    assert.throws(() => c.compileProtoDefSync(), /named type/)
+  })
+
+  it('rejects a hash written as a variable-size type', () => {
+    assert.throws(() => proto.sizeOf(check, varintHash), /constant size/)
+    const c = new ProtoDefCompiler()
+    c.addTypesToCompile({ asVarint: varintHash })
+    assert.throws(() => c.compileProtoDefSync(), /constant size/)
+  })
+
+  for (const [label, p] of [['interpreted', proto], ['compiled', compiled]]) {
+    describe(label, () => {
+      it('writes the hash of the serialized body', () => {
+        assert.deepStrictEqual(p.createPacketBuffer('crc32c', check), u32(0xE3069283))
+      })
+      it('reads the hash, not the value', () => {
+        assert.strictEqual(p.parsePacketBuffer('crc32c', u32(0xE3069283)).data, 0xE3069283)
+      })
+      it('writes a signed type in two\'s complement', () => {
+        const buffer = p.createPacketBuffer('signed', check)
+        assert.deepStrictEqual(buffer, u32(0xE3069283))
+        assert.strictEqual(p.parsePacketBuffer('signed', buffer).data, 0xE3069283 | 0)
+      })
+      it('sizes without hashing', () => {
+        assert.strictEqual(p.sizeOf(check, 'signed'), 4)
+      })
+      it('nests hashes of hashes', () => {
+        const value = [{ key: 'a', value: 1 }, { key: 'b', value: 2 }]
+        const list = Buffer.concat([Buffer.from([2]), ...value.map(entry => lu32(digest('crc32c', p.createPacketBuffer('entry', entry))))])
+        assert.deepStrictEqual(p.createPacketBuffer('list', value), list)
+        assert.deepStrictEqual(p.createPacketBuffer('nested', value), lu32(digest('crc32c', list)))
+      })
+    })
+  }
+})

@@ -1,3 +1,5 @@
+const { algorithms: hashAlgorithms } = require('./hash')
+
 module.exports = {
   Read: {
     pstring: ['parametrizable', (compiler, string) => {
@@ -83,10 +85,17 @@ return { value, size }
       let code = 'const { value, size } = ' + compiler.callType(mapper.type) + '\n'
       code += 'return { value: ' + JSON.stringify(sanitizeMappings(mapper.mappings)) + '[value] || value, size }'
       return compiler.wrapCode(code)
+    }],
+    hash: ['parametrizable', (compiler, { type }) => {
+      return compiler.wrapCode('return ' + compiler.callType(type))
     }]
   },
 
   Write: {
+    // A hash digest is taken in generated code, so the digest function is
+    // copied into the compiled context rather than reached for outside it.
+    // Underscored: the context is shared with the protocol's own type names.
+    _crc32c: ['context', hashAlgorithms.crc32c.digest],
     pstring: ['parametrizable', (compiler, string) => {
       let code = `const length = Buffer.byteLength(value, "${string.encoding || 'utf8'}")\n`
       if (string.countType) {
@@ -163,6 +172,20 @@ return (ctx.${type})(val, buffer, offset)
       code += 'if (mapped === undefined) throw new Error(value + \' is not in the mappings value\')\n'
       code += 'return ' + compiler.callType('mapped', mapper.type)
       return compiler.wrapCode(code)
+    }],
+    hash: ['parametrizable', (compiler, { alg, type, body }) => {
+      if (!hashAlgorithms[alg]) throw new Error('Unknown hash algorithm: ' + alg)
+      let code = `const bodyBuffer = Buffer.alloc(${compiler.callTypeSize('value', body)})\n`
+      code += `;((buffer) => ${compiler.callType('value', body, '0')})(bodyBuffer)\n`
+      code += `const hash = ctx._${alg}(bodyBuffer)\n`
+      // A CRC is unsigned; a signed `type` takes its two's complement
+      code += 'try {\n'
+      code += '  return ' + compiler.callType('hash', type) + '\n'
+      code += '} catch (e) {\n'
+      code += '  if (!(e instanceof RangeError)) throw e\n'
+      code += '  return ' + compiler.callType('hash | 0', type) + '\n'
+      code += '}'
+      return compiler.wrapCode(code)
     }]
   },
 
@@ -217,6 +240,14 @@ return (ctx.${type})(val)
       code += 'if (mapped === undefined) throw new Error(value + \' is not in the mappings value\')\n'
       code += 'return ' + compiler.callType('mapped', mapper.type)
       return compiler.wrapCode(code)
+    }],
+    // The digest has a fixed width, so a hash is sized without hashing: its
+    // size is the size of `type`, which the spec requires to be constant
+    hash: ['parametrizable', (compiler, { alg, type }) => {
+      const size = compiler.constantSize(type)
+      if (size === undefined) throw new Error('hash type must be of constant size, ' + JSON.stringify(type) + ' is not')
+      if (size < hashAlgorithms[alg].bytes) throw new Error('hash type is too small for a ' + alg + ' digest')
+      return String(size)
     }]
   }
 }
