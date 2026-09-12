@@ -229,18 +229,23 @@ compiledProto.setVariable('noArraySizeCheck', true);
 const buffer = compiledProto.createPacketBuffer('mainType', result)
 const result = compiledProto.parsePacketBuffer('mainType', buffer)
 ```
-### Sizing inside a writer, writing inside a sizer
+### Sizing inside a writer
 
-A parametrizable type is compiled by one compiler at a time, so a writer normally has no way to know how large a nested value will be. When it must serialize part of the value before writing (a checksum of it, for example), `WriteCompiler.callTypeSize(value, type)` returns code computing the size of `value` as `type`, and `SizeOfCompiler.callTypeWrite(value, type, offsetExpr)` returns code writing it into `buffer`. Both resolve field references against the current scope and run against the other compiler's context, so they are only available when the types are compiled through `ProtoDefCompiler`. The `hash` datatype is built on them:
+A parametrizable type is compiled by one compiler at a time, so a writer normally has no way to know how large a nested value will be. When it must serialize part of the value before writing (a checksum of it, for example), `WriteCompiler.callTypeSize(value, type)` returns code computing the size of `value` as `type`. It is only available when the types are compiled through `ProtoDefCompiler`, since it calls into the sizeOf context. A named type is already a function there and is called directly; an anonymous type has none, so its sizer is generated in place, against the current scope so that field references resolve to the same variables.
+
+A datatype that needs a helper function in its generated code registers it as a context type, which copies the function's source into the compiled output, rather than reaching for something outside it. The `hash` datatype is built on both:
 
 ```javascript
 Write: {
+  _crc32c: ['context', crc32c],
   hash: ['parametrizable', (compiler, { alg, type, body }) => {
     let code = `const bodyBuffer = Buffer.alloc(${compiler.callTypeSize('value', body)})\n`
     code += `;((buffer) => ${compiler.callType('value', body, '0')})(bodyBuffer)\n`
-    code += `const hash = hashDigest(${JSON.stringify(alg)}, bodyBuffer)\n`
+    code += `const hash = ctx._${alg}(bodyBuffer)\n`
     code += 'return ' + compiler.callType('hash', type)
     return compiler.wrapCode(code)
   }]
 }
 ```
+
+The context is shared with the protocol's own type names, and a context entry wins over a type of the same name, so a helper's name is underscored to keep it out of the way.

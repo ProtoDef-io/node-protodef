@@ -27,14 +27,12 @@ describe('mapper', () => {
 })
 
 describe('hash', () => {
-  const { digest } = require('../src/hash')
+  const { digest } = require('../src/datatypes/hash')
+  const varintHash = ['hash', { alg: 'crc32c', type: 'varint', body: ['buffer', { count: 9 }] }]
   const types = {
-    crc32: ['hash', { alg: 'crc32', type: 'u32', body: ['buffer', { count: 9 }] }],
     crc32c: ['hash', { alg: 'crc32c', type: 'u32', body: ['buffer', { count: 9 }] }],
     signed: ['hash', { alg: 'crc32c', type: 'HashCode', body: ['buffer', { count: 9 }] }],
     HashCode: 'i32',
-    asVarint: ['hash', { alg: 'crc32c', type: 'varint', body: ['buffer', { count: 9 }] }],
-    sha256: ['hash', { alg: 'sha256', type: ['buffer', { count: 32 }], body: ['buffer', { count: 9 }] }],
     // A field of the enclosing container selects the body's type
     tagged: ['container', [
       { name: 'kind', type: 'u8' },
@@ -54,15 +52,31 @@ describe('hash', () => {
   const u32 = n => { const b = Buffer.alloc(4); b.writeUInt32BE(n); return b }
   const lu32 = n => { const b = Buffer.alloc(4); b.writeUInt32LE(n); return b }
 
-  it('crc32 and crc32c match their check values', () => {
-    assert.strictEqual(digest('crc32', check), 0xCBF43926)
+  it('crc32c matches its check value', () => {
     assert.strictEqual(digest('crc32c', check), 0xE3069283)
+  })
+
+  it('rejects an algorithm the spec does not define', () => {
+    assert.throws(() => digest('sha256', check), /Unknown hash algorithm/)
+    const log = console.log // the validator dumps the type it rejected
+    console.log = () => {}
+    try {
+      assert.throws(() => new ProtoDef().addTypes({ bad: ['hash', { alg: 'sha256', type: 'u32', body: 'u8' }] }))
+    } finally {
+      console.log = log
+    }
+  })
+
+  it('rejects a hash written as a variable-size type', () => {
+    assert.throws(() => proto.sizeOf(check, varintHash), /constant size/)
+    const c = new ProtoDefCompiler()
+    c.addTypesToCompile({ asVarint: varintHash })
+    assert.throws(() => c.compileProtoDefSync(), /constant size/)
   })
 
   for (const [label, p] of [['interpreted', proto], ['compiled', compiled]]) {
     describe(label, () => {
       it('writes the hash of the serialized body', () => {
-        assert.deepStrictEqual(p.createPacketBuffer('crc32', check), u32(0xCBF43926))
         assert.deepStrictEqual(p.createPacketBuffer('crc32c', check), u32(0xE3069283))
       })
       it('reads the hash, not the value', () => {
@@ -73,18 +87,8 @@ describe('hash', () => {
         assert.deepStrictEqual(buffer, u32(0xE3069283))
         assert.strictEqual(p.parsePacketBuffer('signed', buffer).data, 0xE3069283 | 0)
       })
-      it('sizes a fixed-size type without hashing', () => {
+      it('sizes without hashing', () => {
         assert.strictEqual(p.sizeOf(check, 'signed'), 4)
-        assert.strictEqual(p.sizeOf(check, 'sha256'), 32)
-      })
-      it('sizes a variable-size type from the hash', () => {
-        const buffer = p.createPacketBuffer('asVarint', check)
-        assert.strictEqual(p.sizeOf(check, 'asVarint'), buffer.length)
-        assert.deepStrictEqual(buffer, p.createPacketBuffer('varint', 0xE3069283 | 0))
-      })
-      it('writes a crypto digest as a buffer', () => {
-        assert.deepStrictEqual(p.createPacketBuffer('sha256', check),
-          require('crypto').createHash('sha256').update(check).digest())
       })
       it('resolves body fields against the enclosing container', () => {
         assert.deepStrictEqual(p.createPacketBuffer('tagged', { kind: 1, hash: 300 }),

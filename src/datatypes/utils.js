@@ -1,5 +1,4 @@
-const { getCount, sendCount, calcCount, getFieldInfo, PartialReadError } = require('../utils')
-const { digest } = require('../hash')
+const { getCount, sendCount, calcCount, PartialReadError } = require('../utils')
 
 module.exports = {
   bool: [readBool, writeBool, 1, require('../../ProtoDef/schemas/utils.json').bool],
@@ -10,7 +9,7 @@ module.exports = {
   bitflags: [readBitflags, writeBitflags, sizeOfBitflags, require('../../ProtoDef/schemas/utils.json').bitflags],
   cstring: [readCString, writeCString, sizeOfCString, require('../../ProtoDef/schemas/utils.json').cstring],
   mapper: [readMapper, writeMapper, sizeOfMapper, require('../../ProtoDef/schemas/utils.json').mapper],
-  hash: [readHash, writeHash, sizeOfHash, require('../../ProtoDef/schemas/utils.json').hash],
+  hash: require('./hash').hash,
   ...require('./varint')
 }
 
@@ -281,31 +280,4 @@ function sizeOfBitflags (value, { type, flags, shift, big }, rootNode) {
     if (value[key]) mappedValue |= f[key]
   }
   return this.sizeOf(mappedValue, type, rootNode)
-}
-
-function readHash (buffer, offset, { type }, rootNode) {
-  return this.read(buffer, offset, type, rootNode)
-}
-
-function hashOf (value, { alg, body }, rootNode) {
-  const bodyBuffer = Buffer.alloc(this.sizeOf(value, body, rootNode))
-  this.write(value, bodyBuffer, 0, body, rootNode)
-  return digest(alg, bodyBuffer)
-}
-
-// A CRC is unsigned; a signed `type` takes its two's complement.
-function writeHash (value, buffer, offset, typeArgs, rootNode) {
-  const hash = hashOf.call(this, value, typeArgs, rootNode)
-  try {
-    return this.write(hash, buffer, offset, typeArgs.type, rootNode)
-  } catch (e) {
-    if (!(e instanceof RangeError) || typeof hash !== 'number') throw e
-    return this.write(hash | 0, buffer, offset, typeArgs.type, rootNode)
-  }
-}
-
-function sizeOfHash (value, typeArgs, rootNode) {
-  const functions = this.types[getFieldInfo(typeArgs.type).type]
-  if (functions && typeof functions[2] === 'number') return functions[2]
-  return this.sizeOf(hashOf.call(this, value, typeArgs, rootNode), typeArgs.type, rootNode)
 }
