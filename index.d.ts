@@ -109,6 +109,8 @@ declare class CompiledProtoDef extends AbstractProtoDefInterface {
 
 declare class ProtodefPartialError extends Error {
   partialReadError: true
+  // The chunk a FullPacketParser could not read; set when it emits 'partialReadError'.
+  buffer?: Buffer
   constructor(message?: string)
 }
 
@@ -134,6 +136,8 @@ declare module 'protodef' {
     noErrorLogging: boolean
     constructor(proto: ProtoDef, mainType: string, noErrorLogging = false)
     parsePacketBuffer(packet: any): Buffer
+    on(event: 'partialReadError', listener: (error: ProtodefPartialError) => void): this
+    on(event: string | symbol, listener: (...args: any[]) => void): this
   }
   export const Compiler: {
     ReadCompiler: typeof ProtodefReadCompiler

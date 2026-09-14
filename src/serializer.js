@@ -78,6 +78,8 @@ class FullPacketParser extends Transform {
       }
     } catch (e) {
       if (e.partialReadError) {
+        e.buffer = chunk
+        this.emit('partialReadError', e)
         if (!this.noErrorLogging) {
           console.log(e.stack)
         }

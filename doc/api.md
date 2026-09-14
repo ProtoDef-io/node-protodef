@@ -66,6 +66,20 @@ Create a parser of `mainType` defined in `proto`. This is a Transform stream.
 
 Returns a parsed packet of `buffer`.
 
+## FullPacketParser(proto,mainType,noErrorLogging)
+
+Create a parser of `mainType` defined in `proto` that reads one whole packet per chunk. This is a Transform stream.
+
+A chunk the definitions cannot read is dropped and the stream continues. Its stack is logged unless `noErrorLogging` is set.
+
+### FullPacketParser.parsePacketBuffer(buffer)
+
+Returns a parsed packet of `buffer`.
+
+### Event: 'partialReadError' (error)
+
+Emitted for each dropped chunk, before it is logged. `error.buffer` is the chunk.
+
 ## types
 
 An object mapping the default type names to the corresponding `[read,write,sizeOf]` functions.
