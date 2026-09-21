@@ -257,6 +257,8 @@ function writeBitflags (value, buffer, offset, { type, flags, shift, big }, root
   for (const key in f) {
     if (value[key]) val |= f[key]
   }
+  // keep 32-bit values unsigned: |= is signed in JS, so bit 31 makes val negative and the writer rejects it
+  if (!big) val = val >>> 0
   return this.write(val, buffer, offset, type, rootNode)
 }
 
