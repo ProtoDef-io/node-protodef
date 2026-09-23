@@ -49,6 +49,28 @@ describe('bitflags', () => {
   }
 })
 
+describe('bitflags with a signed underlying type', () => {
+  // Signed underlying type with bit 31 set: reading 0xffffffff as i32 yields -1. The unsigned coercion must NOT apply
+  // here, or writing the decoded value pushes -1 to 4294967295 and the signed writer rejects it (a regression the
+  // unsigned bit-31 fix introduced). The |= result is already the correct signed value.
+  const type = ['bitflags', { type: 'i32', flags: { top: 31 }, shift: true }]
+  const proto = new ProtoDef()
+  proto.addType('sflags', type)
+  const compiler = new ProtoDefCompiler()
+  compiler.addTypesToCompile({ sflags: type })
+  const compiled = compiler.compileProtoDefSync()
+
+  for (const [label, p] of [['interpreted', proto], ['compiled', compiled]]) {
+    it(`round-trips a signed value with bit 31 set (${label})`, () => {
+      const buf = Buffer.from([0xff, 0xff, 0xff, 0xff]) // i32 -1, top bit set
+      const obj = p.parsePacketBuffer('sflags', buf).data
+      assert.strictEqual(obj.top, true)
+      const back = p.createPacketBuffer('sflags', obj) // must not throw and must reproduce the original bytes
+      assert.deepStrictEqual(back, buf)
+    })
+  }
+})
+
 describe('FullPacketParser', () => {
   const packet = ['container', [{ name: 'a', type: 'i32' }]]
   const proto = new ProtoDef()
