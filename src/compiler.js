@@ -62,6 +62,7 @@ class CompiledProtodef {
     this.sizeOfCtx = sizeOfCtx
     this.writeCtx = writeCtx
     this.readCtx = readCtx
+    this.setVariable('sizeOfCtx', sizeOfCtx)
   }
 
   read (buffer, cursor, type) {
@@ -360,6 +361,12 @@ class WriteCompiler extends Compiler {
     if (type instanceof Array && type[0] === 'container') this.scopeStack.pop()
     if (args.length > 0) return '(' + code + `)(${value}, buffer, ${offsetExpr}, ` + args.map(name => this.getField(name)).join(', ') + ')'
     return '(' + code + `)(${value}, buffer, ${offsetExpr})`
+  }
+
+  callTypeSize (value, type, args = []) {
+    const code = `ctx.sizeOfCtx['${type}']`
+    if (args.length > 0) return '(' + code + `)(${value}, ` + args.map(name => this.getField(name)).join(', ') + ')'
+    return '(' + code + `)(${value})`
   }
 }
 
