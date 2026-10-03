@@ -154,6 +154,7 @@ let val = value._value ${big ? '|| 0n' : ''}
 for (const key in flags) {
   if (value[key]) val |= flags[key]
 }
+${(!big && /^l?u/.test(type)) ? 'val = val >>> 0 // unsigned underlying type: keep bit 31 from making val negative and rejected' : ''}
 return (ctx.${type})(val, buffer, offset)
       `.trim())
     }],
@@ -208,6 +209,7 @@ let val = value._value ${big ? '|| 0n' : ''}
 for (const key in flags) {
   if (value[key]) val |= flags[key]
 }
+${(!big && /^l?u/.test(type)) ? 'val = val >>> 0 // unsigned underlying type (see above)' : ''}
 return (ctx.${type})(val)
       `.trim())
     }],

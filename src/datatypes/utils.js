@@ -257,6 +257,10 @@ function writeBitflags (value, buffer, offset, { type, flags, shift, big }, root
   for (const key in f) {
     if (value[key]) val |= f[key]
   }
+  // Coerce to unsigned only for unsigned underlying types: |= is signed in JS, so bit 31 makes val negative and the
+  // unsigned writer rejects it. Signed types (i8/i16/i32/li32) keep the |= result, which is already the correct value;
+  // forcing them unsigned would push a valid negative out of the signed writer's range.
+  if (!big && /^l?u/.test(type)) val = val >>> 0
   return this.write(val, buffer, offset, type, rootNode)
 }
 
