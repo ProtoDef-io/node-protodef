@@ -20,6 +20,10 @@ const testData = [
   {
     kind: 'utils',
     data: require('../../ProtoDef/test/utils.json')
+  },
+  {
+    kind: 'extras',
+    data: require('../../ProtoDef/test/extras.json')
   }
 ]
 
@@ -30,7 +34,7 @@ function arrayToBuffer (arr) {
 function transformValues (type, values) {
   return values.map(val => {
     let value = val.value
-    if (type.indexOf('buffer') === 0) {
+    if (type.indexOf('buffer') === 0 || type.endsWith('Buffer')) {
       value = arrayToBuffer(value)
     } else if (value) {
       // we cannot use undefined type in JSON so need to convert it here to pass strictEquals test
