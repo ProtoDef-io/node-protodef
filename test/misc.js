@@ -24,6 +24,12 @@ describe('mapper', () => {
       assert.throws(() => p.createPacketBuffer('name', 'nope'), /nope is not in the mappings value/)
     })
   }
+
+  // The compiled read returns the raw id for a value not in the mappings, so writing it back must work
+  it('writes a raw integer not in the mappings (compiled)', () => {
+    assert.deepStrictEqual(compiled.createPacketBuffer('name', 5), Buffer.from([5]))
+    assert.strictEqual(compiled.parsePacketBuffer('name', Buffer.from([5])).data, 5)
+  })
 })
 
 describe('bitflags', () => {
