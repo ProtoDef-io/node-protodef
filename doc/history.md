@@ -1,5 +1,13 @@
 # History
 
+## 1.20.0
+* [Write 32-bit bitflags unsigned so bit 31 does not crash (#181)](https://github.com/ProtoDef-io/node-protodef/commit/09381130091b6d49cdfde2fe1ef1594f87cb69dd) (thanks @Pix3lPirat3)
+* [FullPacketParser: emit partialReadError with the chunk it could not read (#178)](https://github.com/ProtoDef-io/node-protodef/commit/0d7b6e171fe22aaa237a62e7643a5b2ca0dbde2c) (thanks @u9g)
+* [Compiled mapper: throw on a value not in the mappings instead of writing it (#176)](https://github.com/ProtoDef-io/node-protodef/commit/173105d05cdb7102c9b69b5abe35718f3d4b5421) (thanks @u9g)
+* [Use Node 24 in npm-publish workflow so OIDC trusted publishing works](https://github.com/ProtoDef-io/node-protodef/commit/473dc9d10e874d45734b2e5d9c31644b6bf61af8) (thanks @rom1504)
+* [Fix publish condition for npm-publish v4 (#173)](https://github.com/ProtoDef-io/node-protodef/commit/b45d7a21928796872a09d38ca4ffbeaa6ccb09cd) (thanks @rom1504)
+* [Switch to trusted publishing via OIDC (#172)](https://github.com/ProtoDef-io/node-protodef/commit/3759d4341152998d6078d7d02d614450f8530fcd) (thanks @rom1504)
+
 ## 1.19.0
 * [Update protodef.js to remove lodash.get (#167)](https://github.com/ProtoDef-io/node-protodef/commit/98e64f8b940378f791df8b4d6fccdfc873acd3b2) (thanks @rom1504)
 
