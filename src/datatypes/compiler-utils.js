@@ -160,8 +160,11 @@ return (ctx.${type})(val, buffer, offset)
     }],
     mapper: ['parametrizable', (compiler, mapper) => {
       const mappings = JSON.stringify(swapMappings(mapper.mappings))
-      let code = `const mapped = ${mappings}[value]\n`
-      code += 'if (mapped === undefined) throw new Error(value + \' is not in the mappings value\')\n'
+      let code = `let mapped = ${mappings}[value]\n`
+      code += 'if (mapped === undefined) {\n'
+      code += '  if (typeof value !== \'number\') throw new Error(value + \' is not in the mappings value\')\n'
+      code += '  mapped = value\n'
+      code += '}\n'
       code += 'return ' + compiler.callType('mapped', mapper.type)
       return compiler.wrapCode(code)
     }]
@@ -215,8 +218,11 @@ return (ctx.${type})(val)
     }],
     mapper: ['parametrizable', (compiler, mapper) => {
       const mappings = JSON.stringify(swapMappings(mapper.mappings))
-      let code = `const mapped = ${mappings}[value]\n`
-      code += 'if (mapped === undefined) throw new Error(value + \' is not in the mappings value\')\n'
+      let code = `let mapped = ${mappings}[value]\n`
+      code += 'if (mapped === undefined) {\n'
+      code += '  if (typeof value !== \'number\') throw new Error(value + \' is not in the mappings value\')\n'
+      code += '  mapped = value\n'
+      code += '}\n'
       code += 'return ' + compiler.callType('mapped', mapper.type)
       return compiler.wrapCode(code)
     }]
