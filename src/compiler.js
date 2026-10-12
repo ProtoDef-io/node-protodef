@@ -4,6 +4,7 @@ const utils = require('./datatypes/utils')
 const conditionalDatatypes = require('./datatypes/compiler-conditional')
 const structuresDatatypes = require('./datatypes/compiler-structures')
 const utilsDatatypes = require('./datatypes/compiler-utils')
+const extrasDatatypes = require('./datatypes/compiler-extras')
 
 const { tryCatch } = require('./utils')
 
@@ -270,6 +271,7 @@ class ReadCompiler extends Compiler {
     this.addTypes(conditionalDatatypes.Read)
     this.addTypes(structuresDatatypes.Read)
     this.addTypes(utilsDatatypes.Read)
+    this.addTypes(extrasDatatypes.Read)
 
     // Add default types
     for (const key in numeric) {
@@ -320,6 +322,7 @@ class WriteCompiler extends Compiler {
     this.addTypes(conditionalDatatypes.Write)
     this.addTypes(structuresDatatypes.Write)
     this.addTypes(utilsDatatypes.Write)
+    this.addTypes(extrasDatatypes.Write)
 
     // Add default types
     for (const key in numeric) {
@@ -370,6 +373,7 @@ class SizeOfCompiler extends Compiler {
     this.addTypes(conditionalDatatypes.SizeOf)
     this.addTypes(structuresDatatypes.SizeOf)
     this.addTypes(utilsDatatypes.SizeOf)
+    this.addTypes(extrasDatatypes.SizeOf)
 
     // Add default types
     for (const key in numeric) {

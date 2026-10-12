@@ -55,7 +55,7 @@ function testType (type, values) {
       })
     } else { testValue(type, value.value, value.buffer) }
   })
-  if (type !== 'void') {
+  if (type !== 'void' && type !== 'restBuffer' && !type.startsWith('loop_')) {
     it('reads 0 bytes and throw a PartialReadError', () => {
       try {
         proto.parsePacketBuffer(type, Buffer.alloc(0))
