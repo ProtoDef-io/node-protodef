@@ -1,4 +1,4 @@
-const { algorithms: hashAlgorithms } = require('./hash')
+const { algorithms: hashAlgorithms, hashTypeIsSigned } = require('./hash')
 
 module.exports = {
   Read: {
@@ -87,6 +87,7 @@ return { value, size }
       return compiler.wrapCode(code)
     }],
     hash: ['parametrizable', (compiler, { type }) => {
+      hashTypeIsSigned(compiler.resolveType(type), type)
       return compiler.wrapCode('return ' + compiler.callType(type))
     }]
   },
@@ -179,16 +180,12 @@ return (ctx.${type})(val, buffer, offset)
     }],
     hash: ['parametrizable', (compiler, { alg, type, body }) => {
       if (!hashAlgorithms[alg]) throw new Error('Unknown hash algorithm: ' + alg)
+      const signed = hashTypeIsSigned(compiler.resolveType(type), type)
       let code = `const bodyBuffer = Buffer.alloc(${compiler.callTypeSize('value', body)})\n`
       code += `;((buffer) => ${compiler.callType('value', body, '0')})(bodyBuffer)\n`
       code += `const hash = ctx._${alg}(bodyBuffer)\n`
       // A CRC is unsigned; a signed `type` takes its two's complement
-      code += 'try {\n'
-      code += '  return ' + compiler.callType('hash', type) + '\n'
-      code += '} catch (e) {\n'
-      code += '  if (!(e instanceof RangeError)) throw e\n'
-      code += '  return ' + compiler.callType('hash | 0', type) + '\n'
-      code += '}'
+      code += 'return ' + compiler.callType(signed ? 'hash | 0' : 'hash', type)
       return compiler.wrapCode(code)
     }]
   },
@@ -249,13 +246,10 @@ return (ctx.${type})(val)
       code += 'return ' + compiler.callType('mapped', mapper.type)
       return compiler.wrapCode(code)
     }],
-    // The digest has a fixed width, so a hash is sized without hashing: its
-    // size is the size of `type`, which the spec requires to be constant
+    // The digest has a fixed width, so a hash is sized without hashing
     hash: ['parametrizable', (compiler, { alg, type }) => {
-      const size = compiler.constantSize(type)
-      if (size === undefined) throw new Error('hash type must be of constant size, ' + JSON.stringify(type) + ' is not')
-      if (size < hashAlgorithms[alg].bytes) throw new Error('hash type is too small for a ' + alg + ' digest')
-      return String(size)
+      hashTypeIsSigned(compiler.resolveType(type), type)
+      return String(hashAlgorithms[alg].bytes)
     }]
   }
 }

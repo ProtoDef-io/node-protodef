@@ -239,13 +239,16 @@ A datatype that needs a helper function in its generated code registers it as a 
 Write: {
   _crc32c: ['context', crc32c],
   hash: ['parametrizable', (compiler, { alg, type, body }) => {
+    // Throws unless `type` is u32, i32, lu32 or li32, directly or through an alias
+    const signed = hashTypeIsSigned(compiler.resolveType(type), type)
     let code = `const bodyBuffer = Buffer.alloc(${compiler.callTypeSize('value', body)})\n`
     code += `;((buffer) => ${compiler.callType('value', body, '0')})(bodyBuffer)\n`
     code += `const hash = ctx._${alg}(bodyBuffer)\n`
-    code += 'return ' + compiler.callType('hash', type)
+    // A CRC is unsigned; a signed `type` takes its two's complement
+    code += 'return ' + compiler.callType(signed ? 'hash | 0' : 'hash', type)
     return compiler.wrapCode(code)
   }]
 }
 ```
 
-The context is shared with the protocol's own type names, and a context entry wins over a type of the same name, so a helper's name is underscored to keep it out of the way.
+The context is shared with the protocol's own type names, and a context entry wins over a type of the same name, so a helper's name is underscored to keep it out of the way. `compiler.resolveType(type)` follows aliases to the type they name, so the check that a hash is written as a 32 bit integer also accepts a name aliasing one, and fails at compile time otherwise.

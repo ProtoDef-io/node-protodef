@@ -105,13 +105,14 @@ describe('FullPacketParser', () => {
 
 describe('hash', () => {
   const { digest } = require('../src/datatypes/hash')
-  const varintHash = ['hash', { alg: 'crc32c', type: 'varint', body: 'Body' }]
   const inlineBody = ['hash', { alg: 'crc32c', type: 'u32', body: ['buffer', { count: 9 }] }]
   const types = {
     Body: ['buffer', { count: 9 }],
     crc32c: ['hash', { alg: 'crc32c', type: 'u32', body: 'Body' }],
     signed: ['hash', { alg: 'crc32c', type: 'HashCode', body: 'Body' }],
     HashCode: 'i32',
+    littleSigned: ['hash', { alg: 'crc32c', type: 'LittleHashCode', body: 'Body' }],
+    LittleHashCode: 'li32',
     // A hash over a list of hashes
     entry: ['container', [{ name: 'key', type: ['pstring', { countType: 'u8' }] }, { name: 'value', type: 'li32' }]],
     list: ['array', { countType: 'u8', type: ['hash', { alg: 'crc32c', type: 'lu32', body: 'entry' }] }],
@@ -148,11 +149,18 @@ describe('hash', () => {
     assert.throws(() => c.compileProtoDefSync(), /named type/)
   })
 
-  it('rejects a hash written as a variable-size type', () => {
-    assert.throws(() => proto.sizeOf(check, varintHash), /constant size/)
-    const c = new ProtoDefCompiler()
-    c.addTypesToCompile({ asVarint: varintHash })
-    assert.throws(() => c.compileProtoDefSync(), /constant size/)
+  it('rejects a type that is not a 32 bit integer', () => {
+    for (const type of ['f32', 'u64', 'i64', 'varint']) {
+      const message = new RegExp('hash type must be a 32 bit integer \\(u32, i32, lu32, li32\\), "' + type + '" is not')
+      const bad = ['hash', { alg: 'crc32c', type, body: 'Body' }]
+      assert.throws(() => proto.sizeOf(check, bad), message)
+      assert.throws(() => proto.write(check, Buffer.alloc(8), 0, bad), message)
+      assert.throws(() => proto.read(Buffer.alloc(8), 0, bad), message)
+      const c = new ProtoDefCompiler()
+      for (const kind of ['readCompiler', 'writeCompiler', 'sizeOfCompiler']) {
+        assert.throws(() => c[kind].compileType(bad), message, kind)
+      }
+    }
   })
 
   for (const [label, p] of [['interpreted', proto], ['compiled', compiled]]) {
@@ -167,6 +175,11 @@ describe('hash', () => {
         const buffer = p.createPacketBuffer('signed', check)
         assert.deepStrictEqual(buffer, u32(0xE3069283))
         assert.strictEqual(p.parsePacketBuffer('signed', buffer).data, 0xE3069283 | 0)
+      })
+      it('follows an alias to a little-endian signed type', () => {
+        const buffer = p.createPacketBuffer('littleSigned', check)
+        assert.deepStrictEqual(buffer, lu32(0xE3069283))
+        assert.strictEqual(p.parsePacketBuffer('littleSigned', buffer).data, 0xE3069283 | 0)
       })
       it('sizes without hashing', () => {
         assert.strictEqual(p.sizeOf(check, 'signed'), 4)

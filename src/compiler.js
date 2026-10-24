@@ -184,6 +184,15 @@ class Compiler {
     }
   }
 
+  /**
+   * `type` with aliases followed down to the type they name, which is
+   * returned as is when it isn't an alias
+   */
+  resolveType (type) {
+    while (typeof type === 'string' && typeof this.types[type] === 'string' && this.types[type] !== 'native') type = this.types[type]
+    return type
+  }
+
   addProtocol (protocolData, path) {
     const self = this
     function recursiveAddTypes (protocolData, path) {
@@ -420,8 +429,7 @@ class SizeOfCompiler extends Compiler {
    * aliases down to a fixed-size native; undefined otherwise
    */
   constantSize (type) {
-    while (typeof type === 'string' && typeof this.types[type] === 'string' && this.types[type] !== 'native') type = this.types[type]
-    return this.constants[type]
+    return this.constants[this.resolveType(type)]
   }
 
   compileType (type) {

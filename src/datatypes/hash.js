@@ -1,5 +1,3 @@
-const { getFieldInfo } = require('../utils')
-
 // CRC-32C (Castagnoli): reflected table-driven, all-ones init and final xor.
 // The compiler copies this function into the code it generates, so it has to
 // stand on its own: no imports, no module scope, its table cached on itself.
@@ -31,36 +29,49 @@ function digest (alg, buffer) {
   return algorithm.digest(buffer)
 }
 
+// The spec allows exactly these as `type`, directly or through an alias: the
+// digest is an unsigned 32 bit integer, and a signed type holds the same bits
+// read as two's complement.
+const hashTypes = { u32: false, i32: true, lu32: false, li32: true }
+
+// Checks the native type an alias resolved to, and returns whether it is signed
+function hashTypeIsSigned (native, type) {
+  if (!Object.prototype.hasOwnProperty.call(hashTypes, native)) {
+    throw new Error('hash type must be a 32 bit integer (' + Object.keys(hashTypes).join(', ') + '), ' + JSON.stringify(type) + ' is not')
+  }
+  return hashTypes[native]
+}
+
+// An alias is added with its native's functions, so it resolves by identity
+function resolveHashType (proto, type) {
+  const functions = typeof type === 'string' ? proto.types[type] : undefined
+  const native = functions && Object.keys(hashTypes).find(name => proto.types[name] === functions)
+  return hashTypeIsSigned(native, type)
+}
+
 function readHash (buffer, offset, { type }, rootNode) {
+  resolveHashType(this, type)
   return this.read(buffer, offset, type, rootNode)
 }
 
-// A CRC is unsigned; a signed `type` takes its two's complement.
 function writeHash (value, buffer, offset, { alg, type, body }, rootNode) {
+  const signed = resolveHashType(this, type)
   if (typeof body !== 'string') throw new Error('hash body must be a named type, ' + JSON.stringify(body) + ' is not')
   const bodyBuffer = Buffer.alloc(this.sizeOf(value, body, rootNode))
   this.write(value, bodyBuffer, 0, body, rootNode)
   const hash = digest(alg, bodyBuffer)
-  try {
-    return this.write(hash, buffer, offset, type, rootNode)
-  } catch (e) {
-    if (!(e instanceof RangeError)) throw e
-    return this.write(hash | 0, buffer, offset, type, rootNode)
-  }
+  return this.write(signed ? hash | 0 : hash, buffer, offset, type, rootNode)
 }
 
-// The digest has a fixed width, so the size of a hash never depends on the
-// value: `type` is required to be of constant size and is looked up as one.
-function sizeOfHash (value, { alg, type }, rootNode) {
-  const functions = this.types[getFieldInfo(type).type]
-  const size = functions ? functions[2] : undefined
-  if (typeof size !== 'number') throw new Error('hash type must be of constant size, ' + JSON.stringify(type) + ' is not')
-  if (size < algorithms[alg].bytes) throw new Error('hash type is too small for a ' + alg + ' digest')
-  return size
+// The digest has a fixed width, so a hash is sized without hashing
+function sizeOfHash (value, { alg, type }) {
+  resolveHashType(this, type)
+  return algorithms[alg].bytes
 }
 
 module.exports = {
   digest,
   algorithms,
+  hashTypeIsSigned,
   hash: [readHash, writeHash, sizeOfHash, require('../../ProtoDef/schemas/utils.json').hash]
 }
