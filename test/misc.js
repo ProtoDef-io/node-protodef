@@ -77,6 +77,31 @@ describe('bitflags with a signed underlying type', () => {
   }
 })
 
+describe('large packets exceeding the write scratch buffer', () => {
+  // createPacketBuffer writes into a reused 64 KiB scratch and only falls back to a sizeOf pass when that
+  // overflows. A packet larger than the scratch must still serialize correctly (fallback path), the scratch
+  // must then grow so a second large packet does not re-trigger the fallback, and small packets must keep working.
+  const type = ['array', { type: 'i32', countType: 'varint' }]
+  const compiler = new ProtoDefCompiler()
+  compiler.addTypesToCompile({ ints: type })
+  const compiled = compiler.compileProtoDefSync()
+
+  const big = Array.from({ length: 20000 }, (_, i) => i - 10000) // 20000 * 4 B = 80 KB > 64 KiB scratch
+  const bigger = Array.from({ length: 40000 }, (_, i) => i) // 160 KB, must also round-trip
+
+  it('round-trips a packet larger than the scratch (fallback path)', () => {
+    const buf = compiled.createPacketBuffer('ints', big)
+    assert.strictEqual(buf.length, 3 + big.length * 4) // 3-byte varint count + payload
+    assert.deepStrictEqual(compiled.parsePacketBuffer('ints', buf).data, big)
+  })
+
+  it('round-trips a second, larger packet and a small one after growing the scratch', () => {
+    assert.deepStrictEqual(compiled.parsePacketBuffer('ints', compiled.createPacketBuffer('ints', bigger)).data, bigger)
+    const small = [1, 2, 3]
+    assert.deepStrictEqual(compiled.parsePacketBuffer('ints', compiled.createPacketBuffer('ints', small)).data, small)
+  })
+})
+
 describe('FullPacketParser', () => {
   const packet = ['container', [{ name: 'a', type: 'i32' }]]
   const proto = new ProtoDef()
