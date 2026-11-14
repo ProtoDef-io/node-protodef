@@ -96,18 +96,36 @@ class CompiledProtodef {
   }
 
   createPacketBuffer (type, packet) {
-    const length = tryCatch(() => this.sizeOf(packet, type),
-      (e) => {
-        e.message = `SizeOf error for ${e.field} : ${e.message}`
-        throw e
-      })
-    const buffer = Buffer.allocUnsafe(length)
-    tryCatch(() => this.write(packet, buffer, 0, type),
-      (e) => {
+    // Fast path: write straight into a reusable scratch buffer and copy out the exact bytes, avoiding
+    // the separate sizeOf traversal (which re-walks the whole structure and re-encodes string lengths).
+    // Falls back to the exact sizeOf+alloc path if the packet overflows the scratch (then grows it).
+    let scratch = this._scratch
+    if (scratch === undefined) scratch = this._scratch = Buffer.allocUnsafe(65536)
+    try {
+      const end = this.write(packet, scratch, 0, type)
+      const buffer = Buffer.allocUnsafe(end)
+      scratch.copy(buffer, 0, 0, end)
+      return buffer
+    } catch (e) {
+      if (e.code !== 'ERR_BUFFER_OUT_OF_BOUNDS' && e.code !== 'ERR_OUT_OF_RANGE') {
         e.message = `Write error for ${e.field} : ${e.message}`
         throw e
-      })
-    return buffer
+      }
+      // Scratch too small (or a value that didn't fit): take the exact path and grow the scratch.
+      const length = tryCatch(() => this.sizeOf(packet, type),
+        (er) => {
+          er.message = `SizeOf error for ${er.field} : ${er.message}`
+          throw er
+        })
+      const buffer = Buffer.allocUnsafe(length)
+      tryCatch(() => this.write(packet, buffer, 0, type),
+        (er) => {
+          er.message = `Write error for ${er.field} : ${er.message}`
+          throw er
+        })
+      if (length > this._scratch.length) this._scratch = Buffer.allocUnsafe(length)
+      return buffer
+    }
   }
 
   parsePacketBuffer (type, buffer, offset = 0) {
