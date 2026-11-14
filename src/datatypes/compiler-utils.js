@@ -1,3 +1,5 @@
+const { algorithms: hashAlgorithms, hashTypeIsSigned } = require('./hash')
+
 module.exports = {
   Read: {
     pstring: ['parametrizable', (compiler, string) => {
@@ -83,10 +85,18 @@ return { value, size }
       let code = 'const { value, size } = ' + compiler.callType(mapper.type) + '\n'
       code += 'return { value: ' + JSON.stringify(sanitizeMappings(mapper.mappings)) + '[value] || value, size }'
       return compiler.wrapCode(code)
+    }],
+    hash: ['parametrizable', (compiler, { type }) => {
+      hashTypeIsSigned(compiler.resolveType(type), type)
+      return compiler.wrapCode('return ' + compiler.callType(type))
     }]
   },
 
   Write: {
+    // A hash digest is taken in generated code, so the digest function is
+    // copied into the compiled context rather than reached for outside it.
+    // Underscored: the context is shared with the protocol's own type names.
+    _crc32c: ['context', hashAlgorithms.crc32c.digest],
     pstring: ['parametrizable', (compiler, string) => {
       let code = `const length = Buffer.byteLength(value, "${string.encoding || 'utf8'}")\n`
       if (string.countType) {
@@ -167,6 +177,16 @@ return (ctx.${type})(val, buffer, offset)
       code += '}\n'
       code += 'return ' + compiler.callType('mapped', mapper.type)
       return compiler.wrapCode(code)
+    }],
+    hash: ['parametrizable', (compiler, { alg, type, body }) => {
+      if (!hashAlgorithms[alg]) throw new Error('Unknown hash algorithm: ' + alg)
+      const signed = hashTypeIsSigned(compiler.resolveType(type), type)
+      let code = `const bodyBuffer = Buffer.alloc(${compiler.callTypeSize('value', body)})\n`
+      code += `;((buffer) => ${compiler.callType('value', body, '0')})(bodyBuffer)\n`
+      code += `const hash = ctx._${alg}(bodyBuffer)\n`
+      // A CRC is unsigned; a signed `type` takes its two's complement
+      code += 'return ' + compiler.callType(signed ? 'hash | 0' : 'hash', type)
+      return compiler.wrapCode(code)
     }]
   },
 
@@ -225,6 +245,11 @@ return (ctx.${type})(val)
       code += '}\n'
       code += 'return ' + compiler.callType('mapped', mapper.type)
       return compiler.wrapCode(code)
+    }],
+    // The digest has a fixed width, so a hash is sized without hashing
+    hash: ['parametrizable', (compiler, { alg, type }) => {
+      hashTypeIsSigned(compiler.resolveType(type), type)
+      return String(hashAlgorithms[alg].bytes)
     }]
   }
 }
